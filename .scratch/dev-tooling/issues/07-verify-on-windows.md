@@ -1,16 +1,13 @@
-# Verify the workflow end-to-end on Windows
-
-Status: ready-for-human
-
-Blocked by: 06
+# 07: Verify end to end on Windows
 
 Spec: `../spec.md`
 
-## What
+**What to build:** On the Windows machine, from a fresh clone, Jamie follows the developer workflow doc: `py dev.py setup`, then `run`, then `check`. Any failures are filed as new tickets in this directory.
 
-On the Windows machine, from a fresh clone, follow `docs/training-dev.md`: `py dev.py setup <rvz>` → `py dev.py run` → `py dev.py check`. File any failures as new issues in this directory.
+**Blocked by:** 06
 
-## Acceptance
+**Status:** ready-for-human
 
-- Melee boots in Dolphin showing "- T".
-- `check` passes on Windows.
+- [ ] Melee boots in Dolphin from the training build, showing "- T".
+- [ ] `check` passes on Windows.
+- [ ] This works without WSL, msys2 or admin rights.
