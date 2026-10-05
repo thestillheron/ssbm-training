@@ -11,13 +11,23 @@ Commands:
                      --matching the byte-identical matching build.
   run                Build the training build, assemble a game folder from it
                      and boot it in Dolphin.
+  pad SEQUENCE       Piloting: send GameCube controls to the running training
+                     build as keystrokes (--dry-run prints the plan only).
+  shot [LABEL]       Screenshot the running training build with Dolphin's
+                     hotkey; prints the PNG path (build/training/shots).
+  scenario NAME      Play a committed scenario from tools/scenarios
+                     (--dry-run prints the expanded plan only).
   check              Pre-merge gate: the matching build must pass the SHA-1
                      verification and the training build must compile and link.
 
 Per-machine overrides live in the gitignored `dev.config.json`, e.g.
   {"disc": "D:/games/Melee.rvz", "wine": "/opt/homebrew/bin/wine",
-   "dolphin": "C:/Tools/Dolphin/Dolphin.exe"}
-setup also records what it auto-detected under "detected".
+   "dolphin": "C:/Tools/Dolphin/Dolphin.exe",
+   "dolphin_user": "C:/Tools/Dolphin/User",
+   "dolphin_window_title": "^Dolphin .*\\|"}
+dolphin_user is Dolphin's user folder (where pad reads the bindings);
+dolphin_window_title is a regex for Dolphin's game window title (default
+"^Dolphin .*\\|"). setup also records what it auto-detected under "detected".
 """
 
 import argparse
@@ -48,6 +58,8 @@ MATCHING_DOL = ROOT / "build" / VERSION / "main.dol"
 TRAINING_DIR = ROOT / "build" / "training"
 TRAINING_DOL = TRAINING_DIR / "main.dol"
 GAME_DIR = TRAINING_DIR / "game"
+SHOTS_DIR = TRAINING_DIR / "shots"
+WINDOW_TIMEOUT = 30.0  # seconds `run --scenario` waits for the game window
 DISC_EXTS ={".iso", ".rvz", ".gcm", ".wia", ".ciso", ".gcz", ".nfs"}
 
 
@@ -343,11 +355,24 @@ def configure_py_fingerprint():
     return [st.st_mtime_ns, st.st_size]
 
 
-def configured_for(mode):
+def load_state():
     try:
         state = json.loads(BUILD_STATE.read_text())
     except (OSError, ValueError):
-        return False
+        return {}
+    return state if isinstance(state, dict) else {}
+
+
+def save_state(**updates):
+    """Merge `updates` into the dev state file (other keys are kept)."""
+    state = load_state()
+    state.update(updates)
+    BUILD_STATE.parent.mkdir(parents=True, exist_ok=True)
+    BUILD_STATE.write_text(json.dumps(state))
+
+
+def configured_for(mode):
+    state = load_state()
     return (
         state.get("mode") == mode
         and state.get("configure_py") == configure_py_fingerprint()
@@ -364,10 +389,7 @@ def configure(mode):
     say("Configuring ...")
     if run(cmd).returncode != 0:
         raise DevError("configure.py failed")
-    BUILD_STATE.parent.mkdir(parents=True, exist_ok=True)
-    BUILD_STATE.write_text(
-        json.dumps({"mode": mode, "configure_py": configure_py_fingerprint()})
-    )
+    save_state(mode=mode, configure_py=configure_py_fingerprint())
 
 
 def build(mode):
@@ -451,6 +473,10 @@ def assemble_game(dol):
 
 
 def cmd_run(args):
+    events = None
+    if args.scenario:
+        require_piloting_platform()
+        events = load_scenario_plan(args.scenario)  # fail before building
     dolphin = find_dolphin()
     if dolphin is None:
         raise DevError(
@@ -459,6 +485,10 @@ def cmd_run(args):
             '{"dolphin": "C:/path/to/Dolphin.exe"}'
         )
     dol = build("training")
+    stop_tracked_dolphin(load_state())
+    from tools import shot
+
+    shot.clear_shots(SHOTS_DIR)
     game_dol = assemble_game(dol)
     say(f"Launching {dolphin.name} ...")
     kw = {}
@@ -466,13 +496,172 @@ def cmd_run(args):
         kw["creationflags"] = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
     else:
         kw["start_new_session"] = True
-    subprocess.Popen(
+    proc = subprocess.Popen(
         [str(dolphin), "-e", str(game_dol)],
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         **kw,
     )
+    save_state(dolphin_pid=proc.pid)
+    if events is not None:
+        say(f"Waiting for the game window (up to {WINDOW_TIMEOUT:g}s) ...")
+        play_live(events, wait=True)
+
+
+def stop_tracked_dolphin(state, image_of=None, terminate=None):
+    """Terminate the Dolphin that the last `run` launched (state key
+    `dolphin_pid`), but only if that PID is still a Dolphin process. Other
+    Dolphin processes are never touched. Windows only; elsewhere a no-op."""
+    pid = state.get("dolphin_pid")
+    if not pid:
+        return
+    if image_of is None or terminate is None:
+        if not IS_WINDOWS:
+            return
+        from tools import win_pilot
+
+        image_of = image_of or win_pilot.process_image
+        terminate = terminate or win_pilot.terminate
+    image = image_of(pid)
+    if image and Path(image).stem.lower() == "dolphin":
+        say(f"Stopping the Dolphin from the last run (pid {pid}) ...")
+        try:
+            terminate(pid)
+        except OSError as e:
+            raise DevError(f"could not stop the previous Dolphin (pid {pid}): {e}")
+
+
+# ---------------------------------------------------------------- pad
+
+
+def dolphin_user_dir():
+    """Dolphin's user folder: the config `dolphin_user` key, else `User` beside
+    a configured/found Dolphin that has portable.txt, else the per-user
+    location."""
+    override = load_config().get("dolphin_user")
+    if override:
+        return Path(override).expanduser()
+    dolphin = find_dolphin()
+    if dolphin is not None and (dolphin.parent / "portable.txt").exists():
+        return dolphin.parent / "User"
+    if IS_WINDOWS:
+        return Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming")) / "Dolphin Emulator"
+    if IS_MAC:
+        return Path.home() / "Library" / "Application Support" / "Dolphin"
+    return Path.home() / ".local" / "share" / "dolphin-emu"
+
+
+def require_piloting_platform():
+    if not IS_WINDOWS:
+        raise DevError("piloting is not supported yet on this OS (Windows only)")
+
+
+def cmd_pad(args):
+    from tools import pad
+
+    require_piloting_platform()
+    try:
+        steps = pad.parse_sequence(args.sequence)
+        bindings = pad.load_bindings(pad.pad_config_path(dolphin_user_dir()))
+        events = pad.build_plan(steps, bindings)
+    except pad.PadError as e:
+        raise DevError(str(e))
+    if args.dry_run:
+        say(pad.format_plan(events))
+        return
+    from tools import pad_live, win_pilot
+
+    try:
+        pad_live.run_plan(events, find_game_window(), win_pilot.Win32Backend())
+    except pad.PadError as e:
+        raise DevError(str(e))
+
+
+def find_game_window():
+    """hwnd of the running Dolphin game window (Windows only); PadError if
+    there is none or several."""
+    from tools import win_pilot
+
+    return win_pilot.find_dolphin_window(
+        load_state().get("dolphin_pid"), load_config().get("dolphin_window_title")
+    )
+
+
+def cmd_shot(args):
+    from tools import pad, shot
+
+    require_piloting_platform()
+    user = dolphin_user_dir()
+    try:
+        key = shot.screenshot_key(user)
+        target = shot.shot_target(args.label, SHOTS_DIR)
+        if args.dry_run:
+            say(f"hotkey: {key.name} (scancode 0x{key.scancode:02X})")
+            say(f"Dolphin writes to: {shot.screenshots_dir(user)}")
+            say(f"shot lands at: {target}")
+            return
+        from tools import win_pilot
+
+        hwnd = find_game_window()
+        path = shot.take_shot(
+            args.label,
+            key,
+            hwnd,
+            win_pilot.Win32Backend(),
+            shot.screenshots_dir(user),
+            SHOTS_DIR,
+            timeout=args.timeout,
+        )
+    except pad.PadError as e:
+        raise DevError(str(e))
+    say(str(path))
+
+
+def load_scenario_plan(name):
+    """Expand scenario `name` into a timed plan, or raise DevError."""
+    from tools import pad, scenario
+
+    try:
+        items = scenario.expand(name)
+        bindings = pad.load_bindings(pad.pad_config_path(dolphin_user_dir()))
+        return scenario.build_plan(items, bindings)
+    except (pad.PadError, scenario.ScenarioError) as e:
+        raise DevError(str(e))
+
+
+def play_live(events, wait=False):
+    """Play a scenario plan against the Dolphin window, taking its shots.
+    With `wait`, first wait (up to WINDOW_TIMEOUT s) for the window to appear;
+    nothing is sent if it doesn't."""
+    from tools import pad, scenario_live, shot, win_pilot
+
+    user = dolphin_user_dir()
+    try:
+        key = shot.screenshot_key(user)
+
+        hwnd = scenario_live.wait_for_window(find_game_window, WINDOW_TIMEOUT if wait else 0)
+        backend = win_pilot.Win32Backend()
+
+        def take(label):
+            return shot.take_shot(
+                label, key, hwnd, backend, shot.screenshots_dir(user), SHOTS_DIR
+            )
+
+        scenario_live.play(events, hwnd, backend, take, say=say)
+    except pad.PadError as e:
+        raise DevError(str(e))
+
+
+def cmd_scenario(args):
+    require_piloting_platform()
+    from tools import scenario
+
+    events = load_scenario_plan(args.name)
+    if args.dry_run:
+        say(scenario.format_plan(events))
+        return
+    play_live(events)
 
 
 # ---------------------------------------------------------------- check
@@ -511,7 +700,37 @@ def main(argv=None):
     b.add_argument("--matching", action="store_true", help="build the matching build")
     b.set_defaults(func=cmd_build)
     r = sub.add_parser("run", help="build the training build and boot it in Dolphin")
+    r.add_argument(
+        "--scenario",
+        metavar="NAME",
+        help="after launching, wait for the game window and play this scenario",
+    )
     r.set_defaults(func=cmd_run)
+    pd = sub.add_parser(
+        "pad", help="pilot the training build: send GameCube controls as keystrokes"
+    )
+    pd.add_argument("sequence", help='steps, e.g. "start wait:30 stick-down+b:6"')
+    pd.add_argument(
+        "--dry-run", action="store_true", help="print the timed key plan, send nothing"
+    )
+    pd.set_defaults(func=cmd_pad)
+    sh = sub.add_parser(
+        "shot", help="screenshot the running training build into build/training/shots"
+    )
+    sh.add_argument("label", nargs="?", help="file name (without .png); default a timestamp")
+    sh.add_argument(
+        "--timeout", type=float, default=10.0, help="seconds to wait for Dolphin's file"
+    )
+    sh.add_argument(
+        "--dry-run", action="store_true", help="print the hotkey and paths, send nothing"
+    )
+    sh.set_defaults(func=cmd_shot)
+    sc = sub.add_parser("scenario", help="play a committed piloting scenario")
+    sc.add_argument("name", help="scenario name (file stem in tools/scenarios)")
+    sc.add_argument(
+        "--dry-run", action="store_true", help="print the expanded timed plan only"
+    )
+    sc.set_defaults(func=cmd_scenario)
     c = sub.add_parser("check", help="pass/fail gate for both builds")
     c.set_defaults(func=cmd_check)
     args = p.parse_args(argv)

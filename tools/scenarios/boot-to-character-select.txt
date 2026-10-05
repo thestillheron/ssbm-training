@@ -1,0 +1,28 @@
+# Boot to character select: from a freshly launched training build to the
+# VS-mode character select screen. Reusable prefix: `include` it from others.
+#
+# Timing (tuned live): the intro movie plays first and the title screen only
+# appears about 85 s after boot, so wait 90 s. From there `start` always lands
+# on a stable screen: during the intro or a demo it returns to the title, and
+# a second `start` reaches the main menu. (If the title were already showing,
+# the first `start` would reach the main menu and the second would select
+# 1-P Mode, so do not shorten the first wait.)
+
+wait:5400
+start
+wait:120
+shot title
+
+# Title screen -> main menu (cursor starts on 1-P Mode) -> VS. Mode -> its
+# submenu -> character select. The menu ignores input for a few seconds after
+# it appears (memory card "SAVING"), hence the long wait before stick-down.
+start
+wait:240
+shot main-menu
+stick-down:12
+wait:30
+a
+wait:60
+a
+wait:120
+shot character-select

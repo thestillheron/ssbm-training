@@ -102,6 +102,9 @@ Stands for "motion variables." Used by #HSD_GObj::user_data structs (such as #Fi
 @section glossary_phys phys
 Short for "physics."
 
+@section glossary_piloting piloting
+Driving the running training build with controller input, step by step, to reach a game state. Avoid "playtesting" or "driving the emulator": the input goes to the game, and the point is to reach a state, not to play.
+
 @section glossary_plat plat
 Short for "platform."
 
@@ -119,6 +122,9 @@ Short for "radians."
 
 @section glossary_rot rot
 Short for "rotation."
+
+@section glossary_scenario scenario
+A committed, named input script that takes the training build from boot to a known game state, optionally taking screenshots along the way. A scenario is usually piloting that has been written down. Avoid "macro" or "pre-canned results": the scenario is the script, not the screenshots it produces.
 
 @section glossary_sfx sfx
 Short for "sound effect(s)."

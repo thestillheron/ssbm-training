@@ -105,6 +105,20 @@ class RunTests(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertEqual(original_fingerprint(), before)
 
+    @requires_disc
+    def test_run_clears_the_shots_folder(self):
+        r = dev(REPO_ROOT, "setup", str(find_disc()))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        exe, _args = make_fake_dolphin(self.tmp.name)
+        self.configure_dolphin(exe)
+        shots = REPO_ROOT / "build" / "training" / "shots"
+        shots.mkdir(parents=True, exist_ok=True)
+        (shots / "stale.png").write_bytes(b"x")
+
+        r = dev(REPO_ROOT, "run")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertFalse((shots / "stale.png").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

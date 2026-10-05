@@ -1,0 +1,4 @@
+# Smallest live scenario: one shot, a second after the window appears.
+# Used by the opt-in end-to-end test (tools/dev_tests/test_e2e.py).
+wait:60
+shot e2e-smoke
