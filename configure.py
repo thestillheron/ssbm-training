@@ -210,7 +210,15 @@ parser.add_argument(
     action="store_false",
     help="do not always run dtk dol apply after linking",
 )
+parser.add_argument(
+    "--training",
+    action="store_true",
+    help="build the training mod (implies --non-matching; output in build/training)",
+)
 args = parser.parse_args()
+
+if args.training:
+    args.non_matching = True
 
 if args.debug and args.sym == "auto":
     args.sym = "on"
@@ -221,6 +229,8 @@ if any({args.debug, args.asm, args.linkable}) or args.sym == "on":
 
 config = ProjectConfig()
 config.version = str(args.version)
+if args.training:
+    config.out_name = "training"  # keeps build/GALE01 for the matching build
 version_num = VERSIONS.index(config.version)
 
 # Apply arguments
@@ -273,7 +283,7 @@ config.asflags = [
     "--strip-local-absolute",
     "-I include",
     "-I src",
-    f"-I build/{config.version}/include",
+    f"-I {config.out_path().as_posix()}/include",
     f"--defsym BUILD_VERSION={version_num}",
 ]
 config.ldflags = [
@@ -331,6 +341,9 @@ if args.non_matching:
 else:
     cflags_base.append("-DMUST_MATCH")
 
+if args.training:
+    cflags_base.append("-DTRAINING_BUILD")
+
 if args.verbose:
     cflags_base.append("-verbose")
 
@@ -379,7 +392,7 @@ includes_base = [
     "libs/doldecomp/include",
     "src/MSL",
     "libs/dolphin/include",
-    f"build/{config.version}/include",
+    f"{config.out_path().as_posix()}/include",
 ]
 
 
@@ -393,7 +406,7 @@ clang_system_includes = [
     "src/MSL",
     "libs/dolphin/include",
     "libs/dolphin/src",
-    f"build/{config.version}/include",
+    f"{config.out_path().as_posix()}/include",
 ]
 
 clang_warnings = [
@@ -2026,6 +2039,16 @@ config.libs = [
         ],
     ),
 ]
+
+
+if args.training:
+    config.libs.append(
+        Lib(
+            "training (Training Mod)",
+            [Object(Matching, "training/title_marker.c")],
+            category="game",
+        )
+    )
 
 
 config.link_order_callback = lambda _, o: all_objects if config.non_matching else o

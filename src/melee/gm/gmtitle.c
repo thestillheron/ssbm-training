@@ -366,4 +366,7 @@ void gm_Scene_Title_OnEnter(void* unused)
         text->default_kerning = 1;
         HSD_SisLib_803A7548(text, scale, 0.7f, 0.55f);
     }
+#ifdef TRAINING_BUILD
+    { extern void training_title_marker(void); training_title_marker(); }
+#endif
 }

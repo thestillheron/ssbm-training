@@ -87,6 +87,9 @@ Stands for "left/right." Synonymous with "facing direction."
 @section glossary_mag mag
 Short for "magnitude."
 
+@section glossary_matching_build matching build
+The build of this repo whose `main.dol` is byte-identical to the original game, with no training features. Not to be confused with the @ref glossary_training_build "training build".
+
 @section glossary_min min
 Short for "minimum."
 
@@ -134,6 +137,9 @@ Short for "size."
 
 @section glossary_tgt tgt
 Short for "target."
+
+@section glossary_training_build training build
+The game code plus this fork's training features, compiled without the byte-identical check so it can differ from the original. Avoid calling it the "modded" or "non-matching" build: upstream uses "non-matching" for code that is merely equivalent, and "debug" already names a different `configure.py` mode.
 
 @section glossary_unk unk
 Short for "unknown."

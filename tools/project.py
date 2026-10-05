@@ -172,6 +172,7 @@ class ProjectConfig:
         )
         self.linker_version: Optional[str] = None  # mwld version
         self.version: Optional[str] = None  # Version name
+        self.out_name: Optional[str] = None  # Output dir name (default: version)
         self.warn_missing_config: bool = False  # Warn on missing unit configuration
         self.warn_missing_source: bool = False  # Warn on missing source file
         self.rel_strip_partial: bool = True  # Generate PLFs with -strip_partial
@@ -258,7 +259,7 @@ class ProjectConfig:
 
     # Gets the output path for build-related files.
     def out_path(self) -> Path:
-        return self.build_dir / str(self.version)
+        return self.build_dir / str(self.out_name or self.version)
 
     # Gets the path to the compilers directory.
     # Exits the program if neither `compilers_path` nor `compilers_tag` is provided.
