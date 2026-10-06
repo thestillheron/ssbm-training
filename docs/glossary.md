@@ -12,6 +12,9 @@ Short for "ambient."
 @section glossary_atk atk
 Short for "attack."
 
+@section glossary_authoring_tools authoring tools
+Features for designing @ref glossary_curriculum "curriculum" drills, such as printing a drill's layout, compiled into the @ref glossary_training_build "training build" only on request. Players never see them. Avoid "developer build" or "debug build".
+
 @section glossary_cam cam
 Short for "camera."
 
@@ -30,6 +33,12 @@ Short for "camera stick," the yellow analog stick on the right side of the GameC
 @section glossary_cur cur
 Short for "current" or "cursor."
 
+@section glossary_curriculum curriculum
+The fixed, ordered set of @ref glossary_drill "drills" designed to teach tech chasing step by step, from one landing timing and one @ref glossary_tech_option "tech option" up to mixed timing and a random choice of options. Avoid "lesson plan" or "course".
+
+@section glossary_custom_drill custom drill
+A @ref glossary_drill "drill" whose settings the player chooses, as opposed to one from the @ref glossary_curriculum "curriculum".
+
 @section glossary_deg deg
 Short for "degrees."
 
@@ -41,6 +50,9 @@ Short for "divisor" or "divide."
 
 @section glossary_dmg dmg
 Short for "damage."
+
+@section glossary_drill drill
+One configured tech-chasing activity, played as a series of @ref glossary_rep "reps" for a set count or time: the stage, where the opponent drops from and from what heights, where the player starts, which @ref glossary_tech_option "tech options" the opponent picks from, and whether it vanishes mid-tech. Avoid "mini game", "activity" or "exercise".
 
 @section glossary_dst dst
 Short for "destination."
@@ -78,6 +90,9 @@ Short for "item."
 @section glossary_kb kb
 Short for "knockback."
 
+@section glossary_layout layout
+Where a @ref glossary_drill "drill" happens: the landing point (a spot on a floor or platform), the drop heights above it that the opponent falls from in tumble, and the player's start relative to the landing point. One drop height means every @ref glossary_rep "rep" has the same timing. Avoid "spawn config" or "positions".
+
 @section glossary_lstick lstick
 Short for "left stick," the gray analog stick on the GameCube controller.
 
@@ -92,6 +107,9 @@ The build of this repo whose `main.dol` is byte-identical to the original game, 
 
 @section glossary_min min
 Short for "minimum."
+
+@section glossary_missed_tech missed tech
+The @ref glossary_tech_option "tech option" where the opponent lands without teching and lies on the ground before getting up. Avoid "no tech" or "knockdown".
 
 @section glossary_mul mul
 Short for "multiplier" or "multiply."
@@ -117,8 +135,17 @@ Short for "position."
 @section glossary_prev prev
 Short for "previous."
 
+@section glossary_punish_window punish window
+The frames from the opponent landing to its first actionable frame. A hit or grab that connects in the punish window makes the @ref glossary_rep "rep" a success; once it is actionable, the rep is a failure.
+
 @section glossary_rad rad
 Short for "radians."
+
+@section glossary_rep rep
+One cycle of a @ref glossary_drill "drill": the opponent drops in tumble, lands, carries out its @ref glossary_tech_option "tech option", and the rep ends as a success or failure. A rep is void, and doesn't count, if the player hits the opponent before it lands. Avoid "round", "attempt" or "instance".
+
+@section glossary_rep_log rep log
+The text record the @ref glossary_training_build "training build" writes when @ref glossary_authoring_tools "authoring tools" are on: one line per @ref glossary_rep "rep" event, such as the tech option chosen, the frames of the @ref glossary_punish_window "punish window" and the outcome. It lets a rep be checked as text instead of from screenshots.
 
 @section glossary_rot rot
 Short for "rotation."
@@ -141,6 +168,18 @@ Short for "source."
 @section glossary_sz sz
 Short for "size."
 
+@section glossary_tech_away tech away
+The @ref glossary_tech_option "tech option" where the opponent rolls away from the player. Defined relative to the player, not the opponent's facing; avoid "tech back" or "roll back", which the game uses relative to facing.
+
+@section glossary_tech_in tech in
+The @ref glossary_tech_option "tech option" where the opponent rolls toward the player. Defined relative to the player, not the opponent's facing; avoid "tech forward" or "roll forward".
+
+@section glossary_tech_in_place tech in place
+The @ref glossary_tech_option "tech option" where the opponent techs without moving. Avoid "neutral tech" or "tech" on its own.
+
+@section glossary_tech_option tech option
+What the opponent does on landing: @ref glossary_tech_in_place "tech in place", @ref glossary_tech_in "tech in", @ref glossary_tech_away "tech away" or @ref glossary_missed_tech "missed tech". Wall and ceiling techs are not tech options.
+
 @section glossary_tgt tgt
 Short for "target."
 
@@ -162,6 +201,8 @@ Short for "velocity."
 @section glossary_vtx vtx
 Short for "vertex."
 
+@section glossary_vulnerable_frames vulnerable frames
+The part of the @ref glossary_punish_window "punish window" in which the opponent can be hit or grabbed, i.e. after any tech intangibility has ended. A tech's vulnerable frames are short and come at the end; a @ref glossary_missed_tech "missed tech" is vulnerable almost throughout.
 @section glossary_vic vic
 Short for "victim."
 
