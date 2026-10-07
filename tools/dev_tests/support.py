@@ -167,6 +167,7 @@ PILOTING_MODULES = (
     "scenario_live.py",
     "shot.py",
     "movie.py",
+    "reps.py",
 )
 
 

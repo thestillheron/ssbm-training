@@ -1,6 +1,6 @@
 # Authoring tools flag and the rep log
 
-Status: ready-for-agent
+Status: resolved
 
 ## Problem Statement
 
@@ -38,7 +38,9 @@ The first authoring tool is the [rep log](../../docs/glossary.md#glossary_rep_lo
 - **`check`.** Builds matching, then training without authoring, then training with authoring, and reports each in the summary.
 - **Rep log emission.** The training build writes rep log lines through the game's debug print (OSReport) with a fixed prefix (e.g. `[rep]`) and space-separated `key=value` fields, one event per line, including a rep number and the game frame. The events start with: rep start, drop (height), landing (frame), tech option, vulnerable from/to, actionable (frame), outcome. Later features add fields; existing fields aren't renamed.
 - **Rep log collection.** `dev.py` reads Dolphin's log file from the Dolphin user folder, keeps only prefixed lines written since the scenario (or `run`) started, and prints them. Dolphin needs file logging and the OS report log type turned on; prefer per-launch config overrides on Dolphin's command line from `run`. If those don't apply to logger settings, say exactly which settings to turn on.
-- **Verify first (unverified assumption).** That OSReport from a bare booted training `main.dol` reaches Dolphin's log. Dolphin may need the game's symbol map to recognise the print function. Check this first: `run` can place the build's map where Dolphin looks for it. If no route works, fall back to drawing the latest rep log lines as on-screen text and reading them from shots, and record that in this spec.
+- **Verified (ticket 02).** OSReport from a bare booted training `main.dol` reaches Dolphin's log, with no symbol map: the game's OSReport writes through Dolphin's EXI UART log (log type `OSREPORT`), not the HLE'd `OSREPORT_HLE` path that needs symbols. Per-launch overrides work for logger settings: `run` passes `-C Logger.Options.WriteToFile=True -C Logger.Logs.OSREPORT=True` (authoring only) and Dolphin's `Logger.ini` stays untouched. Checked live on Dolphin 2609: an authoring-only `OSReport("[rep] event=probe
+")` called from the title screen hook appeared in `<dolphin_user>/Logs/dolphin.log` as `03:57:455 Core/HW/EXI/EXI_DeviceIPL.cpp:306 N[OSREPORT]: [rep] event=probe` (line ends `
+`; the timestamp is `MM:SS:mmm`, no hour). Dolphin appends to that file across launches, so collection is by byte offset since the launch marker, not by truncation. The "fall back to on-screen text" plan is not needed; tickets 03 to 05 stand as written.
 - **Command.** The on-demand print is a new `dev.py` subcommand (name to choose at implementation, e.g. `reps`), following the existing subcommand style.
 - **Docs.** The developer workflow gets an "Authoring tools" section and the rep log format.
 

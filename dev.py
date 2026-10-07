@@ -9,7 +9,9 @@ Commands:
                      (RVZ or ISO) into orig/GALE01 and verify main.dol.
   build [--matching] Build the training build (build/training), or with
                      --matching the byte-identical matching build.
-  run                Build the training build, assemble a game folder from it
+                     --authoring adds the authoring tools (off by default).
+  run                Build the training build (with authoring tools unless
+                     --no-authoring), assemble a game folder from it
                      and boot it in Dolphin (--scenario NAME: with that
                      scenario played as a frame-exact movie from power-on,
                      against a copy of the memory card snapshot, taking its
@@ -24,7 +26,8 @@ Commands:
   snapshot-card      Snapshot Dolphin's slot-A memory card; movie runs play
                      against a fresh copy of it (build/memcard).
   check              Pre-merge gate: the matching build must pass the SHA-1
-                     verification and the training build must compile and link.
+                     verification and the training build must compile and link, with
+                     and without the authoring tools.
 
 Per-machine overrides live in the gitignored `dev.config.json`, e.g.
   {"disc": "D:/games/Melee.rvz", "wine": "/opt/homebrew/bin/wine",
@@ -44,6 +47,7 @@ import shutil
 import stat
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -383,17 +387,20 @@ def save_state(**updates):
     BUILD_STATE.write_text(json.dumps(state))
 
 
-def configured_for(mode):
+def configured_for(mode, authoring=False):
     state = load_state()
     return (
         state.get("mode") == mode
+        and bool(state.get("authoring")) == authoring
         and state.get("configure_py") == configure_py_fingerprint()
         and (ROOT / "build.ninja").is_file()
     )
 
 
-def configure(mode):
+def configure(mode, authoring=False):
     cmd = [VENV_PYTHON, "configure.py", *MODES[mode][1]]
+    if authoring:
+        cmd.append("--authoring")
     if IS_MAC:
         wine = find_wine()
         if wine:
@@ -401,27 +408,34 @@ def configure(mode):
     say("Configuring ...")
     if run(cmd).returncode != 0:
         raise DevError("configure.py failed")
-    save_state(mode=mode, configure_py=configure_py_fingerprint())
+    save_state(mode=mode, authoring=authoring, configure_py=configure_py_fingerprint())
 
 
-def build(mode):
-    """Build `mode` ("matching" or "training") and return its main.dol."""
+def build(mode, authoring=False):
+    """Build `mode` ("matching" or "training"), the training build with its
+    authoring tools if `authoring`, and return its main.dol."""
     if not VENV_NINJA.is_file() or not (ORIG / "sys" / "main.dol").is_file():
         raise DevError("run `python dev.py setup <disc image>` first")
     dol = MODES[mode][0]
-    if not configured_for(mode):
-        configure(mode)
-    say(f"Building the {mode} build ...")
+    if not configured_for(mode, authoring):
+        configure(mode, authoring)
+    label = f"{mode} (authoring)" if authoring else mode
+    say(f"Building the {label} build ...")
     if run([VENV_NINJA]).returncode != 0:
-        raise DevError(f"{mode} build failed")
+        raise DevError(f"{label} build failed")
     if not dol.is_file():
         raise DevError(f"build finished but {dol} was not produced")
-    say(f"{mode.capitalize()} build OK: {dol.relative_to(ROOT)}")
+    say(f"{label.capitalize()} build OK: {dol.relative_to(ROOT)}")
     return dol
 
 
 def cmd_build(args):
-    build("matching" if args.matching else "training")
+    if args.matching:
+        if args.authoring:
+            raise DevError("--authoring does not apply to the matching build")
+        build("matching")
+    else:
+        build("training", authoring=bool(args.authoring))
 
 
 # ---------------------------------------------------------------- run
@@ -551,12 +565,16 @@ def cmd_run(args):
         )
     if playback:
         playback.check(dolphin)
-    dol = build("training")
+    dol = build("training", authoring=args.authoring)
     stop_tracked_dolphin(load_state())
-    from tools import shot
+    from tools import reps, shot
 
+    # Without authoring tools nothing is logged: no mark, so `reps` says so.
+    save_state(rep_log_mark=reps.mark(reps.log_path(dolphin_user_dir())) if args.authoring else None)
     shot.clear_shots(SHOTS_DIR)
     extra = playback.prepare() if playback else []
+    if args.authoring:
+        extra += reps.launch_args()
     game_dol = assemble_game(dol)
     say(f"Launching {dolphin.name} ...")
     kw = {}
@@ -575,6 +593,8 @@ def cmd_run(args):
     if playback:
         say(f"Waiting for the game window (up to {WINDOW_TIMEOUT:g}s) ...")
         playback.follow()
+        if args.authoring:
+            print_rep_log(load_state().get("rep_log_mark", 0))
 
 
 MOVIE_OPTION = b"--movie"  # in the usage text of a Dolphin that can play movies
@@ -805,7 +825,10 @@ def load_scenario_plan(name):
 def play_live(events, wait=False):
     """Play a scenario plan against the Dolphin window, taking its shots.
     With `wait`, first wait (up to WINDOW_TIMEOUT s) for the window to appear;
-    nothing is sent if it doesn't."""
+    nothing is sent if it doesn't. A plan with no key or shot steps sends
+    nothing, so it needs no window."""
+    if not events:
+        return
     from tools import pad, scenario_live, shot, win_pilot
 
     user = dolphin_user_dir()
@@ -901,7 +924,75 @@ def cmd_scenario(args):
     if args.dry_run:
         say(scenario.format_plan(events))
         return
+    from tools import reps
+
+    since = reps.mark(reps.log_path(dolphin_user_dir()))
+    say(f"Playing scenario {args.name} ...")
     play_live(events)
+    print_rep_log(since)
+
+
+# ---------------------------------------------------------------- reps
+
+
+REP_LOG_SETTLE_S = 1.0  # Dolphin may write the last events just after a scenario's end
+
+
+def print_rep_lines(log, since, window):
+    """Print the `[rep]` lines in `log` after offset `since`; if there are
+    none, say so on stderr, naming `window` (the span that was searched)."""
+    from tools import reps
+
+    lines = reps.read_reps(log, since)
+    for line in lines:
+        say(line)
+    if not lines:
+        print(f"no [rep] lines in {log} {window}", file=sys.stderr)
+
+
+def print_rep_log(since):
+    """Print the `[rep]` lines Dolphin logged after offset `since` (what a
+    scenario run produced), after a moment for Dolphin to write the last of
+    them. A missing log or an empty result is reported on stderr, never
+    mistaken for each other; neither fails the scenario."""
+    from tools import reps
+
+    user = dolphin_user_dir()
+    time.sleep(REP_LOG_SETTLE_S)
+    try:
+        reps.require_logging(user)
+        print_rep_lines(reps.log_path(user), since, "while the scenario played")
+    except reps.RepsError as e:
+        print(f"rep log: {e}", file=sys.stderr)
+
+
+def cmd_reps(args):
+    from tools import reps
+
+    if args.since is not None:
+        since, window = args.since, f"after byte {args.since}"
+    elif args.log:
+        since, window = 0, "(whole file)"
+    else:
+        state = load_state()
+        if "rep_log_mark" in state and state["rep_log_mark"] is None:
+            raise DevError(
+                "the last `run` was launched with --no-authoring, so Dolphin was not "
+                "asked to log the reps. Run again without it, or pass --since to read "
+                "Dolphin's log from an offset."
+            )
+        since, window = state.get("rep_log_mark", 0), "since the last `run` started"
+    try:
+        if args.log:
+            log = Path(args.log)
+            if not log.is_file():
+                raise DevError(f"no such log file: {log}")
+        else:
+            reps.require_logging(dolphin_user_dir())
+            log = reps.log_path(dolphin_user_dir())
+        print_rep_lines(log, since, window)
+    except reps.RepsError as e:
+        raise DevError(str(e))
 
 
 # ---------------------------------------------------------------- check
@@ -911,12 +1002,16 @@ def cmd_check(args):
     """Build both builds (even if the first fails) and summarise. The matching
     build's SHA-1 verification is ninja's own `check` step, run by build()."""
     results = {}
-    for mode in ("matching", "training"):
+    for name, mode, authoring in (
+        ("matching", "matching", False),
+        ("training", "training", False),
+        ("training-authoring", "training", True),
+    ):
         try:
-            build(mode)
-            results[mode] = None
+            build(mode, authoring)
+            results[name] = None
         except DevError as e:
-            results[mode] = str(e)
+            results[name] = str(e)
     say()
     say("check summary")
     for mode, err in results.items():
@@ -938,6 +1033,12 @@ def main(argv=None):
     s.set_defaults(func=cmd_setup)
     b = sub.add_parser("build", help="build the game")
     b.add_argument("--matching", action="store_true", help="build the matching build")
+    b.add_argument(
+        "--authoring",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="include the authoring tools in the training build (default: off)",
+    )
     b.set_defaults(func=cmd_build)
     r = sub.add_parser("run", help="build the training build and boot it in Dolphin")
     r.add_argument(
@@ -953,6 +1054,12 @@ def main(argv=None):
             "movie. For short scenarios only: the committed boot prefixes are "
             "timed for movies (fast disc loads, 2-frame presses) and fail live"
         ),
+    )
+    r.add_argument(
+        "--authoring",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="include the authoring tools (default: on; --no-authoring is the player build)",
     )
     r.set_defaults(func=cmd_run)
     pd = sub.add_parser(
@@ -990,6 +1097,14 @@ def main(argv=None):
         help="snapshot Dolphin's slot-A memory card for movie runs (replaces the old snapshot)",
     )
     sn.set_defaults(func=cmd_snapshot_card)
+    rp = sub.add_parser(
+        "reps", help="print the [rep] lines Dolphin logged since the last run started (only reads a log file)"
+    )
+    rp.add_argument("--log", metavar="PATH", help="read this log file instead of Dolphin's")
+    rp.add_argument(
+        "--since", type=int, metavar="BYTES", help="start marker: a log offset (default: set by run)"
+    )
+    rp.set_defaults(func=cmd_reps)
     c = sub.add_parser("check", help="pass/fail gate for both builds")
     c.set_defaults(func=cmd_check)
     args = p.parse_args(argv)

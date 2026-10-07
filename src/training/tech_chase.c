@@ -14,6 +14,10 @@
 #include <sysdolphin/baselib/gobj.h>
 #include <sysdolphin/baselib/gobjproc.h>
 
+#ifdef AUTHORING_BUILD
+#include <dolphin/os.h>
+#endif
+
 /* Slot of the human player and of the CPU opponent in Training Mode. */
 #define PLAYER_SLOT 0
 #define OPPONENT_SLOT 1
@@ -68,6 +72,53 @@ typedef enum RepState {
 
 /* Stage_80224E64 query: centre of the stage floor. */
 #define STAGE_QUERY_FLOOR_CENTRE 4
+
+/* Rep log (authoring builds only): one `[rep] event=... rep=N frame=F` line per
+ * event through OSReport. `frame` counts the frames the rep loop has run since
+ * Training Mode was entered (paused frames are not counted). In player builds
+ * the REP_LOG* hooks are empty, so there is no logging code or text. */
+#ifdef AUTHORING_BUILD
+static int rep_number;
+static int rep_frame;
+
+static const char* tech_option_name(int motion)
+{
+    switch (motion) {
+    case ftCo_MS_Passive:
+        return "in-place";
+    case ftCo_MS_PassiveStandF:
+        return "forward";
+    case ftCo_MS_PassiveStandB:
+        return "back";
+    case ftCo_MS_PassiveWall:
+        return "wall";
+    case ftCo_MS_PassiveWallJump:
+        return "walljump";
+    case ftCo_MS_PassiveCeil:
+        return "ceil";
+    default:
+        return "miss";
+    }
+}
+
+/* The common `[rep] event=E rep=N frame=F` prefix; `extra` is a printf format
+ * for trailing fields (its arguments follow in REP_LOG_WITH). */
+#define REP_LOG_FMT(event, extra)                                             \
+    "[rep] event=" event " rep=%d frame=%d" extra "\n"
+#define REP_LOG(event)                                                        \
+    OSReport(REP_LOG_FMT(event, ""), rep_number, rep_frame)
+#define REP_LOG_WITH(event, extra, ...)                                       \
+    OSReport(REP_LOG_FMT(event, extra), rep_number, rep_frame, __VA_ARGS__)
+#define REP_LOG_RESET() (rep_number = rep_frame = 0)
+#define REP_LOG_TICK() (rep_frame++)
+#define REP_LOG_START() (rep_number++, REP_LOG("start"))
+#else
+#define REP_LOG(event) ((void) 0)
+#define REP_LOG_WITH(...) ((void) 0)
+#define REP_LOG_RESET() ((void) 0)
+#define REP_LOG_TICK() ((void) 0)
+#define REP_LOG_START() ((void) 0)
+#endif
 
 /* Per-rep state, reset together at the start of every rep. */
 typedef struct RepData {
@@ -131,6 +182,8 @@ static void do_rep_setup(void)
     Player_SetFacingDirection(OPPONENT_SLOT, -1.0F);
     Player_SetHUDDamage(OPPONENT_SLOT, 0);
     Player_800328D4(OPPONENT_SLOT, &drop);
+    REP_LOG_START();
+    REP_LOG_WITH("drop", " height=%d", (int) OPPONENT_DROP_HEIGHT);
 
     opp = Player_GetEntity(OPPONENT_SLOT);
     if (opp != NULL) {
@@ -159,11 +212,19 @@ static bool rep_over(Fighter* fp)
         return true;
     }
     if (in_tech_states(motion)) {
+        if (!rep.seen_tech) {
+            REP_LOG("landing");
+            REP_LOG_WITH("tech", " option=%s", tech_option_name(motion));
+        }
         rep.seen_tech = true;
         return false;
     }
     if (rep.seen_tech) {
-        return motion == ftCo_MS_Wait;
+        if (motion == ftCo_MS_Wait) {
+            REP_LOG("actionable");
+            return true;
+        }
+        return false;
     }
     return motion != ftCo_MS_DamageFall;
 }
@@ -233,6 +294,7 @@ static void think(HSD_GObj* gobj)
     }
 
     frames_in_state++;
+    REP_LOG_TICK();
     switch (rep_state) {
     case RepState_Settle:
         if (frames_in_state >= SETTLE_FRAMES) {
@@ -272,6 +334,7 @@ static void think(HSD_GObj* gobj)
 void training_tech_chase_init(void)
 {
     set_state(RepState_Settle);
+    REP_LOG_RESET();
     reset_rep_data(0.0F);
     HSD_GObj_SetupProc(GObj_Create(TECH_CHASE_GOBJ_CLASS,
                                    TECH_CHASE_GOBJ_PLINK,

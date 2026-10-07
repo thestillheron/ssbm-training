@@ -39,6 +39,32 @@ class RunTests(FakeDolphinCase):
         self.assertIn("dolphin", out.lower())
 
     @requires_disc
+    def test_run_turns_dolphin_logging_on_for_the_authoring_launch_only(self):
+        r = dev(REPO_ROOT, "setup", str(find_disc()))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        exe, args_file = make_fake_dolphin(self.tmp.name)
+        self.configure_dolphin(exe)
+        overrides = ["Logger.Options.WriteToFile=True", "Logger.Logs.OSREPORT=True"]
+
+        r = dev(REPO_ROOT, "run")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        launched = launched_args(self, args_file)
+        for o in overrides:
+            self.assertIn("-C", launched)
+            self.assertIn(o, launched)
+
+        args_file.unlink()
+        r = dev(REPO_ROOT, "run", "--no-authoring")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        launched = launched_args(self, args_file)
+        for o in overrides:
+            self.assertNotIn(o, launched)
+        # `reps` says the last run did not log, not "no [rep] lines".
+        r = dev(REPO_ROOT, "reps")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("--no-authoring", r.stderr)
+
+    @requires_disc
     def test_run_assembles_training_game_and_launches_dolphin(self):
         r = dev(REPO_ROOT, "setup", str(find_disc()))
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)

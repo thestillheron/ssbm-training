@@ -140,6 +140,7 @@ python dev.py run --scenario boot-to-training
 2. It snapshots your slot A memory card if there is no snapshot yet (see **Memory card** below). It builds, stops the Dolphin of the last `run`, writes the movie to `build/training/movies/<name>.dtm` (gitignored, regenerated on every run, never committed) and makes a fresh run copy of the card snapshot.
 3. It launches `Dolphin -e <main.dol> -m <movie>` with slot A pointed at the run copy, so the training build boots with the movie playing from power-on. Command-line playback is always read-only (Dolphin's default; no ini setting changes it), so the keyboard can't override or append to the movie input while it plays. `run` also passes `-C Dolphin.Movie.PauseMovie=False` so emulation carries on when the movie ends.
 4. It waits up to 30 s for the game window, takes each `shot` step at its frame on the wall clock (frame / 59.94 s after the window appears) through the same path as `shot`, printing every path, and returns about 1 s after the movie's last frame, printing "Movie finished". The end allows for the boot offset: until Melee sets up the pad, Dolphin polls it once per frame instead of twice, so frame N of the movie is drawn about 18 frames after power-on + N. (Shots need no such allowance: the window appears, and a shot takes effect, about that much after power-on too.) From then on port 1 is the keyboard-bound controller again, so live `pad` piloting carries on from the reached state.
+5. It then prints the [rep log](#developer_workflow_rep_log) lines Dolphin wrote while the scenario played (only those: the log's size at launch is the start marker, and `reps`'s reader does the rest), after the shot paths, so one command gives the shots and the events. It waits about 1 s first for Dolphin to write the last lines. With `--no-authoring` (no logging) nothing is printed. If there were none, a note on stderr says so; a missing log file is an error message on stderr (see the Rep log section) and does not fail the run.
 
 If Dolphin rejects the movie it opens a modal dialog (for example "Warning" for a bad file or another game's movie); `run` reports that dialog as an error instead of waiting or falling back to the keyboard. If the window doesn't appear in time it fails with a clear error. The Dolphin keeps running afterwards. `run` still takes focus (for the launch and the shots), so the focus permission rule applies.
 
@@ -162,7 +163,7 @@ python dev.py scenario <name> --movie <path>
 python dev.py scenario <name>
 ```
 
-`--dry-run` expands the scenario and prints its full timed plan (key events and shot steps) without touching Dolphin. `--movie <path>` writes the scenario as a movie to `<path>` and prints its path and length in frames; like `--dry-run` it needs no Dolphin, no pad bindings and no focus, and works on any OS. With neither, `scenario` plays the plan live as keystrokes against an already-running training build (for a short scenario mid-session, where a power-on movie can't apply), through the same focus-guarded input path as `pad` (so the same focus permission rule applies), taking each `shot` step through `shot` and printing every shot path. Any abort releases held keys and restores focus.
+`--dry-run` expands the scenario and prints its full timed plan (key events and shot steps) without touching Dolphin. `--movie <path>` writes the scenario as a movie to `<path>` and prints its path and length in frames; like `--dry-run` it needs no Dolphin, no pad bindings and no focus, and works on any OS. With neither, `scenario` plays the plan live as keystrokes against an already-running training build (for a short scenario mid-session, where a power-on movie can't apply), through the same focus-guarded input path as `pad` (so the same focus permission rule applies), taking each `shot` step through `shot` and printing every shot path, then the rep log lines written while it played (same output as `run --scenario`, scoped to this command's start; the Dolphin must have been launched by `run` so it logs). Any abort releases held keys and restores focus.
 
 The committed prefixes:
 
@@ -176,6 +177,57 @@ The committed drill scenarios:
 - `tech-chase-displace`: a development aid, not an acceptance check. With the rep loop running, the player runs at the opponent and hits or grabs it, to check every reset still starts a clean rep.
 
 Codifying piloting: once a `pad` sequence you worked out by hand is worth repeating, paste its steps into a new file in `tools/scenarios/`, one per line, add comments saying what each part does, `include` a prefix such as `boot-to-training` instead of repeating it, add `shot` steps at the checkpoints, check it with `--dry-run`, then play it with `run --scenario`.
+
+## Authoring tools {#developer_workflow_authoring}
+
+[Authoring tools](glossary.md#glossary_authoring_tools) are features for the curriculum designer that a player must never see, such as diagnostic text. They are compiled into the training build only on request:
+
+```
+python dev.py build --authoring      # training build with authoring tools
+python dev.py build                  # player variant (default for build)
+python dev.py run                    # authoring tools on (default for run)
+python dev.py run --no-authoring     # launch the player variant
+```
+
+- `build` defaults to off, so the default build is what a player gets; `run` defaults to on, since the developer is its main user. `--authoring` does not apply to `build --matching`.
+- `configure.py --training --authoring` defines `AUTHORING_BUILD` for the objects of the `training` library only, so switching variants recompiles just `src/training/` and never the game.
+- `dev.py` records the configured variant in `build/dev_state.json` (`authoring`) and re-runs `configure.py` only when it, the build or `configure.py` changes.
+- `check` builds matching, then training without authoring tools, then training with them, and prints `matching:`, `training:` and `training-authoring:` lines in its summary; it exits non-zero if any fails.
+- Wrap authoring-only code in `#ifdef AUTHORING_BUILD ... #endif` inside the file's `#ifdef TRAINING_BUILD`. Upstream hooks never depend on it: a hook may call a training function, but that function must still exist (and do nothing) without authoring tools. `src/training/authoring.c` holds a tiny marker string that is present only in the authoring variant.
+
+## Rep log {#developer_workflow_rep_log}
+
+The [rep log](glossary.md#glossary_rep_log) is the text record of what happened in each rep. The training build prints it through the game's debug print (OSReport) and Dolphin writes it to its log file; `reps` reads it back.
+
+```
+python dev.py reps [--log PATH] [--since BYTES]
+```
+
+`reps` prints, one per line, only the `[rep]`-prefixed lines written since the last `run` started (`run` records the log's size at launch in `build/dev_state.json`). Dolphin's timestamp and log-type columns are dropped. It reads Dolphin's `Logs/dolphin.log` in the `dolphin_user` folder. If no reps were logged it prints nothing on stdout and a note on stderr saying which span it searched. `reps` only reads a file and never touches Dolphin, so it needs no focus permission and has no `--dry-run`. If the last `run` used `--no-authoring`, Dolphin was not asked to log, so `reps` fails saying that instead of reporting "no `[rep]` lines".
+
+Dolphin must be writing that log. `run` (authoring tools on, the default) makes it do so for that launch only, with the command-line overrides `-C Logger.Options.WriteToFile=True -C Logger.Logs.OSREPORT=True`; your `Logger.ini` is not edited, and `--no-authoring` launches without them. Verified live: with just those two overrides, the training build's `OSReport` output reaches `Logs/dolphin.log` in the `dolphin_user` folder. The game's own `OSReport` goes through Dolphin's EXI UART log (type `OSREPORT`), so no symbol map is needed and `run` places none. If the log file doesn't exist, `reps` fails with an error saying to launch with `run`, or, for a Dolphin you start yourself, to turn on Write to File and the OSREPORT log type (View > Show Log Configuration; saved in `Config/Logger.ini` as `WriteToFile` under `[Options]` and `OSREPORT` under `[Logs]`), so a missing log is never mistaken for "no reps happened". `reps` does not read `Logger.ini`, since the overrides make it irrelevant for a `run` launch.
+
+Dolphin appends to `dolphin.log` across launches (it is never truncated), which is why `run` records the log's size at launch and `reps` prints only what follows. Lines are `MM:SS:mmm Core/HW/EXI/EXI_DeviceIPL.cpp:306 N[OSREPORT]: [rep] event=...`, ending `\r\r\n` (the game's `\n` plus Dolphin's); `read_reps` returns each from `[rep]` on.
+
+- `--log PATH` reads that file instead (a fixture, say), from its start unless `--since` is given, and skips the log-exists check.
+- `--since BYTES` overrides the start marker with a log offset. A log shorter than the marker (Dolphin restarted it) is read from the start.
+
+The reader is `tools/reps.py` (`read_reps(log, since)`, `mark(log)`), so other commands can scope it to their own start marker.
+
+### Line format
+
+One event per line: the fixed prefix `[rep]`, then space-separated `key=value` fields, e.g.
+
+```
+[rep] event=landing rep=3 frame=1482
+```
+
+- `event=<name>` comes first, then `rep=<n>` (the rep number) and `frame=<n>` (the game frame the event happened on). Other fields follow.
+- Values contain no spaces.
+- `frame` is the number of frames the tech-chase rep loop has run since Training Mode was entered (paused frames are not counted); `rep` counts from 1 in the same span.
+- Tech-chase emits, in order: `start` (rep begins, fighters reset), `drop` (adds `height=<int>`, the opponent drop height above the floor), `landing` (first frame in a knockdown or tech state), `tech` (same frame; `option=miss|in-place|forward|back|wall|walljump|ceil`), `actionable` (the opponent is back in Wait). Reps that time out or end otherwise log no `actionable`. `vulnerable` and `outcome` events are added by rep-outcome.
+- Emission lives in `src/training/tech_chase.c` inside `AUTHORING_BUILD`; the player variant contains no `[rep]` text.
+- Later features add fields and events; existing fields are never renamed, so parse by key, not by position, and ignore keys you don't know.
 
 ## Where training code goes
 

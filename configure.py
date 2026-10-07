@@ -215,7 +215,15 @@ parser.add_argument(
     action="store_true",
     help="build the training mod (implies --non-matching; output in build/training)",
 )
+parser.add_argument(
+    "--authoring",
+    action="store_true",
+    help="with --training: compile the authoring tools into the training library only",
+)
 args = parser.parse_args()
+
+if args.authoring and not args.training:
+    parser.error("--authoring requires --training")
 
 if args.training:
     args.non_matching = True
@@ -2042,12 +2050,16 @@ config.libs = [
 
 
 if args.training:
+    # AUTHORING_BUILD is defined for these objects only, so toggling it never
+    # recompiles the game.
+    training_cflags = ["-DAUTHORING_BUILD"] if args.authoring else []
     config.libs.append(
         Lib(
             "training (Training Mod)",
             [
-                Object(Matching, "training/title_marker.c"),
-                Object(Matching, "training/tech_chase.c"),
+                Object(Matching, "training/title_marker.c", extra_cflags=training_cflags),
+                Object(Matching, "training/tech_chase.c", extra_cflags=training_cflags),
+                Object(Matching, "training/authoring.c", extra_cflags=training_cflags),
             ],
             category="game",
         )
