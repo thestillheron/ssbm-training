@@ -105,11 +105,17 @@ Short for "magnitude."
 @section glossary_matching_build matching build
 The build of this repo whose `main.dol` is byte-identical to the original game, with no training features. Not to be confused with the @ref glossary_training_build "training build".
 
+@section glossary_memory_card_snapshot memory card snapshot
+A copy of the developer's slot A memory card (the save with every character and stage unlocked) that every @ref glossary_movie "movie" run plays against, kept in gitignored `build/memcard/` and never committed. `dev.py` takes it the first time a movie run needs it; `dev.py snapshot-card` refreshes it. Each run plays against a fresh @ref glossary_run_copy "run copy" of it, so the real card is never written and every run starts from the same card. Avoid "fixed card" or "card backup".
+
 @section glossary_min min
 Short for "minimum."
 
 @section glossary_missed_tech missed tech
 The @ref glossary_tech_option "tech option" where the opponent lands without teching and lies on the ground before getting up. Avoid "no tech" or "knockdown".
+
+@section glossary_movie movie
+A Dolphin input recording (`.dtm`) generated from a @ref glossary_scenario "scenario" by `dev.py`: the controller state for every input poll, so playback is frame-exact. A movie always starts at power-on and is build output, regenerated on every run and never committed; never record or play one from a savestate, which would restore the old build's code. Not to be confused with the game's own intro movie. The scenario is the script; the movie is what it compiles to.
 
 @section glossary_mul mul
 Short for "multiplier" or "multiply."
@@ -150,8 +156,11 @@ The text record the @ref glossary_training_build "training build" writes when @r
 @section glossary_rot rot
 Short for "rotation."
 
+@section glossary_run_copy run copy
+The throwaway copy of the @ref glossary_memory_card_snapshot "memory card snapshot" (`build/memcard/run.USA.raw`) that `dev.py` makes before each @ref glossary_movie "movie" launch and puts in slot A for that launch only. Melee saves to it during the run; the next run replaces it.
+
 @section glossary_scenario scenario
-A committed, named input script that takes the training build from boot to a known game state, optionally taking screenshots along the way. A scenario is usually piloting that has been written down. Avoid "macro" or "pre-canned results": the scenario is the script, not the screenshots it produces.
+A committed, named input script that takes the training build from boot to a known game state, optionally taking screenshots along the way. A scenario is usually piloting that has been written down, and is played as a @ref glossary_movie "movie". Avoid "macro" or "pre-canned results": the scenario is the script, not the screenshots it produces or the movie it compiles to.
 
 @section glossary_sfx sfx
 Short for "sound effect(s)."

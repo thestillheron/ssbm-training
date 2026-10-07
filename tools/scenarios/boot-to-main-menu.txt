@@ -1,0 +1,19 @@
+# Boot to the main menu from a freshly launched training build, played as a
+# movie from power-on. Reusable prefix: `include` it from other scenarios.
+#
+# Timing is frame-exact (movie frames from power-on, fast disc loads; see
+# docs/developer-workflow.md). Measured on the developer's Dolphin, each press
+# registers from a few frames after the screen is up; the presses below sit
+# about 10 frames after that, as a margin for training-build changes that make
+# a load (and so the screen) a little later:
+#  - `start` from frame 62 skips the logo and intro to the title screen.
+#  - On the title screen, `start` registers from 23 frames after that press.
+#  - The main menu reads input from 30 frames after the title `start`.
+# A 2-frame press is enough: movie input can't be dropped.
+
+wait:72
+start:2
+wait:31
+start:2
+wait:38
+# Frame 145: main menu, cursor on 1-P Mode, ready for input.

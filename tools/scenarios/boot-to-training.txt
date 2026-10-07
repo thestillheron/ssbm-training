@@ -1,0 +1,69 @@
+# Boot to Training Mode on Final Destination: from a freshly launched training
+# build to the in-stage state, with both fighters on stage. Reusable prefix:
+# `include` it from drill scenarios. Player is Ness (character select cursor
+# position, see below); the CPU opponent keeps whatever character Training's
+# character select gives it by default.
+#
+# Timing is frame-exact (movie frames from power-on, fast disc loads; see
+# docs/developer-workflow.md); the frame numbers in the comments are where
+# each step starts. Presses are 2 frames. Where a press or a cursor clamp
+# waits on a load, it has about 10 frames or more of margin past what was
+# measured on the developer's Dolphin, so a training-build change that makes
+# a load slightly longer doesn't desync the movie.
+#  - Cursors (character select hand, stage select crosshair) accelerate with
+#    how long the stick is held, so a move is "clamp to a screen corner, let
+#    go for a few frames, then hold one direction for a fixed number of
+#    frames". Same frames, same place, every run. A clamp may start before
+#    the screen reads input: it only has to end in the corner.
+#  - The scenario assumes a save with every character and stage unlocked (the
+#    stage select layout and the icon positions below depend on it).
+# 581 frames of movie: Training is reached about 12.5 s after Dolphin launch
+# (measured times: docs/developer-workflow.md).
+
+include boot-to-main-menu
+shot main-menu
+
+# 145: 1-P Mode. The submenu reads input from 6 frames after the `a`; up
+# wraps from Regular Match to Training, which takes `a` from the frame after
+# the up is released (no load).
+a:2
+wait:14
+stick-up:2
+wait:4
+a:2
+wait:8
+
+# 177: character select. It reads the stick from 5 to 10 frames in, and a
+# clamp started here gets the hand to the top-left corner 66 frames later;
+# this one runs 82. Then right and down onto Ness (second row).
+stick-up+stick-left:82
+wait:4
+stick-right:14
+wait:4
+stick-down:13
+wait:4
+shot hover-player
+# 298: pick Ness. Start works from the next frame on (no load); the stage
+# select is drawn about 7 frames after it.
+a:2
+wait:3
+start:2
+wait:2
+
+# 307: stage select. A clamp gets the crosshair to the bottom-left corner
+# about 35 frames after it starts; this one runs 50. Then right and up onto
+# Final Destination (small icon, bottom row, second from the left).
+stick-down+stick-left:50
+wait:4
+stick-right:22
+wait:4
+stick-up:8
+wait:4
+shot hover-final-destination
+# 399: pick Final Destination. The stage is drawn about 104 frames later with
+# Ness on it, and the CPU is on screen about 162 frames after the pick (a
+# drill may drop it in).
+a:2
+wait:180
+shot in-training
+# 581: in Training Mode, both fighters on stage.

@@ -1,0 +1,132 @@
+# Displacement (development aid, not the acceptance check, which is
+# tech-chase-first-rep): with the rep loop running, the player repeatedly runs at the
+# opponent and hits (c-stick forward smash) or grabs it, then idles, so reps
+# end with the opponent hit away, grabbed or left alone. Every reset must
+# still start a clean rep. Shots every ~0.7 s.
+include boot-to-training
+wait:20
+stick-right:20
+cstick-right:4
+wait:25
+shot d01a
+wait:20
+shot d01b
+stick-left:15
+wait:45
+shot d01c
+wait:30
+stick-right:20
+z:4
+wait:25
+shot d02a
+wait:20
+shot d02b
+stick-left:15
+wait:45
+shot d02c
+wait:30
+stick-right:20
+cstick-right:4
+wait:25
+shot d03a
+wait:20
+shot d03b
+stick-left:15
+wait:45
+shot d03c
+wait:30
+stick-right:20
+z:4
+wait:25
+shot d04a
+wait:20
+shot d04b
+stick-left:15
+wait:45
+shot d04c
+wait:30
+stick-right:20
+cstick-right:4
+wait:25
+shot d05a
+wait:20
+shot d05b
+stick-left:15
+wait:45
+shot d05c
+wait:30
+stick-right:20
+z:4
+wait:25
+shot d06a
+wait:20
+shot d06b
+stick-left:15
+wait:45
+shot d06c
+wait:30
+stick-right:20
+cstick-right:4
+wait:25
+shot d07a
+wait:20
+shot d07b
+stick-left:15
+wait:45
+shot d07c
+wait:30
+stick-right:20
+z:4
+wait:25
+shot d08a
+wait:20
+shot d08b
+stick-left:15
+wait:45
+shot d08c
+wait:30
+stick-right:20
+cstick-right:4
+wait:25
+shot d09a
+wait:20
+shot d09b
+stick-left:15
+wait:45
+shot d09c
+wait:30
+stick-right:20
+z:4
+wait:25
+shot d10a
+wait:20
+shot d10b
+stick-left:15
+wait:45
+shot d10c
+wait:30
+stick-right:20
+cstick-right:4
+wait:25
+shot d11a
+wait:20
+shot d11b
+stick-left:15
+wait:45
+shot d11c
+wait:30
+stick-right:20
+z:4
+wait:25
+shot d12a
+wait:20
+shot d12b
+stick-left:15
+wait:45
+shot d12c
+wait:30
+# Idle: the loop must still be running and the player back at the start.
+wait:120
+shot end1
+wait:120
+shot end2

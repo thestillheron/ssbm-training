@@ -13,8 +13,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from .support import REPO_ROOT, dev
-from .test_pad import make_sandbox as make_pad_sandbox
+from .support import REPO_ROOT, dev, make_piloting_sandbox
 
 sys.path.insert(0, str(REPO_ROOT))
 from tools import pad, shot  # noqa: E402
@@ -25,8 +24,7 @@ PNG = b"\x89PNG\r\n\x1a\nfake"
 
 
 def make_sandbox(hotkeys_ini=None):
-    root, user = make_pad_sandbox()
-    shutil.copy(REPO_ROOT / "tools" / "shot.py", root / "tools")
+    root, user = make_piloting_sandbox()
     if hotkeys_ini is not None:
         (user / "Config" / "Hotkeys.ini").write_text(hotkeys_ini)
     return root, user

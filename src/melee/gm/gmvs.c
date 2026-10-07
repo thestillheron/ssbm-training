@@ -2164,6 +2164,9 @@ void gm_Scene_Training_OnEnter(void* user_data)
     un_802FD428();
     ifStatus_802F665C(data->rules.x0_3);
     fn_8018A000();
+#ifdef TRAINING_BUILD
+    { extern void training_tech_chase_init(void); training_tech_chase_init(); }
+#endif
 }
 
 float gm_8016ECE8(void)

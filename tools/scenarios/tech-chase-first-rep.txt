@@ -1,0 +1,67 @@
+# Acceptance scenario for the tech-chase first rep (spec stories 15-16). Boots
+# to Training on Final Destination (boot-to-training, frame-exact movie), then
+# watches the rep loop in src/training/tech_chase.c. The player stays idle; the
+# CPU character may differ per boot.
+#
+# Part 1, r01..r30: back-to-back shots (a shot costs a few frames by itself, so
+# they are roughly 6 frames apart, about 3 s in total). They cover one whole
+# rep close up: the opponent dropped and in tumble, its landing and tech in
+# place (tech flash, not lying down), and it becoming actionable again.
+# Part 2, r31..r42: a shot every ~20 frames, covering the ~1 s pause, the reset
+# and the next rep starting.
+# Read r01..r42 in order.
+include boot-to-training
+shot r01
+shot r02
+shot r03
+shot r04
+shot r05
+shot r06
+shot r07
+shot r08
+shot r09
+shot r10
+shot r11
+shot r12
+shot r13
+shot r14
+shot r15
+shot r16
+shot r17
+shot r18
+shot r19
+shot r20
+shot r21
+shot r22
+shot r23
+shot r24
+shot r25
+shot r26
+shot r27
+shot r28
+shot r29
+shot r30
+wait:15
+shot r31
+wait:15
+shot r32
+wait:15
+shot r33
+wait:15
+shot r34
+wait:15
+shot r35
+wait:15
+shot r36
+wait:15
+shot r37
+wait:15
+shot r38
+wait:15
+shot r39
+wait:15
+shot r40
+wait:15
+shot r41
+wait:15
+shot r42

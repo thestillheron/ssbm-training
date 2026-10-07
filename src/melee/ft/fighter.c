@@ -1707,6 +1707,9 @@ void Fighter_procCpu(Fighter_GObj* gobj)
     Fighter* fp = GET_FIGHTER(gobj);
     if (!fp->is_sleeping && ftCo_IsCpuControlled(fp)) {
         ftCo_800B3900(gobj);
+#ifdef TRAINING_BUILD
+        { extern void training_cpu_input(Fighter_GObj*); training_cpu_input(gobj); }
+#endif
     }
 }
 

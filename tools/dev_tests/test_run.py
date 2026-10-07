@@ -1,32 +1,23 @@
-import json
-import os
-import shlex
-import stat
-import tempfile
-import time
+import shutil
 import unittest
 from pathlib import Path
 
-from .support import REPO_ROOT, dev, find_disc, requires_disc, sha1
+from .support import (
+    REPO_ROOT,
+    FakeDolphinCase,
+    RunScenarioCase,
+    dev,
+    find_disc,
+    fixture_card,
+    launched_args,
+    make_fake_dolphin,
+    make_run_sandbox,
+    requires_disc,
+    sha1,
+    write_dolphin_ini,
+)
 
-CONFIG = REPO_ROOT / "dev.config.json"
 ORIG = REPO_ROOT / "orig" / "GALE01"
-
-
-def make_fake_dolphin(folder):
-    """An executable that records its arguments, one per line, to args.txt."""
-    folder = Path(folder)
-    out = folder / "args.txt"
-    if os.name == "nt":
-        exe = folder / "fake_dolphin.bat"
-        exe.write_text(
-            "@echo off\r\n" f'(for %%a in (%*) do echo %%~a) > "{out}"\r\n'
-        )
-    else:
-        exe = folder / "fake_dolphin.sh"
-        exe.write_text(f'#!/bin/sh\nprintf "%s\\n" "$@" > {shlex.quote(str(out))}\n')
-        exe.chmod(exe.stat().st_mode | stat.S_IEXEC)
-    return exe, out
 
 
 def original_fingerprint():
@@ -38,24 +29,7 @@ def original_fingerprint():
     }
 
 
-class RunTests(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory(prefix="ssbm-fake-dolphin-")
-        self.addCleanup(self.tmp.cleanup)
-        self.old_config = CONFIG.read_text() if CONFIG.exists() else None
-        self.addCleanup(self.restore_config)
-
-    def restore_config(self):
-        if self.old_config is None:
-            CONFIG.unlink(missing_ok=True)
-        else:
-            CONFIG.write_text(self.old_config)
-
-    def configure_dolphin(self, path):
-        cfg = json.loads(self.old_config) if self.old_config else {}
-        cfg["dolphin"] = str(path)
-        CONFIG.write_text(json.dumps(cfg))
-
+class RunTests(FakeDolphinCase):
     def test_run_without_dolphin_explains_how_to_set_it(self):
         self.configure_dolphin(Path(self.tmp.name) / "no-such-dolphin")
         r = dev(REPO_ROOT, "run")
@@ -81,15 +55,8 @@ class RunTests(unittest.TestCase):
         self.assertTrue(game_dol.is_file())
         self.assertEqual(sha1(game_dol), sha1(training_dol))
         # Dolphin got the assembled game's main.dol.
-        deadline = time.time() + 20
-        while time.time() < deadline and not args_file.exists():
-            time.sleep(0.2)
-        self.assertTrue(args_file.exists(), "fake Dolphin was never launched")
-        time.sleep(0.5)
-        launched = args_file.read_text().split("\n")
-        self.assertTrue(
-            any(a and Path(a) == game_dol for a in launched), f"args were {launched}"
-        )
+        launched = launched_args(self, args_file)
+        self.assertTrue(any(Path(a) == game_dol for a in launched), f"args were {launched}")
         # The rest of the disc is mirrored into the game folder.
         self.assertTrue((game / "sys" / "boot.bin").is_file())
         self.assertEqual(
@@ -118,6 +85,91 @@ class RunTests(unittest.TestCase):
         r = dev(REPO_ROOT, "run")
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertFalse((shots / "stale.png").exists())
+
+
+class RunScenarioLaunchTests(RunScenarioCase):
+    """`run --scenario` up to the launch, with the real checkout's build and
+    its e2e-smoke scenario."""
+
+    def arg_after(self, args, flag):
+        self.assertIn(flag, args, f"args were {args}")
+        return Path(args[args.index(flag) + 1])
+
+    def test_boots_the_training_build_with_the_scenarios_movie(self):
+        r = dev(REPO_ROOT, "run", "--scenario", "e2e-smoke")
+        out = r.stdout + r.stderr
+        args = self.launched_args()
+        game_dol = REPO_ROOT / "build" / "training" / "game" / "sys" / "main.dol"
+        self.assertEqual(self.arg_after(args, "-e"), game_dol)
+        movie = self.arg_after(args, "-m")
+        self.assertTrue(movie.is_relative_to(REPO_ROOT / "build"), movie)
+        # The movie is the one `scenario --movie` generates.
+        expected = Path(self.tmp.name) / "expected.dtm"
+        r2 = dev(REPO_ROOT, "scenario", "e2e-smoke", "--movie", str(expected))
+        self.assertEqual(r2.returncode, 0, r2.stdout + r2.stderr)
+        self.assertEqual(movie.read_bytes(), expected.read_bytes())
+        # No game window from the fake: a clear error, not a silent success.
+        self.assertNotEqual(r.returncode, 0, out)
+        self.assertIn("did not appear", out)
+
+    def test_live_boots_without_a_movie(self):
+        r = dev(REPO_ROOT, "run", "--scenario", "e2e-smoke", "--live")
+        args = self.launched_args()
+        self.assertNotIn("-m", args)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("did not appear", r.stdout + r.stderr)
+
+
+class RunScenarioMovieChecksTests(unittest.TestCase):
+    """`run --scenario` checks that need no build: they fail before anything
+    is built or launched. A sandbox copy of the repo with a fixture scenario
+    and a fake Dolphin."""
+
+    def sandbox(self, movie_option=True, retro_achievements=None):
+        root, self.user, self.args_file = make_run_sandbox(
+            {"s": "wait:60\nshot one\n"}, movie_option
+        )
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        write_dolphin_ini(self.user, card=fixture_card(self.user))
+        if retro_achievements is not None:
+            (self.user / "Config" / "RetroAchievements.ini").write_text(retro_achievements)
+        return root
+
+    def assert_failed_before_building(self, r):
+        out = r.stdout + r.stderr
+        self.assertNotEqual(r.returncode, 0, out)
+        self.assertNotIn("Building", out)
+        self.assertNotIn("Launching", out)
+        self.assertFalse(self.args_file.exists(), "Dolphin should not have been launched")
+
+    def test_a_dolphin_without_movie_playback_is_a_clear_error_not_a_fallback(self):
+        r = dev(self.sandbox(movie_option=False), "run", "--scenario", "s")
+        self.assert_failed_before_building(r)
+        out = r.stdout + r.stderr
+        self.assertIn("movie", out.lower())
+        self.assertIn("--live", out)
+
+    def test_retroachievements_hardcore_mode_is_a_clear_error(self):
+        # Dolphin silently refuses to play movies in hardcore mode.
+        ini = "[Achievements]\nEnabled = True\nHardcoreEnabled = True\n"
+        r = dev(self.sandbox(retro_achievements=ini), "run", "--scenario", "s")
+        self.assert_failed_before_building(r)
+        self.assertIn("hardcore", (r.stdout + r.stderr).lower())
+
+    def test_movie_playback_needs_no_pad_bindings(self):
+        root = self.sandbox()
+        (self.user / "Config" / "GCPadNew.ini").unlink()
+        r = dev(root, "run", "--scenario", "s")
+        # Gets as far as building (the sandbox has no setup), not a bindings error.
+        self.assertIn("setup", r.stdout + r.stderr)
+        self.assertNotIn("GCPadNew", r.stdout + r.stderr)
+
+    def test_live_playback_still_needs_pad_bindings(self):
+        root = self.sandbox()
+        (self.user / "Config" / "GCPadNew.ini").unlink()
+        r = dev(root, "run", "--scenario", "s", "--live")
+        self.assert_failed_before_building(r)
+        self.assertIn("GCPadNew", r.stdout + r.stderr)
 
 
 if __name__ == "__main__":

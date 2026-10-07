@@ -6,16 +6,14 @@ with a fake backend, and the CLI tests use a window-title pattern that cannot
 match anything.
 """
 
-import json
 import shutil
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from .support import REPO_ROOT, dev
+from .support import REPO_ROOT, dev, make_piloting_sandbox, update_config
 from .test_pad_live import DOLPHIN, FakeBackend
-from .test_scenario import make_sandbox as make_scenario_sandbox
 
 sys.path.insert(0, str(REPO_ROOT))
 from tools import pad, scenario, scenario_live  # noqa: E402
@@ -119,15 +117,49 @@ class WaitForWindowTests(unittest.TestCase):
         self.assertIn("no Dolphin window found", str(cm.exception))
 
 
+class FollowMovieTests(unittest.TestCase):
+    """Timing the shots of a movie Dolphin is playing, on a fake clock that
+    starts when the game window appears (power-on)."""
+
+    def follow(self, text):
+        folder = Path(tempfile.mkdtemp(prefix="ssbm-scn-"))
+        self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
+        (folder / "s.txt").write_text(text)
+        self.now = 0.0
+        self.shots = []
+
+        def sleep(s):
+            self.now += s
+
+        def take(label):
+            self.shots.append((label, self.now))
+            return f"/shots/{label}.png"
+
+        frames = scenario_live.follow_movie(
+            scenario.expand("s", folder), take, say=lambda _m: None,
+            sleep=sleep, clock=lambda: self.now,
+        )
+        return frames
+
+    def test_shots_at_their_frame_and_the_end_after_the_boot_offset(self):
+        frames = self.follow("wait:60\nshot one\nwait:30\n")
+        self.assertEqual(frames, 90)
+        # Measured live: a shot sent N fields (of 1001/60000 s) after the
+        # window appears catches frame N to N+4.
+        (label, at), = self.shots
+        self.assertEqual(label, "one")
+        self.assertAlmostEqual(at, 60 * 1001 / 60000, places=3)  # 1.001 s
+        # Before Melee's pad setup Dolphin polls once per field, so the last
+        # frame is drawn as late as 18 fields after power-on + 90. Returns
+        # 1 s after that.
+        self.assertAlmostEqual(self.now, 108 * 1001 / 60000 + 1.0, places=2)
+
+
 class ScenarioLiveCliTests(unittest.TestCase):
     def sandbox(self):
-        root = make_scenario_sandbox({"s": "a\nshot one\n"})
+        root, _user = make_piloting_sandbox({"s": "a\nshot one\n"})
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)
-        for name in ("scenario_live.py", "shot.py"):
-            shutil.copy(REPO_ROOT / "tools" / name, root / "tools")
-        cfg = json.loads((root / "dev.config.json").read_text())
-        cfg["dolphin_window_title"] = "^no-such-window-title-xyzzy$"
-        (root / "dev.config.json").write_text(json.dumps(cfg))
+        update_config(root / "dev.config.json", dolphin_window_title="^no-such-window-title-xyzzy$")
         return root
 
     def test_live_scenario_without_a_game_window_sends_nothing(self):

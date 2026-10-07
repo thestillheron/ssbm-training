@@ -25,7 +25,7 @@ from tools.pad import PadError
 DEFAULT_HOTKEY = "F9"
 HOTKEY_NAME = "General/Take Screenshot"
 DEFAULT_TIMEOUT = 10.0
-PRESS_MS = 50
+PRESS_MS = 250  # a 50 ms press was missed by Dolphin in movie runs (focus is handed back right after)
 POLL_S = 0.1
 
 _LABEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")

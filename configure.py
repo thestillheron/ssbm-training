@@ -2045,7 +2045,10 @@ if args.training:
     config.libs.append(
         Lib(
             "training (Training Mod)",
-            [Object(Matching, "training/title_marker.c")],
+            [
+                Object(Matching, "training/title_marker.c"),
+                Object(Matching, "training/tech_chase.c"),
+            ],
             category="game",
         )
     )

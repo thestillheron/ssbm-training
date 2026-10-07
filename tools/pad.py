@@ -75,6 +75,12 @@ def parse_step(text):
                 f"unknown control '{c}' in step '{text}'. Controls: "
                 + " ".join(CONTROLS)
             )
+    for p in ("stick", "cstick", "dpad"):
+        for a, b in (("up", "down"), ("left", "right")):
+            if f"{p}-{a}" in controls and f"{p}-{b}" in controls:
+                raise PadError(
+                    f"opposing directions {p}-{a} and {p}-{b} in step '{text}'"
+                )
     frames = int(m.group(2)) if m.group(2) is not None else DEFAULT_HOLD_FRAMES
     if frames < 1:
         raise PadError(f"malformed step '{text}': a hold needs at least 1 frame")

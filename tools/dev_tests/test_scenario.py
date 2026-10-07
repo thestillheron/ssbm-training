@@ -9,23 +9,12 @@ import shutil
 import sys
 import unittest
 
-from .support import REPO_ROOT, dev
-from .test_pad import make_sandbox as make_pad_sandbox
-
-
-def make_sandbox(scenarios):
-    root, _user = make_pad_sandbox()
-    shutil.copy(REPO_ROOT / "tools" / "scenario.py", root / "tools")
-    folder = root / "tools" / "scenarios"
-    folder.mkdir()
-    for name, text in scenarios.items():
-        (folder / f"{name}.txt").write_text(text)
-    return root
+from .support import REPO_ROOT, dev, make_piloting_sandbox
 
 
 class ScenarioDryRunTests(unittest.TestCase):
     def sandbox(self, scenarios):
-        root = make_sandbox(scenarios)
+        root, _user = make_piloting_sandbox(scenarios)
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)
         return root
 
@@ -109,9 +98,8 @@ class ScenarioDryRunTests(unittest.TestCase):
         self.assertIn("s:1", out)
 
     def test_committed_boot_to_character_select_passes_dry_run(self):
-        root, _ = make_pad_sandbox()
+        root, _ = make_piloting_sandbox()
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)
-        shutil.copy(REPO_ROOT / "tools" / "scenario.py", root / "tools")
         shutil.copytree(REPO_ROOT / "tools" / "scenarios", root / "tools" / "scenarios")
         r, out = self.run_scenario(root, "boot-to-character-select")
         self.assertEqual(r.returncode, 0, out)

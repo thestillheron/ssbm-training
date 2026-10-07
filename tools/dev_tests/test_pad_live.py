@@ -6,13 +6,11 @@ with a fake backend, and the CLI tests use a window-title pattern that cannot
 match anything.
 """
 
-import json
 import shutil
 import sys
 import unittest
 
-from .support import REPO_ROOT, dev
-from .test_pad import make_sandbox
+from .support import REPO_ROOT, dev, make_piloting_sandbox, update_config
 
 sys.path.insert(0, str(REPO_ROOT))
 from tools import pad, pad_live  # noqa: E402
@@ -140,14 +138,13 @@ class RunPlanTests(unittest.TestCase):
 
 class LiveCliTests(unittest.TestCase):
     def setUp(self):
-        self.root, self.user = make_sandbox()
+        self.root, self.user = make_piloting_sandbox()
         self.addCleanup(shutil.rmtree, self.root, ignore_errors=True)
-        cfg = self.root / "dev.config.json"
-        data = json.loads(cfg.read_text())
         # A title that no window can have, so a real Dolphin on this machine
         # is never found (and never receives keys) by these tests.
-        data["dolphin_window_title"] = "^no-such-window-title-9f3a$"
-        cfg.write_text(json.dumps(data))
+        update_config(
+            self.root / "dev.config.json", dolphin_window_title="^no-such-window-title-9f3a$"
+        )
 
     @unittest.skipUnless(sys.platform == "win32", "Windows only")
     def test_no_dolphin_window_is_a_clear_error_and_sends_nothing(self):

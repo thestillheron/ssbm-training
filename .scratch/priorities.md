@@ -4,7 +4,7 @@ The order of work for the tech-chasing curriculum. Each item is a feature with i
 
 | # | Slug | Status | Blocked by | Summary |
 |---|---|---|---|---|
-| 1 | [tech-chase-first-rep](tech-chase-first-rep/spec.md) | ready-for-agent | — | In Training Mode the opponent drops in tumble, techs in place by fed input, and reps loop; `boot-to-training` scenario. |
+| 1 | [tech-chase-first-rep](tech-chase-first-rep/spec.md) | done | — | In Training Mode the opponent drops in tumble, techs in place by fed input, and reps loop; `boot-to-training` scenario. |
 | 2 | [authoring-tools-flag](authoring-tools-flag/spec.md) | ready-for-agent | 1 | `--authoring` build option (on by default for `run`) and the rep log, so reps can be checked as text. |
 | 3 | [rep-outcome](rep-outcome/spec.md) | ready-for-agent | 1, 2 | Punish window and vulnerable frames measured live; success, failure, void; on-screen score. |
 | 4 | [tech-options](tech-options/spec.md) | ready-for-agent | 3 | Tech in place, tech in, tech away, missed tech (fixed-time getup), uniform random from a pool. |

@@ -1,5 +1,10 @@
 # Reach the title screen and take a shot. For the opt-in end-to-end test
-# (tools/dev_tests/test_e2e.py). The intro movie plays first and the title
-# screen first appears about 85 s after boot, so wait that long.
-wait:5400
+# (tools/dev_tests/test_e2e.py), played as a movie from power-on. A `start`
+# from frame 62 skips the logo and intro straight to the title screen; this
+# one is at 72, as in boot-to-main-menu, so the title is up well before the
+# shot. A shot of the title (not the logo or intro) shows that the movie's
+# input reached the game.
+wait:72
+start:2
+wait:60
 shot title

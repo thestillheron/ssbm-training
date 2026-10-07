@@ -1,5 +1,5 @@
 """Opt-in end-to-end test (Seam 2): `dev.py run --scenario` against a real
-Dolphin.
+Dolphin, played as a movie and then live (`--live`).
 
 It takes window focus and sends keystrokes, so it is skipped unless
 SSBM_E2E=1 is set, and also skipped without a disc image or a Dolphin. It is
@@ -56,20 +56,25 @@ class LiveScenarioEndToEnd(unittest.TestCase):
                 return Path(line.strip())
         self.fail(f"no path for shot {label!r} printed:\n{out}")
 
-    def test_run_scenario_takes_a_shot_and_the_next_run_replaces_the_instance(self):
-        from tools import win_pilot
-
+    def test_run_scenario_plays_a_movie_then_live_replacing_the_instance(self):
         self.addCleanup(self.stop_launched)
+        start = time.monotonic()
         r = dev(REPO_ROOT, "run", "--scenario", "e2e-title")
+        elapsed = time.monotonic() - start
         out = r.stdout + r.stderr
         self.assertEqual(r.returncode, 0, out)
+        self.assertIn(".dtm", out)
+        self.assertIn("Movie finished", out)
         png = self.shot_path(out, "title")
         self.assertTrue(png.is_file(), png)
         self.assertGreater(png.stat().st_size, 0)
+        # Returns once the movie (134 frames, ~2 s) is over, not long after.
+        # The bound allows for the build that `run` does first.
+        self.assertLess(elapsed, 120, out)
         first = tracked_pid()
         self.assertTrue(alive(first))
 
-        r = dev(REPO_ROOT, "run", "--scenario", "e2e-smoke")
+        r = dev(REPO_ROOT, "run", "--scenario", "e2e-smoke", "--live")
         out = r.stdout + r.stderr
         self.assertEqual(r.returncode, 0, out)
         self.assertTrue(self.shot_path(out, "e2e-smoke").is_file())

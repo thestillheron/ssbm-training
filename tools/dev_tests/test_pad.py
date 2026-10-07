@@ -5,60 +5,16 @@ repo, with `dolphin_user` in the sandbox's dev.config.json pointing at a
 fixture Dolphin user folder. No Dolphin is launched.
 """
 
-import json
 import shutil
 import sys
-import tempfile
 import unittest
-from pathlib import Path
 
-from .support import REPO_ROOT, dev
-
-PAD_INI = """\
-[GCPad1]
-Device = DInput/0/Keyboard Mouse
-Buttons/A = X
-Buttons/B = Z
-Buttons/X = C
-Buttons/Start = RETURN
-Buttons/Z = `Left Shift`
-Main Stick/Up = W
-Main Stick/Down = S
-Main Stick/Left = A
-Main Stick/Right = D
-C-Stick/Up = I
-C-Stick/Down = K
-C-Stick/Left = J
-C-Stick/Right = L
-D-Pad/Up = T
-D-Pad/Down = G
-D-Pad/Left = F
-D-Pad/Right = H
-Triggers/L = COMMA
-Triggers/R = PERIOD
-[GCPad2]
-Device = XInput/0/Gamepad
-Buttons/A = `Button A`
-"""
-
-
-def make_sandbox(pad_ini=PAD_INI):
-    root = Path(tempfile.mkdtemp(prefix="ssbm-pad-"))
-    shutil.copy(REPO_ROOT / "dev.py", root)
-    (root / "tools").mkdir()
-    for name in ("__init__.py", "pad.py", "pad_live.py", "win_pilot.py"):
-        shutil.copy(REPO_ROOT / "tools" / name, root / "tools")
-    user = root / "fixture-user"
-    (user / "Config").mkdir(parents=True)
-    if pad_ini is not None:
-        (user / "Config" / "GCPadNew.ini").write_text(pad_ini)
-    (root / "dev.config.json").write_text(json.dumps({"dolphin_user": str(user)}))
-    return root, user
+from .support import PAD_INI, dev, make_piloting_sandbox
 
 
 class PadDryRunTests(unittest.TestCase):
     def setUp(self):
-        self.root, self.user = make_sandbox()
+        self.root, self.user = make_piloting_sandbox()
         self.addCleanup(shutil.rmtree, self.root, ignore_errors=True)
 
     def pad(self, seq, *extra):
