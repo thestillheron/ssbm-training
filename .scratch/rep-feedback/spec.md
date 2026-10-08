@@ -42,7 +42,7 @@ The end-of-drill summary adds a per-option breakdown. Presentation follows the U
   - **Late:** keep watching after the rep's failure through the inter-rep pause. If a hit or grab by the player connects there, report how many frames after actionable. The outcome stays a failure.
   - **None:** no attack during the window.
   - **Void:** hit before landing.
-- **Presentation:** text drawn with the game's text library, styled, placed and timed according to the UnclePunch research. Shown during the inter-rep pause and cleared at reset.
+- **Presentation:** text drawn with the game's text library, styled, placed and timed according to the UnclePunch research. Shown during the inter-rep pause and cleared at reset. The pause grows from 60 to 120 frames so the result can be read (developer decision, in place of the research's idea of a message that outlives the reset).
 - **Summary:** extends drills-as-data's summary with per-option success rate and early/late counts.
 - **Rep log** gets `timing` (success_k/n, early_Nf, late_Nf, none, void) on the outcome line.
 
