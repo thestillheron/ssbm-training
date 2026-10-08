@@ -174,6 +174,11 @@ The committed prefixes:
 The committed drill scenarios:
 
 - `tech-chase-first-rep`: the acceptance scenario for the tech-chase drill's first rep. It includes `boot-to-training`, then takes shots of the opponent in tumble, during its tech in place, and after the reset with the second rep starting. Read the shots in order to confirm each phase. Run it with `python dev.py run --scenario tech-chase-first-rep`.
+- `rep-outcome-no-input`: the acceptance scenario for the punish window log. Boots to Training and gives no input for about 30 s; `python dev.py run --scenario rep-outcome-no-input` then prints only `outcome=failure` lines whose `window_open`, `vuln_from`, `vuln_to` and `actionable` are the same in every rep.
+- `rep-outcome-mash-attack`: the acceptance scenario for hit success and void. The player dashes at the opponent's drop point and mashes jab over about 55 s; `python dev.py run --scenario rep-outcome-mash-attack` prints `outcome=success ... hit_kind=hit` for hits inside the punish window, `outcome=void` for hits before the landing, and `outcome=failure` for the rest.
+- `rep-outcome-mash-grab`: the acceptance scenario for grab success. The player dashes at the opponent's drop point and mashes Z over about 55 s; `python dev.py run --scenario rep-outcome-mash-grab` prints `outcome=success ... hit_kind=grab` for the reps where a grab connected inside the punish window (timing is only rough), and `outcome=failure` for the rest.
+- `rep-outcome-score`: the acceptance scenario for the on-screen score. Boots to Training and gives no input, with shots at the start (0/0, 0%) and after later reps (0/N, 0%). Needs window focus for the shots.
+- `rep-outcome-early-shots`: the shot variant of `rep-outcome-mash-attack`, with a shot after every cycle to catch the "early" notice of a void rep and the score changing. Needs window focus.
 - `tech-chase-displace`: a development aid, not an acceptance check. With the rep loop running, the player runs at the opponent and hits or grabs it, to check every reset still starts a clean rep.
 
 Codifying piloting: once a `pad` sequence you worked out by hand is worth repeating, paste its steps into a new file in `tools/scenarios/`, one per line, add comments saying what each part does, `include` a prefix such as `boot-to-training` instead of repeating it, add `shot` steps at the checkpoints, check it with `--dry-run`, then play it with `run --scenario`.
@@ -225,8 +230,15 @@ One event per line: the fixed prefix `[rep]`, then space-separated `key=value` f
 - `event=<name>` comes first, then `rep=<n>` (the rep number) and `frame=<n>` (the game frame the event happened on). Other fields follow.
 - Values contain no spaces.
 - `frame` is the number of frames the tech-chase rep loop has run since Training Mode was entered (paused frames are not counted); `rep` counts from 1 in the same span.
-- Tech-chase emits, in order: `start` (rep begins, fighters reset), `drop` (adds `height=<int>`, the opponent drop height above the floor), `landing` (first frame in a knockdown or tech state), `tech` (same frame; `option=miss|in-place|forward|back|wall|walljump|ceil`), `actionable` (the opponent is back in Wait). Reps that time out or end otherwise log no `actionable`. `vulnerable` and `outcome` events are added by rep-outcome.
-- Emission lives in `src/training/tech_chase.c` inside `AUTHORING_BUILD`; the player variant contains no `[rep]` text.
+- Tech-chase emits, in order: `start` (rep begins, fighters reset), `drop` (adds `height=<int>`, the opponent drop height above the floor), `landing` (first frame in a knockdown or tech state), `tech` (same frame; `option=miss|in-place|forward|back|wall|walljump|ceil`), `actionable` (the opponent is back in Wait), then `outcome`. Reps that time out or end otherwise log no `actionable`.
+- The punish window is measured from the opponent's live state (motion state, whole-body invincibility/intangibility, hurtbox states), with no per-character tables. It opens on the landing frame and closes on the `actionable` frame.
+- `outcome` is logged when the window closes, with `outcome=success|failure|void` and the fields `window_open` (landing frame), `vuln_from` and `vuln_to` (first and last frame the opponent could be hit or grabbed, -1 if never), `actionable`, `hit_frame` and `hit_kind=hit|grab|none`.
+  - `failure`: the opponent became actionable unpunished.
+  - `success`: the player hit or grabbed the opponent inside the window; the rep ends at once. A hit is the opponent taking damage with the player's slot as recorded attacker; a grab is the opponent entering a captured state whose grabber is the player's fighter.
+  - `void`: the player hit or grabbed the opponent before it landed. The rep is not scored and "early" is shown during the pause.
+  - On these fields (and only these) the frame is counted from the rep's drop, so they match across reps for the same layout and character; the common `frame` is the loop frame as above. A rep that times out or ends before landing logs no `outcome`.
+- The score (successes out of counted reps, and the success rate) and the "early" notice are on-screen text drawn in the training build, not authoring-only; only the `[rep]` log lines are authoring-only. Failures and successes are counted, voids are not.
+- Log emission lives in `src/training/tech_chase.c` inside `AUTHORING_BUILD`; the player variant contains no `[rep]` text. The score text is in `src/training/score.c` and the "early" text in `tech_chase.c`, both drawn in every training build.
 - Later features add fields and events; existing fields are never renamed, so parse by key, not by position, and ignore keys you don't know.
 
 ## Where training code goes

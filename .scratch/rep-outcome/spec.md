@@ -1,6 +1,6 @@
 # Rep outcome: success, failure, void, and a score
 
-Status: ready-for-agent
+Status: resolved
 
 ## Problem Statement
 

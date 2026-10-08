@@ -5,8 +5,8 @@ The order of work for the tech-chasing curriculum. Each item is a feature with i
 | # | Slug | Status | Blocked by | Summary |
 |---|---|---|---|---|
 | 1 | [tech-chase-first-rep](tech-chase-first-rep/spec.md) | done | — | In Training Mode the opponent drops in tumble, techs in place by fed input, and reps loop; `boot-to-training` scenario. |
-| 2 | [authoring-tools-flag](authoring-tools-flag/spec.md) | ready-for-agent | 1 | `--authoring` build option (on by default for `run`) and the rep log, so reps can be checked as text. |
-| 3 | [rep-outcome](rep-outcome/spec.md) | ready-for-agent | 1, 2 | Punish window and vulnerable frames measured live; success, failure, void; on-screen score. |
+| 2 | [authoring-tools-flag](authoring-tools-flag/spec.md) | done | 1 | `--authoring` build option (on by default for `run`) and the rep log, so reps can be checked as text. |
+| 3 | [rep-outcome](rep-outcome/spec.md) | done | 1, 2 | Punish window and vulnerable frames measured live; success, failure, void; on-screen score. |
 | 4 | [tech-options](tech-options/spec.md) | ready-for-agent | 3 | Tech in place, tech in, tech away, missed tech (fixed-time getup), uniform random from a pool. |
 | 5 | [drills-as-data](drills-as-data/spec.md) | ready-for-agent | 4 | Drill records in a C table: layout with snapping, heights, pool, vanish flag, length, pass mark; drill end and summary. |
 | 6 | [tech-vanish](tech-vanish/spec.md) | ready-for-agent | 3, 5 | Hide model and shadow from frame 8 of a tech until its first vulnerable frame. |

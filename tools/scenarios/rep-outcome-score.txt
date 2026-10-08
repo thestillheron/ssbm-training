@@ -1,0 +1,10 @@
+# Acceptance scenario for rep-outcome ticket 04 (on-screen score). Boots to
+# Training and gives no input, so every rep is a failure. The first shot, right
+# after boot, shows the score at 0/0 and 0%; the later ones show 0/N and 0%
+# with N growing. Needs window focus for the shots.
+include boot-to-training
+shot score-start
+wait:600
+shot score-after-reps
+wait:600
+shot score-after-more-reps

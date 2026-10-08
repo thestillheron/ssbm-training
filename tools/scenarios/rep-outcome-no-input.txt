@@ -1,0 +1,11 @@
+# Acceptance scenario for rep-outcome ticket 01 (punish window measured and
+# logged). Boots to Training, then gives no input at all for about 30 s, so
+# several reps run and every one ends with the opponent becoming actionable
+# unpunished. The rep log (printed after the scenario) must contain only
+# `outcome=failure` outcome lines, and window_open, vuln_from, vuln_to and
+# actionable must be equal in every one of them (same layout and character).
+# No shots are taken, so no window focus is needed beyond launching.
+include boot-to-training
+wait:600
+wait:600
+wait:600

@@ -105,6 +105,29 @@ class ScenarioDryRunTests(unittest.TestCase):
         self.assertEqual(r.returncode, 0, out)
         self.assertTrue(self.rows(out))
 
+    def check_committed_scenario_dry_run(self, name):
+        root, _ = make_piloting_sandbox()
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        shutil.copytree(REPO_ROOT / "tools" / "scenarios", root / "tools" / "scenarios")
+        r, out = self.run_scenario(root, name)
+        self.assertEqual(r.returncode, 0, out)
+        self.assertTrue(self.rows(out))
+
+    def test_committed_rep_outcome_no_input_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("rep-outcome-no-input")
+
+    def test_committed_rep_outcome_mash_attack_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("rep-outcome-mash-attack")
+
+    def test_committed_rep_outcome_mash_grab_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("rep-outcome-mash-grab")
+
+    def test_committed_rep_outcome_score_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("rep-outcome-score")
+
+    def test_committed_rep_outcome_early_shots_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("rep-outcome-early-shots")
+
     @unittest.skipUnless(sys.platform == "darwin", "macOS only")
     def test_macos_is_not_supported_yet(self):
         root = self.sandbox({"s": "a\n"})

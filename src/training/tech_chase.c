@@ -13,10 +13,13 @@
 #include <sysdolphin/baselib/controller.h>
 #include <sysdolphin/baselib/gobj.h>
 #include <sysdolphin/baselib/gobjproc.h>
+#include <sysdolphin/baselib/sislib.h>
 
 #ifdef AUTHORING_BUILD
 #include <dolphin/os.h>
 #endif
+
+#include "score.h"
 
 /* Slot of the human player and of the CPU opponent in Training Mode. */
 #define PLAYER_SLOT 0
@@ -34,6 +37,8 @@ typedef enum RepState {
     RepState_Reset,
     RepState_Drop,
     RepState_Wait,
+    RepState_Landed,
+    RepState_Outcome,
     RepState_Pause,
 } RepState;
 
@@ -120,14 +125,60 @@ static const char* tech_option_name(int motion)
 #define REP_LOG_START() ((void) 0)
 #endif
 
-/* Per-rep state, reset together at the start of every rep. */
+/* How the player's punish reached the opponent. */
+typedef enum HitKind {
+    HitKind_None,
+    HitKind_Hit,
+    HitKind_Grab,
+} HitKind;
+
+#ifdef AUTHORING_BUILD
+static const char* hit_kind_name(HitKind kind)
+{
+    switch (kind) {
+    case HitKind_Grab:
+        return "grab";
+    case HitKind_Hit:
+        return "hit";
+    default:
+        return "none";
+    }
+}
+#endif
+
+/* Frame number meaning "has not happened (yet) in this rep". */
+#define NO_FRAME (-1)
+
+/* Per-rep state, reset together at the start of every rep. Frames are counted
+ * from the rep's drop (rep_frames), so they match across reps. */
 typedef struct RepData {
     float floor_y;
     bool tech_pressed;
     bool press_pending;
     int rep_frames;
     bool seen_tech;
+    /* The punish window, measured from the opponent's live state: it opens on
+     * the landing frame and closes on the first actionable frame. The
+     * vulnerable frames are the window frames in which the opponent can be
+     * hit or grabbed. */
+    int window_open;
+    int vuln_from;
+    int vuln_to;
+    int actionable;
+    /* The player's hit on the opponent: the frame it happened, or NO_FRAME. */
+    int hit_frame;
+    HitKind hit_kind;
+    /* The rep was voided by an early hit. */
+    bool voided;
 } RepData;
+
+/* The opponent's damage percent as of the previous frame, to see when it takes
+ * damage. Updated every frame, in every state. */
+static float prev_percent;
+
+/* Whether the opponent was held by the player's fighter as of the previous
+ * frame, to see the frame the grab connects. Updated every frame. */
+static bool prev_grabbed;
 
 static RepState rep_state;
 static int frames_in_state;
@@ -146,6 +197,20 @@ static void reset_rep_data(float floor_y)
     rep.press_pending = false;
     rep.rep_frames = 0;
     rep.seen_tech = false;
+    rep.window_open = NO_FRAME;
+    rep.vuln_from = NO_FRAME;
+    rep.vuln_to = NO_FRAME;
+    rep.actionable = NO_FRAME;
+    rep.hit_frame = NO_FRAME;
+    rep.hit_kind = HitKind_None;
+    rep.voided = false;
+}
+
+/// Records the player's hit or grab on the opponent at the current rep frame.
+static void record_hit(HitKind hit)
+{
+    rep.hit_frame = rep.rep_frames;
+    rep.hit_kind = hit;
 }
 
 static void clear_fighter_motion(Fighter* fp)
@@ -156,6 +221,27 @@ static void clear_fighter_motion(Fighter* fp)
     fp->gr_vel = 0.0F;
     fp->xF0_ground_kb_vel = 0.0F;
     fp->dmg.x18A4_knockbackMagnitude = 0.0F;
+}
+
+/// True when the opponent is in a captured state (pulled, held or damaged
+/// while held) and the fighter holding it is the player's. The game does not
+/// credit grabs to the attacker slot, so the grabber link on the captured
+/// fighter is what attributes it.
+static bool opponent_grabbed_by_player(Fighter* fp)
+{
+    return fp->motion_id >= ftCo_MS_CapturePulledHi &&
+           fp->motion_id <= ftCo_MS_CaptureDamageLw &&
+           fp->victim_gobj != NULL &&
+           fp->victim_gobj == Player_GetEntity(PLAYER_SLOT);
+}
+
+/// Re-syncs the hit baselines with the opponent as it is now, so a reset
+/// (percent back to 0, a grab dropped) cannot read as a hit or hide one on the
+/// next frame. Polling only runs while the rep loop does.
+static void refresh_hit_baseline(Fighter* fp)
+{
+    prev_percent = fp->dmg.x1830_percent;
+    prev_grabbed = opponent_grabbed_by_player(fp);
 }
 
 /// Reset state: the player stands at the start position facing the opponent
@@ -190,6 +276,7 @@ static void do_rep_setup(void)
         Fighter* fp = GET_FIGHTER(opp);
         clear_fighter_motion(fp);
         ftCo_80090780(opp);
+        refresh_hit_baseline(fp);
     }
 }
 
@@ -198,35 +285,80 @@ static bool in_tech_states(int motion)
     return motion >= MS_KNOCKDOWN_FIRST && motion <= MS_TECH_LAST;
 }
 
-/// True when the rep is over: the opponent is actionable again (Wait) after
-/// its knockdown/tech, or it left the expected path (KO'd), or the rep timed
-/// out. Other interruptions (hit away, grabbed) end by timeout.
-static bool rep_over(Fighter* fp)
+/// True when the opponent can be hit or grabbed this frame: no whole-body
+/// invincibility or intangibility, and at least one hurtbox enabled. The game
+/// sets all of these per character and per state, so nothing is tabulated.
+static bool opponent_vulnerable(Fighter* fp)
 {
-    int motion = fp->motion_id;
+    int i;
 
-    rep.rep_frames++;
-    if (rep.rep_frames >= REP_TIMEOUT || fp->is_sleeping ||
-        motion <= MS_LAST_DEAD_OR_REBIRTH)
-    {
-        return true;
-    }
-    if (in_tech_states(motion)) {
-        if (!rep.seen_tech) {
-            REP_LOG("landing");
-            REP_LOG_WITH("tech", " option=%s", tech_option_name(motion));
-        }
-        rep.seen_tech = true;
+    if (fp->x1988 != 0 || fp->x198C != 0 || fp->x221D_b6) {
         return false;
     }
-    if (rep.seen_tech) {
-        if (motion == ftCo_MS_Wait) {
-            REP_LOG("actionable");
+    for (i = 0; i < fp->hurt_capsules_len; i++) {
+        if (fp->hurt_capsules[i].capsule.state == HurtCapsule_Enabled) {
             return true;
         }
-        return false;
     }
-    return motion != ftCo_MS_DamageFall;
+    return false;
+}
+
+/// True when the rep ended before the opponent landed: it timed out, or the
+/// opponent was KO'd. Expects the frame to be counted already.
+static bool rep_aborted(Fighter* fp)
+{
+    return rep.rep_frames >= REP_TIMEOUT || fp->is_sleeping ||
+           fp->motion_id <= MS_LAST_DEAD_OR_REBIRTH;
+}
+
+/// How the player reached the opponent this frame, or HitKind_None. A hit is
+/// the opponent taking damage with the recorded attacker the player's slot; a
+/// grab is the opponent newly captured by the player's fighter. Polled every
+/// frame, so the baselines always follow the opponent; damage or grabs from
+/// other sources are not credited.
+static HitKind poll_player_hit(Fighter* fp)
+{
+    bool took_damage = fp->dmg.x1830_percent > prev_percent;
+    bool grabbed = opponent_grabbed_by_player(fp);
+    bool new_grab = grabbed && !prev_grabbed;
+
+    prev_percent = fp->dmg.x1830_percent;
+    prev_grabbed = grabbed;
+    if (new_grab) {
+        return HitKind_Grab;
+    }
+    if (took_damage && fp->dmg.x18c4_source_ply == PLAYER_SLOT) {
+        return HitKind_Hit;
+    }
+    return HitKind_None;
+}
+
+/// Opens the punish window on the landing frame.
+static void open_window(Fighter* fp)
+{
+    rep.seen_tech = true;
+    rep.window_open = rep.rep_frames;
+    REP_LOG("landing");
+    REP_LOG_WITH("tech", " option=%s", tech_option_name(fp->motion_id));
+}
+
+/// Measures the current frame of the punish window. True when the window
+/// closed this frame (the opponent is actionable, back in Wait) or the rep
+/// timed out. Expects the frame to be counted already.
+static bool measure_window(Fighter* fp)
+{
+    if (opponent_vulnerable(fp)) {
+        if (rep.vuln_from == NO_FRAME) {
+            rep.vuln_from = rep.rep_frames;
+        }
+        rep.vuln_to = rep.rep_frames;
+    }
+    if (fp->motion_id == ftCo_MS_Wait) {
+        rep.actionable = rep.rep_frames;
+        REP_LOG("actionable");
+        return true;
+    }
+    return rep.rep_frames >= REP_TIMEOUT;
 }
 
 /// Frames until the opponent's feet reach the floor, simulating the fall from
@@ -266,20 +398,107 @@ static void update_tech_press(Fighter* fp)
     }
 }
 
-/// Ends the rep (into Pause) if it is over; true when it did.
-static bool end_rep_if_over(Fighter* fp)
+/// Writes the rep's outcome line. The window fields are -1 when the window
+/// never opened or closed; hit_frame is -1 and hit_kind=none for no punish.
+static void log_outcome(const char* outcome)
 {
-    if (!rep_over(fp)) {
-        return false;
+    REP_LOG_WITH("outcome",
+                 " outcome=%s window_open=%d vuln_from=%d vuln_to=%d "
+                 "actionable=%d hit_frame=%d hit_kind=%s",
+                 outcome, rep.window_open, rep.vuln_from, rep.vuln_to,
+                 rep.actionable, rep.hit_frame,
+                 hit_kind_name(rep.hit_kind));
+}
+
+/* The "early" notice shown for a void rep: position (canvas units) and size.
+ * Tune by eye with `run`. The text is the full-width Shift-JIS the game's SIS
+ * font expects. */
+#define EARLY_X 270.0F
+#define EARLY_Y 150.0F
+#define EARLY_SCALE 1.4F
+static char early_str[] = "\x82\x85\x82\x81\x82\x92\x82\x8C\x82\x99";
+
+static HSD_Text* early_text;
+
+/// Creates the "early" text, hidden, once the scene has settled; text made
+/// during the scene's own setup is not drawn. Showing and hiding it flips its
+/// hidden flag.
+static void create_early(void)
+{
+    int idx;
+
+    early_text = training_text_create();
+    idx = HSD_SisLib_803A6B98(early_text, EARLY_X, EARLY_Y, "%s", early_str);
+    HSD_SisLib_803A7548(early_text, idx, EARLY_SCALE, EARLY_SCALE);
+    early_text->hidden = true;
+}
+
+static void show_early(void)
+{
+    if (early_text != NULL) {
+        early_text->hidden = false;
     }
-    set_state(RepState_Pause);
-    return true;
+}
+
+static void hide_early(void)
+{
+    if (early_text != NULL) {
+        early_text->hidden = true;
+    }
+}
+
+/// Per-frame check for the Drop and Wait states: ends the rep (into Pause) if
+/// it was aborted, or if the player hit the opponent before it landed (void,
+/// "early" shown), or moves to Landed, opening the punish window, when the
+/// opponent lands (straight to Outcome, as a success, if it is hit that same
+/// frame). True when the state changed.
+static bool advance_if_landed_or_aborted(Fighter* fp, HitKind hit)
+{
+    /* The frame is counted here for Drop and Wait; the Landed state counts its
+     * own. rep_aborted and measure_window rely on the count being current. */
+    rep.rep_frames++;
+    if (rep_aborted(fp)) {
+        set_state(RepState_Pause);
+        return true;
+    }
+    if (in_tech_states(fp->motion_id)) {
+        open_window(fp);
+        measure_window(fp);
+        if (hit != HitKind_None) {
+            record_hit(hit);
+        }
+        set_state(hit != HitKind_None ? RepState_Outcome : RepState_Landed);
+        return true;
+    }
+    if (hit != HitKind_None) {
+        record_hit(hit);
+        log_outcome("void");
+        rep.voided = true;
+        set_state(RepState_Pause);
+        return true;
+    }
+    return false;
+}
+
+/// The outcome step: the rep ends as a success (the player hit the opponent
+/// inside the punish window) or a failure (the opponent became actionable
+/// unpunished) and is scored. A window that timed out logs nothing.
+static void finish_rep(void)
+{
+    if (rep.hit_frame != NO_FRAME) {
+        training_score_record(true);
+        log_outcome("success");
+    } else if (rep.actionable != NO_FRAME) {
+        training_score_record(false);
+        log_outcome("failure");
+    }
 }
 
 static void think(HSD_GObj* gobj)
 {
     HSD_GObj* player = Player_GetEntity(PLAYER_SLOT);
     HSD_GObj* opp = Player_GetEntity(OPPONENT_SLOT);
+    HitKind hit;
 
     if (player == NULL || opp == NULL) {
         return;
@@ -295,8 +514,13 @@ static void think(HSD_GObj* gobj)
 
     frames_in_state++;
     REP_LOG_TICK();
+    hit = poll_player_hit(GET_FIGHTER(opp));
     switch (rep_state) {
     case RepState_Settle:
+        if (frames_in_state == 1) {
+            training_score_show();
+            create_early();
+        }
         if (frames_in_state >= SETTLE_FRAMES) {
             set_state(RepState_Reset);
         }
@@ -310,19 +534,41 @@ static void think(HSD_GObj* gobj)
         {
             break;
         }
+        hide_early();
         do_rep_setup();
         set_state(RepState_Drop);
         break;
     case RepState_Drop:
         update_tech_press(GET_FIGHTER(opp));
-        if (!end_rep_if_over(GET_FIGHTER(opp)) && rep.tech_pressed) {
+        if (!advance_if_landed_or_aborted(GET_FIGHTER(opp), hit) &&
+            rep.tech_pressed)
+        {
             set_state(RepState_Wait);
         }
         break;
     case RepState_Wait:
-        end_rep_if_over(GET_FIGHTER(opp));
+        advance_if_landed_or_aborted(GET_FIGHTER(opp), hit);
+        break;
+    case RepState_Landed:
+        /* Count this frame before measuring it (see
+         * advance_if_landed_or_aborted for Drop and Wait). */
+        rep.rep_frames++;
+        if (measure_window(GET_FIGHTER(opp))) {
+            set_state(RepState_Outcome);
+        } else if (hit != HitKind_None) {
+            /* Hit or grab inside the window: success, the rep ends at once. */
+            record_hit(hit);
+            set_state(RepState_Outcome);
+        }
+        break;
+    case RepState_Outcome:
+        finish_rep();
+        set_state(RepState_Pause);
         break;
     case RepState_Pause:
+        if (rep.voided) {
+            show_early();
+        }
         if (frames_in_state >= PAUSE_FRAMES) {
             set_state(RepState_Reset);
         }
@@ -334,8 +580,12 @@ static void think(HSD_GObj* gobj)
 void training_tech_chase_init(void)
 {
     set_state(RepState_Settle);
+    early_text = NULL;
+    prev_percent = 0.0F;
+    prev_grabbed = false;
     REP_LOG_RESET();
     reset_rep_data(0.0F);
+    training_score_init();
     HSD_GObj_SetupProc(GObj_Create(TECH_CHASE_GOBJ_CLASS,
                                    TECH_CHASE_GOBJ_PLINK,
                                    TECH_CHASE_GOBJ_PRIORITY),
