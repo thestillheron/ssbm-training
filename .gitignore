@@ -186,3 +186,6 @@ dev.config.json
 
 # Where I put things I need Claude to see but don't want to check in
 .artifacts/
+
+# UnclePunch example
+ref/
