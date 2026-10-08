@@ -54,6 +54,15 @@ Short for "damage."
 @section glossary_drill drill
 One configured tech-chasing activity, played as a series of @ref glossary_rep "reps" for a set count or time: the stage, where the opponent drops from and from what heights, where the player starts, which @ref glossary_tech_option "tech options" the opponent picks from, and whether it vanishes mid-tech. Avoid "mini game", "activity" or "exercise".
 
+@section glossary_drill_chooser drill chooser
+The temporary authoring-build control (D-pad right, until drill select exists) that switches to the next @ref glossary_drill "drill" in the @ref glossary_drill_table "drill table" that fits the stage in play, restarting from rep 1 with a clean score and clock. It also lists the drills that need another stage. Avoid "drill picker".
+
+@section glossary_drill_summary drill summary
+The screen shown when a @ref glossary_drill "drill" ends: its name, the score, the @ref glossary_pass_mark "pass mark", pass or fail, and the successes per @ref glossary_tech_option "tech option". Press A to restart the drill.
+
+@section glossary_drill_table drill table
+The const table of @ref glossary_drill "drills" in `src/training/drill.c`: the @ref glossary_curriculum "curriculum", plus test drills in authoring builds. The rep loop runs one entry, the current drill.
+
 @section glossary_dst dst
 Short for "destination."
 
@@ -84,6 +93,9 @@ Short for "index."
 @section glossary_init init
 Short for "initial" or any form of the verb "initialize."
 
+@section glossary_invalid_layout invalid layout
+A @ref glossary_layout "layout" that cannot run on the stage in play: no floor below the landing point or the player's start, or no usable drop heights. It is reported in the @ref glossary_rep_log "rep log" and on screen, and the @ref glossary_drill "drill" runs no reps. A stage that no drill in the @ref glossary_drill_table "drill table" fits is reported the same way (`no_drill_for_stage`).
+
 @section glossary_it it
 Short for "item."
 
@@ -91,7 +103,7 @@ Short for "item."
 Short for "knockback."
 
 @section glossary_layout layout
-Where a @ref glossary_drill "drill" happens: the landing point (a spot on a floor or platform), the drop heights above it that the opponent falls from in tumble, and the player's start relative to the landing point. One drop height means every @ref glossary_rep "rep" has the same timing. Avoid "spawn config" or "positions".
+Where a @ref glossary_drill "drill" happens: the landing point (a spot on a floor or platform), the drop heights above it that the opponent falls from in tumble (a list of heights picked at random, or a range with a uniform pick), and the player's start: an x offset from the point beside the opponent and a y offset from the landing surface, snapped to the floor below (on a platform landing, 0 puts the player on the floor beneath it). One drop height means every @ref glossary_rep "rep" has the same timing. Avoid "spawn config" or "positions".
 
 @section glossary_lstick lstick
 Short for "left stick," the gray analog stick on the GameCube controller.
@@ -122,6 +134,9 @@ Short for "multiplier" or "multiply."
 
 @section glossary_mv mv
 Stands for "motion variables." Used by #HSD_GObj::user_data structs (such as #Fighter::mv) to store polymorphic variables specific to an #MotionState.
+
+@section glossary_pass_mark pass mark
+The number of successful @ref glossary_rep "reps" a @ref glossary_drill "drill" needs for the player to pass it, shown in the @ref glossary_drill_summary "drill summary".
 
 @section glossary_phys phys
 Short for "physics."

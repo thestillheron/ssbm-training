@@ -116,6 +116,12 @@ class ScenarioDryRunTests(unittest.TestCase):
     def test_committed_rep_outcome_no_input_passes_dry_run(self):
         self.check_committed_scenario_dry_run("rep-outcome-no-input")
 
+    def test_committed_drill_end_no_input_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("drill-end-no-input")
+
+    def test_committed_drill_time_limit_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("drill-time-limit")
+
     def test_committed_rep_outcome_mash_attack_passes_dry_run(self):
         self.check_committed_scenario_dry_run("rep-outcome-mash-attack")
 

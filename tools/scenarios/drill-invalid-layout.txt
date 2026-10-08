@@ -1,0 +1,10 @@
+# Acceptance scenario for drills-as-data ticket 02 (invalid layouts). Boots to
+# Training on Final Destination and gives no input for about 10 s.
+# `python dev.py run --drill 4 --scenario drill-invalid-layout` runs the test
+# drill whose landing point has no floor below it (authoring builds only): the
+# rep log must show one `invalid_layout` line naming the point and no `start`
+# or `drop` line, and the shot shows the error on screen, with no crash.
+include boot-to-training
+wait:300
+shot invalid-layout
+wait:300

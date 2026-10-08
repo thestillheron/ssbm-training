@@ -1,0 +1,42 @@
+# Acceptance scenario for drills-as-data ticket 07 (stage match and temporary
+# drill chooser). Boots to Training on Final Destination (authoring build, the
+# default for run) and presses D-pad right eleven times, which cycles through
+# the whole drill table once. Each press switches to the next drill that fits
+# the stage in play: the rep log must show `event=drill_choose` (the new
+# drill), `event=drill_needs` lines for the drills that need another stage
+# (here "Test: platform", which needs Battlefield) and a new
+# `event=drill_start` for the new drill (the rep number back at 1). The
+# platform drill is never started. Expected `drill_choose` order from the
+# default drill 0: 1, 2, 4 (invalid layout, which shows its error and runs no
+# reps), 5, 6, 7, 8, 9, 10 (time limit), 11 (no drop heights: invalid layout,
+# `problem=bad-drop-heights`), then wraps to 0. The switch to drill 10 comes
+# after 2000+ frames of earlier drills, and it must still start a fresh clock:
+# it waits 1100 frames, long enough for its 15 s to run out, and the log shows
+# its reps and a `drill_end` line. The shot shows the on-screen chooser list.
+# Needs window focus for the shots.
+include boot-to-training
+wait:600
+dpad-right:3
+wait:30
+shot chooser
+wait:300
+dpad-right:3
+wait:300
+dpad-right:3
+wait:300
+dpad-right:3
+wait:300
+dpad-right:3
+wait:300
+dpad-right:3
+wait:300
+dpad-right:3
+wait:300
+dpad-right:3
+wait:300
+dpad-right:3
+wait:1100
+dpad-right:3
+wait:300
+dpad-right:3
+wait:300

@@ -1,0 +1,13 @@
+# Acceptance scenario for drills-as-data ticket 06 (time-limited drills).
+# Build the time-limited test drill and give no input:
+#   python dev.py run --scenario drill-time-limit --drill 10
+# The `drill_start` line shows `length=time/15`. Reps run for 15 s of drill
+# time (8 reps at about 2 s each); once the clock is up the rep in
+# progress finishes and is logged with its `outcome` line, then `drill_end`
+# follows (`score=0/N passed=false`) and no `start` line comes after it. The
+# shot shows the summary. Needs window focus for the shot.
+include boot-to-training
+wait:600
+wait:600
+wait:300
+shot summary

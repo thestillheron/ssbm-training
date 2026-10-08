@@ -2,6 +2,8 @@
 
 #include "score.h"
 
+#include "drill.h"
+
 #include <sysdolphin/baselib/sislib.h>
 
 /* Position (canvas units) and size of the score text. Tune by eye with `run`.
@@ -39,8 +41,26 @@ static char rate_placeholder[] = "\x82\x4F\x82\x4F\x82\x4F\x81\x93";
 
 static int successes;
 static int counted;
+/* The same counts per tech option, for the end-of-drill summary. */
+static int option_successes[TechOption_Count];
+static int option_counted[TechOption_Count];
 static HSD_Text* score_text;
 static int line_count_idx;
+
+/* The drill summary: a few lines of text near the screen centre. Each line is
+ * converted to the full-width Shift-JIS the SIS font expects. */
+#define SUMMARY_X 200.0F
+#define SUMMARY_Y 90.0F
+#define SUMMARY_LINE_HEIGHT 30.0F
+#define SUMMARY_SCALE_X 1.0F
+#define SUMMARY_SCALE_Y 0.9F
+#define SUMMARY_MAX_LINES 10
+#define SUMMARY_LINE_CHARS 40
+
+static HSD_Text* summary_text;
+/* The text keeps the pointers it is given, so each line has its own buffer. */
+static char summary_lines[SUMMARY_MAX_LINES][SUMMARY_LINE_CHARS * 2 + 1];
+static int summary_line_count;
 static int line_rate_idx;
 
 /// Success rate in whole percent. Zero before the first counted rep.
@@ -114,9 +134,39 @@ HSD_Text* training_text_create(void)
 /// Zeroes the score. Called when Training Mode is entered.
 void training_score_init(void)
 {
+    summary_text = NULL;
+    score_text = NULL;
+    training_score_clear();
+}
+
+/// Zeroes the counts and redraws the score. Restarting a drill does this.
+void training_score_clear(void)
+{
+    int i;
+
     successes = 0;
     counted = 0;
-    score_text = NULL;
+    for (i = 0; i < TechOption_Count; i++) {
+        option_successes[i] = 0;
+        option_counted[i] = 0;
+    }
+    redraw();
+}
+
+int training_score_successes(void)
+{
+    return successes;
+}
+
+int training_score_counted(void)
+{
+    return counted;
+}
+
+/// True when the successes so far reach the drill's pass mark.
+bool training_score_passed(const Drill* drill)
+{
+    return successes >= drill->pass_mark;
 }
 
 /// Creates the score text, once the scene has settled (text made during the
@@ -138,13 +188,120 @@ void training_score_show(void)
 
 /// Records a counted rep that ended as a success or a failure. Voids are not
 /// recorded.
-void training_score_record(bool success)
+void training_score_record(TechOption option, bool success)
 {
     counted++;
+    option_counted[option]++;
     if (success) {
         successes++;
+        option_successes[option]++;
     }
     redraw();
+}
+
+/// Writes the ASCII `src` as full-width Shift-JIS into `dst`: letters, digits,
+/// and a few punctuation marks; anything else becomes a space.
+static void put_text(char* dst, const char* src)
+{
+    int n;
+
+    for (n = 0; *src != 0 && n < SUMMARY_LINE_CHARS; src++, n++) {
+        char c = *src;
+
+        if (c >= '0' && c <= '9') {
+            dst = put_char(dst, 0x82, 0x4F + (c - '0'));
+        } else if (c >= 'A' && c <= 'Z') {
+            dst = put_char(dst, 0x82, 0x60 + (c - 'A'));
+        } else if (c >= 'a' && c <= 'z') {
+            dst = put_char(dst, 0x82, 0x81 + (c - 'a'));
+        } else if (c == '/') {
+            dst = put_char(dst, SJIS_SLASH_HI, SJIS_SLASH_LO);
+        } else if (c == '%') {
+            dst = put_char(dst, SJIS_PERCENT_HI, SJIS_PERCENT_LO);
+        } else if (c == ':') {
+            dst = put_char(dst, 0x81, 0x46);
+        } else if (c == '-') {
+            dst = put_char(dst, 0x81, 0x7C);
+        } else if (c == '.') {
+            dst = put_char(dst, 0x81, 0x44);
+        } else {
+            dst = put_char(dst, 0x81, 0x40);
+        }
+    }
+    *dst = 0;
+}
+
+static void add_summary_line(const char* ascii)
+{
+    int idx;
+
+    if (summary_line_count >= SUMMARY_MAX_LINES) {
+        return;
+    }
+    put_text(summary_lines[summary_line_count], ascii);
+    idx = HSD_SisLib_803A6B98(
+        summary_text, SUMMARY_X,
+        SUMMARY_Y + SUMMARY_LINE_HEIGHT * summary_line_count, "%s",
+        summary_lines[summary_line_count]);
+    HSD_SisLib_803A7548(summary_text, idx, SUMMARY_SCALE_X, SUMMARY_SCALE_Y);
+    summary_line_count++;
+}
+
+/// Formats "<label> <a>/<b>" into `dst` (two digits each).
+static void format_fraction(char* dst, const char* label, int a, int b)
+{
+    char* p = dst;
+
+    while (*label != 0) {
+        *p++ = *label++;
+    }
+    *p++ = ' ';
+    *p++ = '0' + a / 10 % 10;
+    *p++ = '0' + a % 10;
+    *p++ = '/';
+    *p++ = '0' + b / 10 % 10;
+    *p++ = '0' + b % 10;
+    *p = 0;
+}
+
+/// Draws the end-of-drill summary: score, pass mark, pass or fail, and the
+/// successes per tech option in the drill's pool.
+void training_summary_show(const Drill* drill)
+{
+    static const char* const option_labels[TechOption_Count] = {
+        "In place", "In", "Away", "Miss"
+    };
+    char line[SUMMARY_LINE_CHARS + 1];
+    int i;
+
+    training_summary_hide();
+    summary_text = training_text_create();
+    summary_line_count = 0;
+    add_summary_line(drill->name);
+    format_fraction(line, "Score", successes, counted);
+    add_summary_line(line);
+    format_fraction(line, "Pass mark", drill->pass_mark,
+                    drill->length_kind == DrillLength_Time ? counted
+                                                           : drill->length);
+    add_summary_line(line);
+    add_summary_line(training_score_passed(drill) ? "PASS" : "FAIL");
+    for (i = 0; i < TechOption_Count; i++) {
+        if (drill->option_pool & TECH_OPTION_BIT(i)) {
+            format_fraction(line, option_labels[i], option_successes[i],
+                            option_counted[i]);
+            add_summary_line(line);
+        }
+    }
+    add_summary_line("Press A to restart");
+}
+
+/// Hides the summary, if shown.
+void training_summary_hide(void)
+{
+    if (summary_text != NULL) {
+        summary_text->hidden = true;
+        summary_text = NULL;
+    }
 }
 
 #endif

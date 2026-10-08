@@ -15,12 +15,7 @@ typedef enum TechOption {
 
 #define TECH_OPTION_BIT(option) (1 << (option))
 
-/* The option pool and the missed-tech down time: the one place they are set.
- * Drill-agnostic defaults for now; drills-as-data will supply them per drill.
- * Each rep picks uniformly from the pool. */
-#ifndef TECH_OPTION_POOL
-#define TECH_OPTION_POOL TECH_OPTION_BIT(TechOption_InPlace)
-#endif
+/* The option pool is per drill (see drill.h): each rep picks uniformly from it. */
 
 /* Frames, counted from the landing, before the plain getup input is fed after
  * a missed tech: 45 (0.75 s) is a beat in which the opponent visibly lies

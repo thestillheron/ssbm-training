@@ -1,0 +1,53 @@
+# Acceptance scenario for drills-as-data ticket 07 (stage mismatch). Boots to
+# Training on a stage no table drill fits (the stage select cursor goes up past
+# the small icons; the shot hover-other-stage shows which stage). The rep log
+# must show one `no_drill_for_stage` line and no `start` lines; the screen
+# says "No drill for this stage". Needs window focus for the shots.
+include boot-to-main-menu
+shot main-menu
+
+# 145: 1-P Mode. The submenu reads input from 6 frames after the `a`; up
+# wraps from Regular Match to Training, which takes `a` from the frame after
+# the up is released (no load).
+a:2
+wait:14
+stick-up:2
+wait:4
+a:2
+wait:8
+
+# 177: character select. It reads the stick from 5 to 10 frames in, and a
+# clamp started here gets the hand to the top-left corner 66 frames later;
+# this one runs 82. Then right and down onto Ness (second row).
+stick-up+stick-left:82
+wait:4
+stick-right:14
+wait:4
+stick-down:13
+wait:4
+shot hover-player
+# 298: pick Ness. Start works from the next frame on (no load); the stage
+# select is drawn about 7 frames after it.
+a:2
+wait:3
+start:2
+wait:2
+
+# 307: stage select. A clamp gets the crosshair to the bottom-left corner
+# about 35 frames after it starts; this one runs 50. Then right and up onto
+# a larger stage above it.
+stick-down+stick-left:50
+wait:4
+stick-right:20
+wait:4
+stick-up:40
+wait:4
+shot hover-other-stage
+# 399: pick Battlefield. The stage is drawn about 104 frames later with
+# Ness on it, and the CPU is on screen about 162 frames after the pick (a
+# drill may drop it in).
+a:2
+wait:180
+shot in-training
+# 581: in Training Mode, both fighters on stage.
+

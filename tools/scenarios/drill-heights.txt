@@ -1,0 +1,18 @@
+# Acceptance scenario for drills-as-data ticket 03 (drop height lists and
+# ranges). Boots to Training, then gives no input for about 60 s so about 24
+# reps run. Build the current drill with --drill:
+#   python dev.py run --scenario drill-heights              one height (40): every
+#                                                           `drop` line reads height=40
+#   python dev.py run --scenario drill-heights --drill 1    list of 30, 60, 90: all three
+#                                                           heights appear in `drop` lines
+#   python dev.py run --scenario drill-heights --drill 2    range 30 to 90: every `drop`
+#                                                           height is within 30..90
+# The `drill_start` line shows `height_kind` and `heights`. No shots are taken,
+# so no window focus is needed beyond launching.
+include boot-to-training
+wait:600
+wait:600
+wait:600
+wait:600
+wait:600
+wait:600

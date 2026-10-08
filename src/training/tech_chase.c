@@ -23,6 +23,8 @@
 #include <dolphin/os.h>
 #endif
 
+#include "drill.h"
+#include "layout.h"
 #include "score.h"
 #include "tech_options.h"
 
@@ -30,11 +32,17 @@
 #define PLAYER_SLOT 0
 #define OPPONENT_SLOT 1
 
-/* Hardcoded layout, relative to the centre of the stage floor. */
-#define OPPONENT_DROP_HEIGHT 40.0F
+/* The layout and settings come from the current drill (drill.h); layout.h
+ * snaps its points onto the stage. */
 
-/* How far above and below a spawn point teleport() looks for the floor. */
+/* How far above and below a spawn point teleport() looks for the floor. The
+ * layout has snapped the point onto a surface, so this only absorbs rounding. */
 #define GROUND_PROBE_RANGE 40.0F
+
+/* Vanish: the opponent is drawn for this many frames of its tech, counted
+ * from the landing frame as frame 1, then hidden until its first vulnerable
+ * frame (see .scratch/tech-vanish/spec.md). */
+#define VANISH_VISIBLE_FRAMES 7
 
 /* Frames to let the scene settle (fighters spawned) before the first rep. */
 #define SETTLE_FRAMES 60
@@ -47,6 +55,8 @@ typedef enum RepState {
     RepState_Landed,
     RepState_Outcome,
     RepState_Pause,
+    RepState_Summary,
+    RepState_Invalid, /* the drill's layout has no floor: nothing runs */
 } RepState;
 
 /* Frames between the opponent becoming actionable and the next drop. */
@@ -81,9 +91,6 @@ typedef enum RepState {
  * human-driven type); we put it back to the plain CPU type. */
 #define CPU_KIND_HUMAN_DRIVEN 5
 #define CPU_TYPE_CPU 0
-
-/* Stage_80224E64 query: centre of the stage floor. */
-#define STAGE_QUERY_FLOOR_CENTRE 4
 
 /// Which side of the opponent the player stands on: 1 for the right, -1 for
 /// the left. The one rule for "toward the player", shared by the stick that
@@ -214,12 +221,59 @@ static const char* tech_result_name(TechResult result)
 #define REP_LOG_RESET() (rep_number = rep_frame = 0)
 #define REP_LOG_TICK() (rep_frame++)
 #define REP_LOG_START() (rep_number++, REP_LOG("start"))
+#define REP_LOG_RESTART() (rep_number = 0)
+
+static void log_drill_end(const Drill* drill)
+{
+    int successes = training_score_successes();
+
+    REP_LOG_WITH("drill_end", " score=%d/%d pass_mark=%d passed=%s", successes,
+                 training_score_counted(), drill->pass_mark,
+                 training_score_passed(drill) ? "true" : "false");
+}
+#define LOG_INVALID_LAYOUT(drill, status)                                     \
+    OSReport("[rep] event=invalid_layout drill=\"%s\" problem=%s\n",        \
+             (drill)->name, training_layout_status_name(status))
+#define LOG_NO_DRILL_FOR_STAGE(stage)                                         \
+    OSReport("[rep] event=no_drill_for_stage stage=%d\n", stage)
+#define LOG_LAYOUT(layout)                                                    \
+    REP_LOG_WITH("layout",                                                    \
+                 " landing_x=%d landing_y=%d start_x=%d start_y=%d",          \
+                 (int) (layout)->landing.x, (int) (layout)->landing.y,        \
+                 (int) (layout)->start.x, (int) (layout)->start.y)
+
+static void log_drill_start(const Drill* drill)
+{
+    int i;
+
+    OSReport("[rep] event=drill_start name=\"%s\" stage=%d height_kind=%s "
+             "heights=",
+             drill->name, drill->stage,
+             drill->height_kind == DrillHeight_Range ? "range" : "list");
+    for (i = 0; i < drill->height_count && i < DRILL_MAX_HEIGHTS; i++) {
+        OSReport(i == 0 ? "%d" : ",%d", (int) drill->heights[i]);
+    }
+    OSReport(" landing_x=%d landing_y=%d start_dx=%d start_dy=%d",
+             (int) drill->landing_x, (int) drill->landing_y,
+             (int) drill->start_dx, (int) drill->start_dy);
+    OSReport(" pool=%d vanish=%d reset=%d facing=%d length=%s/%d pass=%d\n",
+             drill->option_pool, drill->vanish, drill->reset_player,
+             drill->opponent_facing,
+             drill->length_kind == DrillLength_Time ? "time" : "reps",
+             drill->length, drill->pass_mark);
+}
 #else
 #define REP_LOG(event) ((void) 0)
 #define REP_LOG_WITH(...) ((void) 0)
 #define REP_LOG_RESET() ((void) 0)
 #define REP_LOG_TICK() ((void) 0)
 #define REP_LOG_START() ((void) 0)
+#define REP_LOG_RESTART() ((void) 0)
+#define log_drill_end(drill) ((void) 0)
+#define LOG_INVALID_LAYOUT(drill, status) ((void) 0)
+#define LOG_NO_DRILL_FOR_STAGE(stage) ((void) 0)
+#define LOG_LAYOUT(layout) ((void) 0)
+#define log_drill_start(drill) ((void) 0)
 #endif
 
 /* How the player's punish reached the opponent. */
@@ -269,6 +323,9 @@ typedef struct RepData {
     bool voided;
     /* The tech option chosen for this rep, before the drop. */
     TechOption option;
+    /* Vanish: the opponent is hidden now; the first hidden frame. */
+    bool vanish_hidden;
+    int vanish_from;
 } RepData;
 
 /* The opponent's damage percent as of the previous frame, to see when it takes
@@ -283,6 +340,10 @@ static bool prev_grabbed;
  * the opponent's input hook: the hook acts only on a frame the loop ran, i.e.
  * in Training Mode. */
 static bool rep_loop_ran;
+
+/* Whether the player has been placed since Training was entered: with reset
+ * player off, only the first rep places them. */
+static bool player_placed;
 
 static RepState rep_state;
 static int frames_in_state;
@@ -309,6 +370,8 @@ static void reset_rep_data(float floor_y)
     rep.hit_kind = HitKind_None;
     rep.voided = false;
     rep.option = TechOption_InPlace;
+    rep.vanish_hidden = false;
+    rep.vanish_from = NO_FRAME;
 }
 
 /// The option chosen for the current rep (see tech_options.h).
@@ -326,13 +389,13 @@ static TechOption choose_tech_option(void)
     int i;
 
     for (i = 0; i < TechOption_Count; i++) {
-        if (TECH_OPTION_POOL & TECH_OPTION_BIT(i)) {
+        if (training_drill_current()->option_pool & TECH_OPTION_BIT(i)) {
             count++;
         }
     }
     pick = HSD_Randi(count);
     for (i = 0;; i++) {
-        if ((TECH_OPTION_POOL & TECH_OPTION_BIT(i)) && pick-- == 0) {
+        if ((training_drill_current()->option_pool & TECH_OPTION_BIT(i)) && pick-- == 0) {
             return (TechOption) i;
         }
     }
@@ -474,34 +537,60 @@ static s8 roll_stick_x(float opp_x, float opp_facing, float px,
     return toward_right ? 127 : -127;
 }
 
-/// Reset state: the player stands next to the opponent's drop point facing it
-/// at 0%, and the opponent is respawned over the drop point at 0%, facing the
-/// player. Then the drop: the opponent enters tumble from rest.
-static void do_rep_setup(void)
+/// The opponent's facing (+1 right, -1 left) for a drill's setting, when it is
+/// respawned over `drop_x` with the player standing at `px`. Toward the player
+/// is the default; equal x faces left.
+static float opponent_facing(DrillFacing facing, float drop_x, float px)
 {
-    Vec3 centre;
-    Vec3 start;
-    Vec3 drop;
+    float toward = px > drop_x ? 1.0F : -1.0F;
+
+    switch (facing) {
+    case DrillFacing_Away:
+        return -toward;
+    case DrillFacing_Left:
+        return -1.0F;
+    case DrillFacing_Right:
+        return 1.0F;
+    default:
+        return toward;
+    }
+}
+
+/// Reset state: the player stands next to the opponent's drop point facing it
+/// at 0% (only if the drill resets the player, else they stay where they
+/// are), and the opponent is respawned over the drop point at 0%, facing as
+/// the drill says. Then the drop: the opponent enters tumble from rest.
+static void do_rep_setup(const Layout* layout)
+{
+    Vec3 start = layout->start;
+    Vec3 drop = layout->landing;
     HSD_GObj* opp;
+    const Drill* drill = training_drill_current();
+    float drop_height = training_drill_pick_height(drill);
+    bool place_player = drill->reset_player || !player_placed;
 
-    Stage_80224E64(STAGE_QUERY_FLOOR_CENTRE, &centre);
-    reset_rep_data(centre.y);
-    start = centre;
-    start.x -= player_reach + opponent_reach;
-    drop = centre;
-    drop.y += OPPONENT_DROP_HEIGHT;
+    reset_rep_data(layout->landing.y);
+    drop.y += drop_height;
 
-    Player_SetFacingDirection(PLAYER_SLOT, 1.0F);
-    Player_SetHUDDamage(PLAYER_SLOT, 0);
-    teleport(PLAYER_SLOT, &start, true);
+    if (place_player) {
+        Player_SetFacingDirection(PLAYER_SLOT, 1.0F);
+        Player_SetHUDDamage(PLAYER_SLOT, 0);
+        teleport(PLAYER_SLOT, &start, true);
+        player_placed = true;
+    }
 
-    Player_SetFacingDirection(OPPONENT_SLOT, -1.0F);
+    Player_SetFacingDirection(OPPONENT_SLOT,
+                              opponent_facing(drill->opponent_facing, drop.x,
+                                              player_x()));
     Player_SetHUDDamage(OPPONENT_SLOT, 0);
     teleport(OPPONENT_SLOT, &drop, false);
     rep.option = choose_tech_option();
     REP_LOG_START();
-    REP_LOG_WITH("drop", " height=%d option=%s", (int) OPPONENT_DROP_HEIGHT,
-                 tech_option_name(rep.option));
+    LOG_LAYOUT(layout);
+    REP_LOG_WITH("drop", " height=%d option=%s opp_facing=%d player_x=%d",
+                 (int) drop_height, tech_option_name(rep.option),
+                 (int) GET_FIGHTER(Player_GetEntity(OPPONENT_SLOT))->facing_dir,
+                 (int) player_x());
 
     opp = Player_GetEntity(OPPONENT_SLOT);
     if (opp != NULL) {
@@ -692,6 +781,151 @@ static void hide_early(void)
     }
 }
 
+/* The on-screen notice (invalid layout, no drill for the stage, chooser): canvas position and size of its lines. */
+#define NOTICE_X 60.0F
+#define NOTICE_Y 130.0F
+#define NOTICE_LINE_HEIGHT 44.0F
+#define NOTICE_SCALE 0.9F
+
+/// Writes `src` into `dst` as the full-width Shift-JIS the game's SIS font
+/// expects: letters, digits and space; anything else becomes a space.
+static void put_fullwidth(char* dst, const char* src)
+{
+    for (; *src != 0; src++) {
+        int hi = 0x81;
+        int lo = 0x40;
+
+        if (*src >= '0' && *src <= '9') {
+            hi = 0x82;
+            lo = 0x4F + (*src - '0');
+        } else if (*src >= 'A' && *src <= 'Z') {
+            hi = 0x82;
+            lo = 0x60 + (*src - 'A');
+        } else if (*src >= 'a' && *src <= 'z') {
+            hi = 0x82;
+            lo = 0x81 + (*src - 'a');
+        }
+        *dst++ = (char) hi;
+        *dst++ = (char) lo;
+    }
+    *dst = 0;
+}
+
+static void add_notice_line(HSD_Text* text, int row, const char* ascii)
+{
+    char sjis[96];
+    int idx;
+
+    put_fullwidth(sjis, ascii);
+    idx = HSD_SisLib_803A6B98(text, NOTICE_X,
+                              NOTICE_Y + NOTICE_LINE_HEIGHT * row, "%s",
+                              sjis);
+    HSD_SisLib_803A7548(text, idx, NOTICE_SCALE, NOTICE_SCALE);
+}
+
+/* The on-screen notice of the moment (invalid layout, drill chooser list),
+ * hidden when a new drill starts. */
+static HSD_Text* notice_text;
+/* Frames the notice has been up; negative means it stays until replaced. */
+static int notice_age;
+#define CHOOSER_LIST_FRAMES 600
+
+static void hide_notice(void)
+{
+    if (notice_text != NULL) {
+        notice_text->hidden = true;
+        notice_text = NULL;
+    }
+}
+
+/// The drill's layout cannot be used (no floor below one of its points, or no
+/// usable drop heights): say so in the rep log and on screen, once. The
+/// caller then stops the drill.
+static void report_invalid_layout(LayoutStatus status)
+{
+    const Drill* drill = training_drill_current();
+    HSD_Text* text;
+    const char* problem;
+
+    switch (status) {
+    case Layout_NoLandingFloor:
+        problem = "No floor below landing";
+        break;
+    case Layout_BadHeights:
+        problem = "Bad drop heights";
+        break;
+    default:
+        problem = "No floor below start";
+        break;
+    }
+    LOG_INVALID_LAYOUT(drill, status);
+    text = training_text_create();
+    notice_text = text;
+    notice_age = -1;
+    add_notice_line(text, 0, "Invalid layout");
+    add_notice_line(text, 1, problem);
+    add_notice_line(text, 2, drill->name);
+}
+
+/// No drill in the table fits the stage in play: say so in the rep log and on
+/// screen, once. The caller then runs no reps.
+static void report_no_drill_for_stage(int stage)
+{
+    HSD_Text* text;
+
+    LOG_NO_DRILL_FOR_STAGE(stage);
+    text = training_text_create();
+    notice_text = text;
+    notice_age = -1;
+    add_notice_line(text, 0, "No drill for this stage");
+    add_notice_line(text, 1, "Pick another stage");
+}
+
+/// Hides or shows the opponent's model and shadow. The game clears both flags
+/// on every motion state change, so while hidden this is called every frame.
+static void set_opponent_hidden(Fighter* fp, bool hidden)
+{
+    fp->invisible = hidden;
+    fp->x221E_b1 = hidden; /* casts no shadow (ftLib_CastsShadow) */
+}
+
+/// Shows the opponent again after a vanish and logs the hidden frames.
+static void end_vanish(Fighter* fp)
+{
+    if (!rep.vanish_hidden) {
+        return;
+    }
+    set_opponent_hidden(fp, false);
+    rep.vanish_hidden = false;
+    REP_LOG_WITH("vanish", " vanish_from=%d vanish_to=%d", rep.vanish_from,
+                 rep.rep_frames - 1);
+}
+
+/// The vanish step, once a frame of the punish window has been measured: when
+/// the drill vanishes, the tech is not a missed tech and the opponent has been
+/// drawn for VANISH_VISIBLE_FRAMES, hide it until its first vulnerable frame.
+static void update_vanish(Fighter* fp)
+{
+    bool hide;
+
+    if (!training_drill_current()->vanish || rep.option == TechOption_Miss ||
+        rep.window_open == NO_FRAME)
+    {
+        return;
+    }
+    hide = rep.vuln_from == NO_FRAME &&
+           rep.rep_frames - rep.window_open >= VANISH_VISIBLE_FRAMES;
+    if (hide) {
+        if (!rep.vanish_hidden) {
+            rep.vanish_hidden = true;
+            rep.vanish_from = rep.rep_frames;
+        }
+        set_opponent_hidden(fp, true);
+    } else {
+        end_vanish(fp);
+    }
+}
+
 /// Per-frame check for the Drop and Wait states: ends the rep (into Pause) if
 /// it was aborted, or if the player hit the opponent before it landed (void,
 /// "early" shown), or moves to Landed, opening the punish window, when the
@@ -709,6 +943,7 @@ static bool advance_if_landed_or_aborted(Fighter* fp, HitKind hit)
     if (in_tech_states(fp->motion_id)) {
         open_window(fp);
         measure_window(fp);
+        update_vanish(fp);
         if (hit != HitKind_None) {
             record_hit(hit);
         }
@@ -731,19 +966,104 @@ static bool advance_if_landed_or_aborted(Fighter* fp, HitKind hit)
 static void finish_rep(void)
 {
     if (rep.hit_frame != NO_FRAME) {
-        training_score_record(true);
+        training_score_record(rep.option, true);
         log_outcome("success");
     } else if (rep.actionable != NO_FRAME) {
-        training_score_record(false);
+        training_score_record(rep.option, false);
         log_outcome("failure");
     }
 }
+
+/* Frames the current drill has run (not counting settle or the summary), for
+ * a time-limited drill's clock. */
+static int drill_frames;
+#define DRILL_FPS 60
+
+/// True when the current drill's length is reached: a rep-count drill has
+/// counted that many reps (voids and abandoned reps are not counted); a
+/// time-limited drill has run its length in seconds. Only checked between
+/// reps, so the rep in progress when time runs out finishes and counts.
+static bool drill_length_reached(void)
+{
+    const Drill* drill = training_drill_current();
+
+    if (drill->length_kind == DrillLength_Time) {
+        return drill_frames >= drill->length * DRILL_FPS;
+    }
+    return training_score_counted() >= drill->length;
+}
+
+/// Starts the current drill from rep 1, clearing everything of the previous
+/// run: the notice, summary and "early" text, the score, the drill clock, the
+/// player's placement and any vanish in progress (the opponent is shown
+/// again). Restarting a finished drill and switching drills both start here.
+static void start_drill(Fighter* opp_fp)
+{
+    hide_notice();
+    hide_early();
+    training_summary_hide();
+    training_score_clear();
+    end_vanish(opp_fp);
+    player_placed = false;
+    drill_frames = 0;
+    REP_LOG_RESTART();
+    log_drill_start(training_drill_current());
+    set_state(RepState_Reset);
+}
+
+#ifdef AUTHORING_BUILD
+/// The temporary drill chooser (until drill-select exists): the D-pad moves
+/// to the next drill that fits the stage in play. The new drill's name is
+/// shown with the drills that need another stage and the stage each needs
+/// (also in the rep log), then the drill starts from rep 1.
+static void choose_next_drill(Fighter* opp_fp)
+{
+    int stage = Stage_80225194();
+    int i;
+    int row = 1;
+    char needs[48];
+    const char* n;
+    HSD_Text* text;
+
+    if (!training_drill_choose_next(stage)) {
+        return;
+    }
+    start_drill(opp_fp);
+    text = training_text_create();
+    notice_text = text;
+    notice_age = 0;
+    add_notice_line(text, 0, training_drill_current()->name);
+    OSReport("[rep] event=drill_choose name=\"%s\" stage_in_play=%d\n",
+             training_drill_current()->name, stage);
+    for (i = 0; i < training_drill_count(); i++) {
+        const Drill* drill = training_drill_at(i);
+
+        if (!training_drill_fits_stage(drill, stage)) {
+            const char* name = training_drill_stage_name(drill->stage);
+            char* p = needs;
+
+            OSReport("[rep] event=drill_needs name=\"%s\" stage=%d\n",
+                     drill->name, drill->stage);
+            add_notice_line(text, row++, drill->name);
+            for (n = "needs "; *n != 0; n++) {
+                *p++ = *n;
+            }
+            while (*name != 0 && p < needs + sizeof(needs) - 1) {
+                *p++ = *name++;
+            }
+            *p = 0;
+            add_notice_line(text, row++, needs);
+        }
+    }
+}
+#endif
 
 static void think(HSD_GObj* gobj)
 {
     HSD_GObj* player = Player_GetEntity(PLAYER_SLOT);
     HSD_GObj* opp = Player_GetEntity(OPPONENT_SLOT);
     HitKind hit;
+    bool window_closed;
 
     if (player == NULL || opp == NULL) {
         return;
@@ -759,7 +1079,26 @@ static void think(HSD_GObj* gobj)
     }
 
     frames_in_state++;
+    if (rep_state != RepState_Settle && rep_state != RepState_Summary) {
+        drill_frames++;
+    }
     REP_LOG_TICK();
+    if (notice_text != NULL && notice_age >= 0 &&
+        ++notice_age > CHOOSER_LIST_FRAMES)
+    {
+        hide_notice();
+    }
+#ifdef AUTHORING_BUILD
+    /* Temporary drill chooser: D-pad right, in any state once the scene has
+     * settled. */
+    if (rep_state != RepState_Settle &&
+        (HSD_PadGameStatus[Player_GetPadPort(PLAYER_SLOT)].trigger &
+         HSD_PAD_DPADRIGHT))
+    {
+        choose_next_drill(GET_FIGHTER(opp));
+        return;
+    }
+#endif
     hit = poll_player_hit(GET_FIGHTER(opp));
     switch (rep_state) {
     case RepState_Settle:
@@ -782,8 +1121,30 @@ static void think(HSD_GObj* gobj)
             break;
         }
         hide_early();
-        do_rep_setup();
+        {
+            Layout layout;
+            int stage = Stage_80225194();
+            LayoutStatus status;
+
+            if (!training_drill_fits_stage(training_drill_current(), stage)) {
+                report_no_drill_for_stage(stage);
+                set_state(RepState_Invalid);
+                break;
+            }
+            status = training_layout_resolve(
+                training_drill_current(), player_reach + opponent_reach,
+                &layout);
+
+            if (status != Layout_Ok) {
+                report_invalid_layout(status);
+                set_state(RepState_Invalid);
+                break;
+            }
+            do_rep_setup(&layout);
+        }
         set_state(RepState_Drop);
+        break;
+    case RepState_Invalid:
         break;
     case RepState_Drop:
         update_tech_press(GET_FIGHTER(opp));
@@ -800,7 +1161,9 @@ static void think(HSD_GObj* gobj)
         /* Count this frame before measuring it (see
          * advance_if_landed_or_aborted for Drop and Wait). */
         rep.rep_frames++;
-        if (measure_window(GET_FIGHTER(opp))) {
+        window_closed = measure_window(GET_FIGHTER(opp));
+        update_vanish(GET_FIGHTER(opp));
+        if (window_closed) {
             set_state(RepState_Outcome);
         } else if (hit != HitKind_None) {
             /* Hit or grab inside the window: success, the rep ends at once. */
@@ -809,6 +1172,9 @@ static void think(HSD_GObj* gobj)
         }
         break;
     case RepState_Outcome:
+        /* A vanish never outlives the window (a timed-out window, or a hit
+         * while hidden, shows the opponent here). */
+        end_vanish(GET_FIGHTER(opp));
         finish_rep();
         set_state(RepState_Pause);
         break;
@@ -817,7 +1183,24 @@ static void think(HSD_GObj* gobj)
             show_early();
         }
         if (frames_in_state >= PAUSE_FRAMES) {
-            set_state(RepState_Reset);
+            if (drill_length_reached()) {
+                /* The last rep has finished: stop dropping, show the
+                 * summary. */
+                hide_early();
+                log_drill_end(training_drill_current());
+                training_summary_show(training_drill_current());
+                set_state(RepState_Summary);
+            } else {
+                set_state(RepState_Reset);
+            }
+        }
+        break;
+    case RepState_Summary:
+        /* Restart is the only action until drill-select exists. */
+        if (HSD_PadGameStatus[Player_GetPadPort(PLAYER_SLOT)].trigger &
+            HSD_PAD_A)
+        {
+            start_drill(GET_FIGHTER(opp));
         }
         break;
     }
@@ -827,10 +1210,15 @@ static void think(HSD_GObj* gobj)
 void training_tech_chase_init(void)
 {
     set_state(RepState_Settle);
+    drill_frames = 0;
     early_text = NULL;
+    notice_text = NULL;
+    training_drill_fit_to_stage(Stage_80225194());
     prev_percent = 0.0F;
     prev_grabbed = false;
+    player_placed = false;
     REP_LOG_RESET();
+    log_drill_start(training_drill_current());
     reset_rep_data(0.0F);
     training_score_init();
     HSD_GObj_SetupProc(GObj_Create(TECH_CHASE_GOBJ_CLASS,
