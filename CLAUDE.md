@@ -27,3 +27,7 @@ Ask the user before running any command that takes window focus or sends input t
 ### Worktree cleanup
 
 Never link or junction `orig/`, `build/` or `.venv` into a worktree, and never delete a worktree with `Remove-Item -Recurse -Force`, `rm -rf` or `git worktree remove --force` while it holds links: on Windows they delete the link targets in the main checkout (this once wiped the disc image and toolchain). Give worktrees real copies, or run `dev.py setup` there, and remove each link first (`cmd /c rmdir`, which removes the link only) before deleting the worktree. Check `orig/GALE01` is intact afterwards.
+
+### Merging branches to master
+
+Whenever asked to merge a branch to master, squash merge, land on master and remove the now completed branch
