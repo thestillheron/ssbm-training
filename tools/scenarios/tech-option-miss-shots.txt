@@ -1,0 +1,45 @@
+# Shot variant of tech-option-miss (tech-options ticket 03): shots through one
+# missed-tech rep, to read in order: the opponent falling without a tech,
+# lying down after the bounce, and getting up. Needs the pool set to missed
+# tech only (`--tech-pool miss`) and window focus for the shots.
+include boot-to-training
+shot m01
+wait:8
+shot m02
+wait:8
+shot m03
+wait:8
+shot m04
+wait:8
+shot m05
+wait:8
+shot m06
+wait:8
+shot m07
+wait:8
+shot m08
+wait:8
+shot m09
+wait:8
+shot m10
+wait:8
+shot m11
+wait:8
+shot m12
+wait:8
+shot m13
+wait:8
+shot m14
+wait:8
+shot m15
+wait:8
+shot m16
+wait:8
+shot m17
+wait:8
+shot m18
+wait:8
+shot m19
+wait:8
+shot m20
+wait:8

@@ -220,7 +220,16 @@ parser.add_argument(
     action="store_true",
     help="with --training: compile the authoring tools into the training library only",
 )
+parser.add_argument(
+    "--tech-pool",
+    type=int,
+    help="with --training: TECH_OPTION_POOL bit mask overriding "
+    "src/training/tech_options.h in the tech chase object",
+)
 args = parser.parse_args()
+
+if args.tech_pool is not None and not args.training:
+    parser.error("--tech-pool requires --training")
 
 if args.authoring and not args.training:
     parser.error("--authoring requires --training")
@@ -2053,12 +2062,19 @@ if args.training:
     # AUTHORING_BUILD is defined for these objects only, so toggling it never
     # recompiles the game.
     training_cflags = ["-DAUTHORING_BUILD"] if args.authoring else []
+    tech_pool_cflags = (
+        [f"-DTECH_OPTION_POOL={args.tech_pool}"] if args.tech_pool is not None else []
+    )
     config.libs.append(
         Lib(
             "training (Training Mod)",
             [
                 Object(Matching, "training/title_marker.c", extra_cflags=training_cflags),
-                Object(Matching, "training/tech_chase.c", extra_cflags=training_cflags),
+                Object(
+                    Matching,
+                    "training/tech_chase.c",
+                    extra_cflags=training_cflags + tech_pool_cflags,
+                ),
                 Object(Matching, "training/score.c", extra_cflags=training_cflags),
                 Object(Matching, "training/authoring.c", extra_cflags=training_cflags),
             ],

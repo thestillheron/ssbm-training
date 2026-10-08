@@ -16,6 +16,7 @@
 #include <sysdolphin/baselib/controller.h>
 #include <sysdolphin/baselib/gobj.h>
 #include <sysdolphin/baselib/gobjproc.h>
+#include <sysdolphin/baselib/random.h>
 #include <sysdolphin/baselib/sislib.h>
 
 #ifdef AUTHORING_BUILD
@@ -23,6 +24,7 @@
 #endif
 
 #include "score.h"
+#include "tech_options.h"
 
 /* Slot of the human player and of the CPU opponent in Training Mode. */
 #define PLAYER_SLOT 0
@@ -83,6 +85,26 @@ typedef enum RepState {
 /* Stage_80224E64 query: centre of the stage floor. */
 #define STAGE_QUERY_FLOOR_CENTRE 4
 
+/// Which side of the opponent the player stands on: 1 for the right, -1 for
+/// the left. The one rule for "toward the player", shared by the stick that
+/// forces a roll and the check of the roll that came out: if the two x
+/// positions are equal, the opponent's facing counts as toward.
+static int side_of_player(float opp_x, float opp_facing, float player_x)
+{
+    float dx = player_x - opp_x;
+
+    if (dx == 0.0F) {
+        return opp_facing > 0.0F ? 1 : -1;
+    }
+    return dx > 0.0F ? 1 : -1;
+}
+
+/// The player's x position.
+static float player_x(void)
+{
+    return GET_FIGHTER(Player_GetEntity(PLAYER_SLOT))->cur_pos.x;
+}
+
 /* Rep log (authoring builds only): one `[rep] event=... rep=N frame=F` line per
  * event through OSReport. `frame` counts the frames the rep loop has run since
  * Training Mode was entered (paused frames are not counted). In player builds
@@ -91,23 +113,93 @@ typedef enum RepState {
 static int rep_number;
 static int rep_frame;
 
-static const char* tech_option_name(int motion)
+static const char* tech_option_name(TechOption option)
 {
-    switch (motion) {
-    case ftCo_MS_Passive:
+    switch (option) {
+    case TechOption_InPlace:
         return "in-place";
-    case ftCo_MS_PassiveStandF:
-        return "forward";
-    case ftCo_MS_PassiveStandB:
-        return "back";
-    case ftCo_MS_PassiveWall:
-        return "wall";
-    case ftCo_MS_PassiveWallJump:
-        return "walljump";
-    case ftCo_MS_PassiveCeil:
-        return "ceil";
+    case TechOption_In:
+        return "in";
+    case TechOption_Away:
+        return "away";
     default:
         return "miss";
+    }
+}
+
+/* What the game actually entered on landing, kept apart from TechOption (what
+ * the drill aimed for): a result can be one no option aims for (wall and
+ * ceiling techs), and a failed press knocks the opponent down, which is only
+ * what the drill wanted when the option was missed tech. */
+typedef enum TechResult {
+    TechResult_InPlace,
+    TechResult_In,
+    TechResult_Away,
+    TechResult_Knockdown,
+    TechResult_Wall,
+    TechResult_WallJump,
+    TechResult_Ceil,
+} TechResult;
+
+/// Maps the opponent's landing state to what it amounts to. A roll is forward
+/// or back relative to the opponent's facing; the player-relative name follows
+/// from which side of the opponent the player is on.
+static TechResult tech_result(Fighter* fp, float px)
+{
+    bool player_ahead =
+        side_of_player(fp->cur_pos.x, fp->facing_dir, px) * fp->facing_dir >
+        0.0F;
+
+    switch (fp->motion_id) {
+    case ftCo_MS_Passive:
+        return TechResult_InPlace;
+    case ftCo_MS_PassiveStandF:
+        return player_ahead ? TechResult_In : TechResult_Away;
+    case ftCo_MS_PassiveStandB:
+        return player_ahead ? TechResult_Away : TechResult_In;
+    case ftCo_MS_PassiveWall:
+        return TechResult_Wall;
+    case ftCo_MS_PassiveWallJump:
+        return TechResult_WallJump;
+    case ftCo_MS_PassiveCeil:
+        return TechResult_Ceil;
+    default:
+        return TechResult_Knockdown;
+    }
+}
+
+/// True when the game did what the option aimed for.
+static bool result_matches(TechOption option, TechResult result)
+{
+    switch (option) {
+    case TechOption_InPlace:
+        return result == TechResult_InPlace;
+    case TechOption_In:
+        return result == TechResult_In;
+    case TechOption_Away:
+        return result == TechResult_Away;
+    default:
+        return result == TechResult_Knockdown;
+    }
+}
+
+static const char* tech_result_name(TechResult result)
+{
+    switch (result) {
+    case TechResult_InPlace:
+        return "in-place";
+    case TechResult_In:
+        return "in";
+    case TechResult_Away:
+        return "away";
+    case TechResult_Wall:
+        return "wall";
+    case TechResult_WallJump:
+        return "walljump";
+    case TechResult_Ceil:
+        return "ceil";
+    default:
+        return "knockdown";
     }
 }
 
@@ -175,6 +267,8 @@ typedef struct RepData {
     HitKind hit_kind;
     /* The rep was voided by an early hit. */
     bool voided;
+    /* The tech option chosen for this rep, before the drop. */
+    TechOption option;
 } RepData;
 
 /* The opponent's damage percent as of the previous frame, to see when it takes
@@ -184,6 +278,11 @@ static float prev_percent;
 /* Whether the opponent was held by the player's fighter as of the previous
  * frame, to see the frame the grab connects. Updated every frame. */
 static bool prev_grabbed;
+
+/* Set by every run of the rep loop (with both fighters present) and cleared by
+ * the opponent's input hook: the hook acts only on a frame the loop ran, i.e.
+ * in Training Mode. */
+static bool rep_loop_ran;
 
 static RepState rep_state;
 static int frames_in_state;
@@ -209,6 +308,34 @@ static void reset_rep_data(float floor_y)
     rep.hit_frame = NO_FRAME;
     rep.hit_kind = HitKind_None;
     rep.voided = false;
+    rep.option = TechOption_InPlace;
+}
+
+/// The option chosen for the current rep (see tech_options.h).
+TechOption training_tech_option(void)
+{
+    return rep.option;
+}
+
+/// Picks the rep's tech option uniformly from the pool with the game's random
+/// number function. The pool must not be empty.
+static TechOption choose_tech_option(void)
+{
+    int count = 0;
+    int pick;
+    int i;
+
+    for (i = 0; i < TechOption_Count; i++) {
+        if (TECH_OPTION_POOL & TECH_OPTION_BIT(i)) {
+            count++;
+        }
+    }
+    pick = HSD_Randi(count);
+    for (i = 0;; i++) {
+        if ((TECH_OPTION_POOL & TECH_OPTION_BIT(i)) && pick-- == 0) {
+            return (TechOption) i;
+        }
+    }
 }
 
 /// Records the player's hit or grab on the opponent at the current rep frame.
@@ -334,6 +461,19 @@ static void measure_reach(HSD_GObj* player, HSD_GObj* opp)
     opponent_reach = hurtbox_reach(GET_FIGHTER(opp), -1.0F);
 }
 
+/// The stick x (full left or right) that rolls the opponent toward the player
+/// (tech in) or away (tech away), from where the two stand now.
+static s8 roll_stick_x(float opp_x, float opp_facing, float px,
+                       TechOption option)
+{
+    bool toward_right = side_of_player(opp_x, opp_facing, px) > 0;
+
+    if (option == TechOption_Away) {
+        toward_right = !toward_right;
+    }
+    return toward_right ? 127 : -127;
+}
+
 /// Reset state: the player stands next to the opponent's drop point facing it
 /// at 0%, and the opponent is respawned over the drop point at 0%, facing the
 /// player. Then the drop: the opponent enters tumble from rest.
@@ -358,8 +498,10 @@ static void do_rep_setup(void)
     Player_SetFacingDirection(OPPONENT_SLOT, -1.0F);
     Player_SetHUDDamage(OPPONENT_SLOT, 0);
     teleport(OPPONENT_SLOT, &drop, false);
+    rep.option = choose_tech_option();
     REP_LOG_START();
-    REP_LOG_WITH("drop", " height=%d", (int) OPPONENT_DROP_HEIGHT);
+    REP_LOG_WITH("drop", " height=%d option=%s", (int) OPPONENT_DROP_HEIGHT,
+                 tech_option_name(rep.option));
 
     opp = Player_GetEntity(OPPONENT_SLOT);
     if (opp != NULL) {
@@ -429,7 +571,20 @@ static void open_window(Fighter* fp)
     rep.seen_tech = true;
     rep.window_open = rep.rep_frames;
     REP_LOG("landing");
-    REP_LOG_WITH("tech", " option=%s", tech_option_name(fp->motion_id));
+#ifdef AUTHORING_BUILD
+    {
+        float px = player_x();
+        TechResult result = tech_result(fp, px);
+
+        REP_LOG_WITH("tech",
+                     " option=%s result_state=%s forced_ok=%s player_side=%s",
+                     tech_option_name(rep.option), tech_result_name(result),
+                     result_matches(rep.option, result) ? "true" : "false",
+                     side_of_player(fp->cur_pos.x, fp->facing_dir, px) < 0
+                         ? "left"
+                         : "right");
+    }
+#endif
 }
 
 /// Measures the current frame of the punish window. True when the window
@@ -593,6 +748,7 @@ static void think(HSD_GObj* gobj)
     if (player == NULL || opp == NULL) {
         return;
     }
+    rep_loop_ran = true;
     if (gm_GetDbPauseFlag(DB_PAUSE_FLAG_TRAINING)) {
         return;
     }
@@ -683,18 +839,75 @@ void training_tech_chase_init(void)
                        (HSD_GObjEvent) think, TECH_CHASE_PROC_PRIORITY);
 }
 
+/// The per-option input step: feeds the opponent's controller for `option`
+/// this frame, on top of the neutral input already set. `press` is true on the
+/// frame the tech press is due (timed from the fall). Carrying out another
+/// option means filling in its case; the rep loop does not change.
+static void feed_option_input(Fighter* fp, TechOption option, bool press)
+{
+    switch (option) {
+    case TechOption_InPlace:
+        /* One L press with neutral stick; Fighter_procInput derives the
+         * trigger and edge from the button bit. */
+        if (press) {
+            fp->cpu.buttons = HSD_PAD_L;
+        }
+        break;
+    case TechOption_In:
+    case TechOption_Away:
+        /* The same press, with the stick held fully left or right from the
+         * drop until the landing; the game turns it into its own forward/back
+         * roll. The direction is re-read every frame, not latched: the game
+         * reads the stick on the landing frame, so what counts is where the
+         * player stands then, and a latched side mislabelled the roll whenever
+         * the player crossed the opponent during the fall (measured). The
+         * stick history is written as already held (as for a player who held
+         * it into the hit), because a stick that starts or flips in the tumble
+         * is a flick, which cancels the tech. Air drift is zeroed so the held
+         * stick does not carry the opponent across the player before it
+         * lands. */
+        if (press) {
+            fp->cpu.buttons = HSD_PAD_L;
+        }
+        if (!rep.seen_tech &&
+            (rep_state == RepState_Drop || rep_state == RepState_Wait))
+        {
+            s8 stick =
+                roll_stick_x(fp->cur_pos.x, fp->facing_dir, player_x(), option);
+
+            fp->cpu.lstick.x = stick;
+            fp->input.lstick[0].x = stick / 127.0F;
+            fp->active_timer.lstick.x = 254;
+            fp->self_vel.x = 0.0F;
+        }
+        break;
+    case TechOption_Miss:
+        /* No L/R and no A/B while falling, so the opponent bounces and lies
+         * down; once it has lain for the down time, a plain getup (stick up,
+         * held until it stands). */
+        if (rep.window_open != NO_FRAME &&
+            rep.rep_frames - rep.window_open >= MISSED_TECH_DOWN_TIME)
+        {
+            fp->cpu.lstick.y = 127;
+        }
+        break;
+    default:
+        break;
+    }
+}
+
 /// Called from Fighter_procCpu after the CPU tick: replaces the opponent's
 /// input with neutral so the AI does nothing (ADR-0004). Only in Training
-/// Mode: the scene check scopes it without a scene-exit hook.
+/// Mode: whether the rep loop ran this frame scopes it without a scene-exit hook (the
+/// scene index is the mode's state index, not the scene kind, so it cannot).
 void training_cpu_input(Fighter_GObj* gobj)
 {
     Fighter* fp = GET_FIGHTER(gobj);
 
-    if (gm_GetCurrentSceneIndex() != GS_TRAINING ||
-        fp->player_idx != OPPONENT_SLOT)
-    {
+    if (fp->player_idx != OPPONENT_SLOT || !rep_loop_ran) {
         return;
     }
+    rep_loop_ran = false;
     fp->cpu.buttons = 0;
     fp->cpu.lstick.x = 0;
     fp->cpu.lstick.y = 0;
@@ -702,12 +915,8 @@ void training_cpu_input(Fighter_GObj* gobj)
     fp->cpu.cstick.y = 0;
     fp->cpu.ltrigger = 0;
     fp->cpu.rtrigger = 0;
-    if (rep.press_pending) {
-        /* One L press with neutral stick; Fighter_procInput derives the
-         * trigger and edge from the button bit. */
-        fp->cpu.buttons = HSD_PAD_L;
-        rep.press_pending = false;
-    }
+    feed_option_input(fp, rep.option, rep.press_pending);
+    rep.press_pending = false;
 }
 
 #endif

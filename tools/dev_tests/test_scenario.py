@@ -128,6 +128,27 @@ class ScenarioDryRunTests(unittest.TestCase):
     def test_committed_rep_outcome_early_shots_passes_dry_run(self):
         self.check_committed_scenario_dry_run("rep-outcome-early-shots")
 
+    def test_committed_tech_option_pool_of_one_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("tech-option-pool-of-one")
+
+    def test_committed_tech_option_pool_of_all_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("tech-option-pool-of-all")
+
+    def test_committed_tech_option_player_right_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("tech-option-player-right")
+
+    def test_committed_tech_option_miss_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("tech-option-miss")
+
+    def test_committed_tech_option_miss_shots_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("tech-option-miss-shots")
+
+    def test_committed_tech_option_miss_player_right_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("tech-option-miss-player-right")
+
+    def test_committed_tech_option_miss_hit_passes_dry_run(self):
+        self.check_committed_scenario_dry_run("tech-option-miss-hit")
+
     @unittest.skipUnless(sys.platform == "darwin", "macOS only")
     def test_macos_is_not_supported_yet(self):
         root = self.sandbox({"s": "a\n"})

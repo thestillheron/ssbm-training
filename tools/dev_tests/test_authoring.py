@@ -60,6 +60,22 @@ class FlagParsingTests(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("authoring", r.stdout + r.stderr)
 
+    def test_build_accepts_a_tech_pool(self):
+        self.accepted("build", "--tech-pool", "all")
+        self.accepted("build", "--authoring", "--tech-pool", "in,away")
+        r = dev(self.root, "run", "--help")
+        self.assertIn("--tech-pool", r.stdout)
+
+    def test_unknown_tech_pool_option_is_named(self):
+        r = dev(self.root, "build", "--tech-pool", "in,sideways")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("sideways", r.stdout + r.stderr)
+
+    def test_matching_build_has_no_tech_pool(self):
+        r = dev(self.root, "build", "--matching", "--tech-pool", "all")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("tech-pool", r.stdout + r.stderr)
+
 
 @requires_disc
 class AuthoringBuildTests(unittest.TestCase):
@@ -110,6 +126,19 @@ class AuthoringBuildTests(unittest.TestCase):
         self.build("--authoring")
         self.assertNotIn("Configuring", self.build("--authoring"))
         self.assertIn("Configuring", self.build())
+
+    def test_tech_pool_is_recorded_and_reconfigures_only_when_it_changes(self):
+        self.build("--authoring", "--tech-pool", "all")
+        self.assertEqual(state(self.root)["tech_pool"], 0b1111)
+        self.assertNotIn("Configuring", self.build("--authoring", "--tech-pool", "all"))
+        out = self.build("--authoring", "--tech-pool", "in,away")
+        self.assertIn("Configuring", out)
+        self.assertEqual(state(self.root)["tech_pool"], 0b0110)
+        files = compiled(out)
+        self.assertTrue(files, out)
+        self.assertTrue(all("/src/training/" in f for f in files), files)
+        self.build("--authoring")
+        self.assertIsNone(state(self.root)["tech_pool"])
 
     def test_check_reports_every_variant(self):
         r = dev(self.root, "check")

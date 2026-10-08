@@ -1,0 +1,11 @@
+# Acceptance scenario for tech-options ticket 03 (missed tech): hits on the
+# downed opponent. rep-outcome-mash-attack's dashing and jab mashing, run with
+# the pool set to missed tech only
+# (`python dev.py run --tech-pool miss --scenario tech-option-miss-hit`). Every
+# `tech` line reads `option=miss result_state=knockdown forced_ok=true`. A jab
+# that lands on the opponent lying down, after the landing, logs
+# `outcome=success ... hit_kind=hit` with the normal hit behaviour; a hit
+# before the landing logs `outcome=void`; reps with no connecting hit log
+# `outcome=failure` at the same actionable frame. Which reps get which is
+# rough, as in rep-outcome-mash-attack. No shots are taken.
+include rep-outcome-mash-attack

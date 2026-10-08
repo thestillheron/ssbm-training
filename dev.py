@@ -387,20 +387,42 @@ def save_state(**updates):
     BUILD_STATE.write_text(json.dumps(state))
 
 
-def configured_for(mode, authoring=False):
+TECH_OPTION_NAMES = ("in-place", "in", "away", "miss")  # TechOption order
+
+
+def tech_pool_mask(text):
+    """The TECH_OPTION_POOL bit mask for `all` or a comma list of option names
+    (src/training/tech_options.h)."""
+    if text == "all":
+        return (1 << len(TECH_OPTION_NAMES)) - 1
+    mask = 0
+    for name in text.split(","):
+        if name not in TECH_OPTION_NAMES:
+            raise argparse.ArgumentTypeError(
+                f"unknown tech option {name!r} (use all, or a comma list of "
+                f"{', '.join(TECH_OPTION_NAMES)})"
+            )
+        mask |= 1 << TECH_OPTION_NAMES.index(name)
+    return mask
+
+
+def configured_for(mode, authoring=False, tech_pool=None):
     state = load_state()
     return (
         state.get("mode") == mode
         and bool(state.get("authoring")) == authoring
+        and state.get("tech_pool") == tech_pool
         and state.get("configure_py") == configure_py_fingerprint()
         and (ROOT / "build.ninja").is_file()
     )
 
 
-def configure(mode, authoring=False):
+def configure(mode, authoring=False, tech_pool=None):
     cmd = [VENV_PYTHON, "configure.py", *MODES[mode][1]]
     if authoring:
         cmd.append("--authoring")
+    if tech_pool is not None:
+        cmd += ["--tech-pool", str(tech_pool)]
     if IS_MAC:
         wine = find_wine()
         if wine:
@@ -408,17 +430,24 @@ def configure(mode, authoring=False):
     say("Configuring ...")
     if run(cmd).returncode != 0:
         raise DevError("configure.py failed")
-    save_state(mode=mode, authoring=authoring, configure_py=configure_py_fingerprint())
+    save_state(
+        mode=mode,
+        authoring=authoring,
+        tech_pool=tech_pool,
+        configure_py=configure_py_fingerprint(),
+    )
 
 
-def build(mode, authoring=False):
+def build(mode, authoring=False, tech_pool=None):
     """Build `mode` ("matching" or "training"), the training build with its
-    authoring tools if `authoring`, and return its main.dol."""
+    authoring tools if `authoring`, and return its main.dol. `tech_pool`, a
+    TECH_OPTION_POOL mask, overrides the pool compiled in (None: the default
+    in src/training/tech_options.h)."""
     if not VENV_NINJA.is_file() or not (ORIG / "sys" / "main.dol").is_file():
         raise DevError("run `python dev.py setup <disc image>` first")
     dol = MODES[mode][0]
-    if not configured_for(mode, authoring):
-        configure(mode, authoring)
+    if not configured_for(mode, authoring, tech_pool):
+        configure(mode, authoring, tech_pool)
     label = f"{mode} (authoring)" if authoring else mode
     say(f"Building the {label} build ...")
     if run([VENV_NINJA]).returncode != 0:
@@ -433,9 +462,11 @@ def cmd_build(args):
     if args.matching:
         if args.authoring:
             raise DevError("--authoring does not apply to the matching build")
+        if args.tech_pool is not None:
+            raise DevError("--tech-pool does not apply to the matching build")
         build("matching")
     else:
-        build("training", authoring=bool(args.authoring))
+        build("training", authoring=bool(args.authoring), tech_pool=args.tech_pool)
 
 
 # ---------------------------------------------------------------- run
@@ -565,7 +596,7 @@ def cmd_run(args):
         )
     if playback:
         playback.check(dolphin)
-    dol = build("training", authoring=args.authoring)
+    dol = build("training", authoring=args.authoring, tech_pool=args.tech_pool)
     stop_tracked_dolphin(load_state())
     from tools import reps, shot
 
@@ -1043,6 +1074,13 @@ def main(argv=None):
         default=None,
         help="include the authoring tools in the training build (default: off)",
     )
+    tech_pool_help = (
+        "tech option pool for this build: all, or a comma list of "
+        "in-place,in,away,miss (default: the pool in src/training/tech_options.h)"
+    )
+    b.add_argument(
+        "--tech-pool", type=tech_pool_mask, default=None, help=tech_pool_help
+    )
     b.set_defaults(func=cmd_build)
     r = sub.add_parser("run", help="build the training build and boot it in Dolphin")
     r.add_argument(
@@ -1064,6 +1102,9 @@ def main(argv=None):
         action=argparse.BooleanOptionalAction,
         default=True,
         help="include the authoring tools (default: on; --no-authoring is the player build)",
+    )
+    r.add_argument(
+        "--tech-pool", type=tech_pool_mask, default=None, help=tech_pool_help
     )
     r.set_defaults(func=cmd_run)
     pd = sub.add_parser(

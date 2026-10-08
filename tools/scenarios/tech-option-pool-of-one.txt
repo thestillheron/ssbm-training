@@ -1,0 +1,10 @@
+# Acceptance scenario for tech-options ticket 01 (option choice and verified
+# log). Boots to Training, then gives no input for about 30 s so several reps
+# run. The default pool is tech in place only, so `python dev.py run --scenario
+# tech-option-pool-of-one` must print a `drop` line with `option=in-place` and
+# a `tech` line with `option=in-place result_state=in-place forced_ok=true` for
+# every rep. No shots are taken, so no window focus is needed beyond launching.
+include boot-to-training
+wait:600
+wait:600
+wait:600

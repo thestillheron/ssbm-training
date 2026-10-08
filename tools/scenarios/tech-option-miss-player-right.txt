@@ -1,0 +1,9 @@
+# Acceptance scenario for tech-options ticket 03 (missed tech) with the player
+# on the right of the landing point: tech-option-player-right's dashing, run
+# with the pool set to missed tech only
+# (`python dev.py run --tech-pool miss --scenario tech-option-miss-player-right`).
+# Every `tech` line must read `option=miss result_state=knockdown
+# forced_ok=true player_side=right` (rep 1 runs before the dash, so it reads
+# `left`), and every `outcome=failure` line shows the same actionable frame as
+# with the player on the left. No shots are taken.
+include tech-option-player-right
