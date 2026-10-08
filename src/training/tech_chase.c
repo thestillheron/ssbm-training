@@ -1,6 +1,8 @@
 #ifdef TRAINING_BUILD
 
 #include <melee/ft/fighter.h>
+#include <melee/ft/ft_0D4D.h>
+#include <melee/ft/ftcommon.h>
 #include <melee/ft/ftlib.h>
 #include <melee/ft/inlines.h>
 #include <melee/ft/kinds/ftCommon/ftCo_DamageFall.h>
@@ -9,6 +11,7 @@
 #include <melee/gm/gm_1A3F.h>
 #include <melee/gm/gmscene.h>
 #include <melee/gr/stage.h>
+#include <melee/mp/mpcoll.h>
 #include <melee/pl/player.h>
 #include <sysdolphin/baselib/controller.h>
 #include <sysdolphin/baselib/gobj.h>
@@ -26,8 +29,10 @@
 #define OPPONENT_SLOT 1
 
 /* Hardcoded layout, relative to the centre of the stage floor. */
-#define PLAYER_START_DX -30.0F
 #define OPPONENT_DROP_HEIGHT 40.0F
+
+/* How far above and below a spawn point teleport() looks for the floor. */
+#define GROUND_PROBE_RANGE 40.0F
 
 /* Frames to let the scene settle (fighters spawned) before the first rep. */
 #define SETTLE_FRAMES 60
@@ -244,7 +249,92 @@ static void refresh_hit_baseline(Fighter* fp)
     prev_grabbed = opponent_grabbed_by_player(fp);
 }
 
-/// Reset state: the player stands at the start position facing the opponent
+/// Moves a fighter to `pos` and respawns it there, like Player_800328D4 but
+/// without the spawn sparkles (a distraction in a drill that needs focus):
+/// ftCo_800D4F24's non-zero index is what spawns them.
+///
+/// With `grounded`, the fighter ends the teleport standing on the floor below
+/// `pos` (in Wait), so its first frame of input reads as a grounded one.
+/// Fighter_Spawn leaves it airborne (its own ground probe, ft_80082A68, only
+/// reaches 10 units and misses); the probe here reaches GROUND_PROBE_RANGE.
+/// The probe also loads the fighter's real ECB, which a spawn leaves stale.
+static void teleport(int slot, Vec3* pos, bool grounded)
+{
+    HSD_GObj* gobj;
+    Fighter* fp;
+    CollData* coll;
+    bool found;
+
+    Player_80032768(slot, pos);
+    gobj = Player_GetEntity(slot);
+    if (gobj == NULL || GET_FIGHTER(gobj)->is_sleeping) {
+        return;
+    }
+    fp = GET_FIGHTER(gobj);
+    coll = &fp->coll_data;
+    ftCo_800D4F24(gobj, 0);
+    ftCommon_8007ED2C(fp);
+    Fighter_Spawn(gobj);
+
+    coll->cur_pos = fp->cur_pos;
+    coll->last_pos = fp->cur_pos;
+    coll->last_pos.y += GROUND_PROBE_RANGE;
+    coll->cur_pos.y -= GROUND_PROBE_RANGE;
+    found = mpColl_800471F8(coll);
+    if (grounded && found) {
+        fp->cur_pos = coll->cur_pos;
+        ftCommon_8007D6A4(fp);
+    } else {
+        coll->cur_pos = fp->cur_pos;
+        coll->last_pos = fp->cur_pos;
+    }
+    ftCommon_8007D92C(gobj);
+}
+
+/* How far each fighter's body reaches to the side that faces the other, from
+ * its own position, measured while both stand in Wait (see measure_reach). The
+ * player starts exactly their sum from the opponent: as close as possible
+ * without standing inside the opponent. */
+static float player_reach;
+static float opponent_reach;
+
+/// The farthest an enabled hurtbox of `fp` reaches along the x axis towards
+/// `side` (+1 right, -1 left), measured from its position. Hurtbox positions
+/// follow the live pose, so this is only meaningful when the pose is fresh.
+static float hurtbox_reach(Fighter* fp, float side)
+{
+    float reach = 0.0F;
+    int i;
+
+    for (i = 0; i < fp->hurt_capsules_len; i++) {
+        HurtCapsule* hc = &fp->hurt_capsules[i].capsule;
+        float a;
+        float b;
+        float far;
+
+        if (hc->state != HurtCapsule_Enabled) {
+            continue;
+        }
+        a = (hc->a_pos.x - fp->cur_pos.x) * side;
+        b = (hc->b_pos.x - fp->cur_pos.x) * side;
+        far = (a > b ? a : b) + hc->scale;
+        if (far > reach) {
+            reach = far;
+        }
+    }
+    return reach;
+}
+
+/// Measures both fighters' reach towards each other. Called at the end of
+/// Settle, when both stand in Wait with fresh hurtboxes; the same every rep
+/// after, so the start spacing never depends on the previous rep's pose.
+static void measure_reach(HSD_GObj* player, HSD_GObj* opp)
+{
+    player_reach = hurtbox_reach(GET_FIGHTER(player), 1.0F);
+    opponent_reach = hurtbox_reach(GET_FIGHTER(opp), -1.0F);
+}
+
+/// Reset state: the player stands next to the opponent's drop point facing it
 /// at 0%, and the opponent is respawned over the drop point at 0%, facing the
 /// player. Then the drop: the opponent enters tumble from rest.
 static void do_rep_setup(void)
@@ -257,17 +347,17 @@ static void do_rep_setup(void)
     Stage_80224E64(STAGE_QUERY_FLOOR_CENTRE, &centre);
     reset_rep_data(centre.y);
     start = centre;
-    start.x += PLAYER_START_DX;
+    start.x -= player_reach + opponent_reach;
     drop = centre;
     drop.y += OPPONENT_DROP_HEIGHT;
 
     Player_SetFacingDirection(PLAYER_SLOT, 1.0F);
     Player_SetHUDDamage(PLAYER_SLOT, 0);
-    Player_800328D4(PLAYER_SLOT, &start);
+    teleport(PLAYER_SLOT, &start, true);
 
     Player_SetFacingDirection(OPPONENT_SLOT, -1.0F);
     Player_SetHUDDamage(OPPONENT_SLOT, 0);
-    Player_800328D4(OPPONENT_SLOT, &drop);
+    teleport(OPPONENT_SLOT, &drop, false);
     REP_LOG_START();
     REP_LOG_WITH("drop", " height=%d", (int) OPPONENT_DROP_HEIGHT);
 
@@ -522,6 +612,7 @@ static void think(HSD_GObj* gobj)
             create_early();
         }
         if (frames_in_state >= SETTLE_FRAMES) {
+            measure_reach(player, opp);
             set_state(RepState_Reset);
         }
         break;

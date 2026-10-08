@@ -701,6 +701,10 @@ def cmd_snapshot_card(args):
     snapshot_card()
 
 
+def cmd_stop(args):
+    stop_tracked_dolphin(load_state())
+
+
 def stop_tracked_dolphin(state, image_of=None, terminate=None):
     """Terminate the Dolphin that the last `run` launched (state key
     `dolphin_pid`), but only if that PID is still a Dolphin process. Other
@@ -1105,6 +1109,8 @@ def main(argv=None):
         "--since", type=int, metavar="BYTES", help="start marker: a log offset (default: set by run)"
     )
     rp.set_defaults(func=cmd_reps)
+    st = sub.add_parser("stop", help="close the Dolphin that the last run launched")
+    st.set_defaults(func=cmd_stop)
     c = sub.add_parser("check", help="pass/fail gate for both builds")
     c.set_defaults(func=cmd_check)
     args = p.parse_args(argv)

@@ -66,6 +66,14 @@ Builds the training build, assembles a game folder in `build/training/game/`, an
 
 `run --scenario <name>` also boots with a scenario played as a movie from power-on; see [Scenarios](#developer_workflow_scenarios).
 
+### `stop`
+
+```
+python dev.py stop
+```
+
+Closes the Dolphin that the last `run` launched (the PID in `build/dev_state.json`, and only if it is still a Dolphin process). `run` leaves Dolphin open, so call `stop` when you are done with it. Windows only; a no-op elsewhere.
+
 ### `check`
 
 ```
@@ -173,7 +181,7 @@ The committed prefixes:
 
 The committed drill scenarios:
 
-- `tech-chase-first-rep`: the acceptance scenario for the tech-chase drill's first rep. It includes `boot-to-training`, then takes shots of the opponent in tumble, during its tech in place, and after the reset with the second rep starting. Read the shots in order to confirm each phase. Run it with `python dev.py run --scenario tech-chase-first-rep`.
+- `tech-chase-first-rep`: the acceptance scenario for the tech-chase drill's first rep. It includes `boot-to-training`, then takes shots of the opponent in tumble, during its tech in place, and after the reset with the second rep starting. Read the shots in order to confirm each phase. Run it with `python dev.py run --scenario tech-chase-first-rep`. At every rep start the player is teleported, grounded and in Wait (not Fall), right beside the opponent's drop point (hurtboxes touching, measured once while both stand in Wait), and neither teleport shows the spawn sparkles.
 - `rep-outcome-no-input`: the acceptance scenario for the punish window log. Boots to Training and gives no input for about 30 s; `python dev.py run --scenario rep-outcome-no-input` then prints only `outcome=failure` lines whose `window_open`, `vuln_from`, `vuln_to` and `actionable` are the same in every rep.
 - `rep-outcome-mash-attack`: the acceptance scenario for hit success and void. The player dashes at the opponent's drop point and mashes jab over about 55 s; `python dev.py run --scenario rep-outcome-mash-attack` prints `outcome=success ... hit_kind=hit` for hits inside the punish window, `outcome=void` for hits before the landing, and `outcome=failure` for the rest.
 - `rep-outcome-mash-grab`: the acceptance scenario for grab success. The player dashes at the opponent's drop point and mashes Z over about 55 s; `python dev.py run --scenario rep-outcome-mash-grab` prints `outcome=success ... hit_kind=grab` for the reps where a grab connected inside the punish window (timing is only rough), and `outcome=failure` for the rest.
