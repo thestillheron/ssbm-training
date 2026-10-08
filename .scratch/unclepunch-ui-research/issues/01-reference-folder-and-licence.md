@@ -4,9 +4,13 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The developer workflow documents `ref/` in one line
-- [ ] `ref/` is confirmed gitignored and nothing in the build reads from it
-- [ ] The findings document exists with a licence section quoting the licence and stating what reuse it permits
-- [ ] The findings document has an empty section for each of the questions in tickets 02 to 06
+- [x] The developer workflow documents `ref/` in one line
+- [x] `ref/` is confirmed gitignored and nothing in the build reads from it
+- [x] The findings document exists with a licence section quoting the licence and stating what reuse it permits
+- [x] The findings document has an empty section for each of the questions in tickets 02 to 06
+
+## Answer
+
+UnclePunch's repo has no licence, so default copyright applies: learn from it and reimplement against our decomp's names, never copy its code, assets or text. Only ideas carry over. `ref/` is gitignored and documented in the developer workflow. See [Licence](../findings.md#licence).

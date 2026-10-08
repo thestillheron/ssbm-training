@@ -282,6 +282,10 @@ One event per line: the fixed prefix `[rep]`, then space-separated `key=value` f
 
 Keeping hooks to one guarded line makes them easy to find and re-apply after merging upstream `doldecomp/melee`. If you forget a guard, the matching build stops being byte-identical and `check` fails.
 
+## Reference source
+
+Reference source for agents to read alongside the decomp, such as the UnclePunch training pack (`ref/Training-Mode`), goes in `ref/` at the repo root. It is gitignored and nothing in the build reads from it.
+
 ## Per-machine config {#developer_workflow_config}
 
 `dev.config.json` at the repo root is gitignored and holds this machine's overrides. All keys are optional:

@@ -1,6 +1,6 @@
 # Research: how UnclePunch's training pack does menus and feedback
 
-Status: ready-for-agent (once the developer has placed the UnclePunch source in `ref/`)
+Status: resolved
 
 ## Problem Statement
 
