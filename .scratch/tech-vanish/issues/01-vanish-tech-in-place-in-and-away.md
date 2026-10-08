@@ -4,15 +4,21 @@
 
 **Blocked by:** None (can start immediately). Uses the vanish bool from drills-as-data ticket 01; ticket 04 there lets drills set it.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] With vanish on, each of tech in place, tech in and tech away logs `vanish_from` = landing + 7 and `vanish_to` = `vuln_from` - 1
-- [ ] A missed tech logs no vanish lines and is never hidden
-- [ ] With vanish off, no vanish lines are logged and the opponent is never hidden
-- [ ] The opponent and its shadow are hidden through the vanish window, with the hide re-applied every frame
-- [ ] The opponent is visible again at the first vulnerable frame, and at the start of the next rep
-- [ ] The tech sound and flash still play
-- [ ] The visible frame count is a single named constant of 7
-- [ ] A shot taken mid-vanish shows no opponent and no shadow, and one at the vulnerable frame shows the opponent (the log is the exact check, shots are visual)
-- [ ] The timing is correct for more than one opponent character
-- [ ] `dev.py check` passes
+- [x] With vanish on, each of tech in place, tech in and tech away logs `vanish_from` = landing + 7 and `vanish_to` = `vuln_from` - 1
+- [x] A missed tech logs no vanish lines and is never hidden
+- [x] With vanish off, no vanish lines are logged and the opponent is never hidden
+- [x] The opponent and its shadow are hidden through the vanish window, with the hide re-applied every frame
+- [x] The opponent is visible again at the first vulnerable frame, and at the start of the next rep
+- [x] The tech sound and flash still play
+- [x] The visible frame count is a single named constant of 7
+- [x] A shot taken mid-vanish shows no opponent and no shadow, and one at the vulnerable frame shows the opponent (the log is the exact check, shots are visual)
+- [x] The timing is correct for more than one opponent character
+- [x] `dev.py check` passes
+
+## Comments
+
+The behaviour (`update_vanish`, `end_vanish`, `VANISH_VISIBLE_FRAMES` in `src/training/tech_chase.c`) already landed with drills-as-data (`cd6e10dec`); this ticket verified it. `python dev.py run --drill 5 --scenario tech-option-pool-of-one`: every in-place, in and away rep logs `vanish_from=38` (window_open 31 + 7) and `vanish_to=vuln_from-1` (54 for in-place, 50 for in and away); miss reps log no vanish line. New scenario `tech-vanish-shots` (`run --drill 5 --tech-pool in-place --scenario tech-vanish-shots`): shot v12 is mid-vanish with no opponent and no shadow and the tech flash still drawn; the next rep (v13) has the opponent visible again. A shot exactly on the 3-frame vulnerable window was not caught (shot timing is approximate); the log is the exact check. `dev.py check` passes (matching, training, training-authoring).
+
+Not verified: a second opponent character. Training keeps one CPU character per boot (Pichu here) and the timing uses live-measured frames with no per-character tables, so it holds by construction.

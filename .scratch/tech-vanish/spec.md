@@ -1,6 +1,6 @@
 # Tech vanish: hide the opponent mid-tech
 
-Status: ready-for-agent
+Status: resolved
 
 ## Problem Statement
 

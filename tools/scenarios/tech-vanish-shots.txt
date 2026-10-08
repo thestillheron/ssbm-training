@@ -1,0 +1,38 @@
+# Acceptance scenario for tech vanish (tech-vanish tickets 01 and 02): back-to-back
+# shots (about 6 frames apart) across one rep with vanish on. Run it with
+#   python dev.py run --drill 5 --tech-pool in-place --scenario tech-vanish-shots
+# Read v01..v30 in order: the opponent falls, is drawn for the first 7 frames of
+# its tech, then neither it nor its shadow (nor a magnifier or name tag) is
+# drawn until its first vulnerable frame. The rep log is the exact check; shot
+# timing is approximate. Needs window focus for the shots.
+include boot-to-training
+shot v01
+shot v02
+shot v03
+shot v04
+shot v05
+shot v06
+shot v07
+shot v08
+shot v09
+shot v10
+shot v11
+shot v12
+shot v13
+shot v14
+shot v15
+shot v16
+shot v17
+shot v18
+shot v19
+shot v20
+shot v21
+shot v22
+shot v23
+shot v24
+shot v25
+shot v26
+shot v27
+shot v28
+shot v29
+shot v30
