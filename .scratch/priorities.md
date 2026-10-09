@@ -12,7 +12,7 @@ The order of work for the tech-chasing curriculum. Each item is a feature with i
 | 6 | [tech-vanish](tech-vanish/spec.md) | done | 3, 5 | Hide model and shadow from frame 8 of a tech until its first vulnerable frame. |
 | 7 | [unclepunch-ui-research](unclepunch-ui-research/spec.md) | done | — | `ref/` folder; how UnclePunch does menus, feedback, mode entry and saves. |
 | 8 | [rep-feedback](rep-feedback/spec.md) | done | 3, 4, 7 | Per-rep option, outcome, frames early/late; per-option summary. |
-| 9 | [drill-select](drill-select/spec.md) | ready-for-agent | 5, 7 | Each drill an Event Match event; pause menu (resume, restart, change characters, event list); summary menu; Training Mode back to vanilla (ADR-0005). |
+| 9 | [drill-select](drill-select/spec.md) | done | 5, 7 | Each drill an Event Match event; pause menu (resume, restart, change characters, event list); summary menu; Training Mode back to vanilla (ADR-0005). |
 | 10 | [layout-editor](layout-editor/spec.md) | ready-for-agent | 2, 5, 9 | Edit layout in game with the fighters as markers; Print layout in authoring builds only. |
 | 11 | [curriculum-v1](curriculum-v1/spec.md) | ready-for-human | 5, 6, 10 | Design and play-test the first curriculum along the agreed skeleton. |
 | 12 | [custom-drills](custom-drills/spec.md) | ready-for-agent | 9, 10 | Custom drill settings menu, any stage, layout editor for players; session only. |

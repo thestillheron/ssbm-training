@@ -1,0 +1,12 @@
+# Boot to the first drill through Event Match (ADR-0005): from a freshly
+# launched training build, 1-P Mode, Event Match, the first event, the
+# player + CPU character select, then the match on the drill's own stage with
+# the drill running. Reusable prefix for drill scenarios: `include` it.
+# Player is Ness; the CPU opponent keeps whatever character the character
+# select gives it. See boot-to-event-list and event-css-to-match for timing.
+
+include boot-to-event-list
+
+# The event list, cursor on the first event: choose it.
+a:2
+include event-css-to-match

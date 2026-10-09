@@ -1,6 +1,6 @@
 # Drill select and in-drill controls (drills as Event Match events)
 
-Status: ready-for-agent
+Status: resolved
 
 ## Problem Statement
 
@@ -48,7 +48,7 @@ Training Mode goes back to being vanilla: no drills, no drill chooser. This supe
 - **Restart drill:** in place (resets the rep loop to rep 1 with a clean score and clock), not a scene reload.
 - **Change characters / L+R+A+Start:** end the match and go back to the CSS for the same event. **Back to event list:** end the match and reopen the list on the drill just played (retail's "reopen on the last event" routing).
 - **Next drill:** the next drill in the table as the next event, with the same fighters, reloading the match scene (the stage may change). After the last drill, Next drill is disabled.
-- **Punish window display:** from a cached measurement of earlier reps against this opponent in the session, or "—" until one rep has measured it.
+- **Punish window display:** from a cached measurement of earlier reps against this opponent in the session, or a placeholder until one rep has measured it. The placeholder is "--": the SIS text conversion (`text.h`) covers printable ASCII only, so no em dash. It is shown in the pause menu and also when a drill starts (until the first rep ends).
 - **Training Mode:** the drill hook, CPU takeover and drill chooser are removed from Training Mode, which goes back to vanilla behaviour.
 - **No locking or saving** in this spec.
 - **Rep log** gets `menu` lines for list and menu selections.

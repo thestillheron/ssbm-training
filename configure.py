@@ -226,16 +226,7 @@ parser.add_argument(
     help="with --training: TECH_OPTION_POOL bit mask overriding "
     "the pool of every drill (compiled into src/training/drill.c)",
 )
-parser.add_argument(
-    "--drill",
-    type=int,
-    help="with --training: index of the current drill in the table in "
-    "src/training/drill.c (compiled into drill.c)",
-)
 args = parser.parse_args()
-
-if args.drill is not None and not args.training:
-    parser.error("--drill requires --training")
 
 if args.tech_pool is not None and not args.training:
     parser.error("--tech-pool requires --training")
@@ -2074,9 +2065,6 @@ if args.training:
     tech_pool_cflags = (
         [f"-DTECH_OPTION_POOL={args.tech_pool}"] if args.tech_pool is not None else []
     )
-    drill_cflags = (
-        [f"-DTRAINING_DRILL_INDEX={args.drill}"] if args.drill is not None else []
-    )
     config.libs.append(
         Lib(
             "training (Training Mod)",
@@ -2093,10 +2081,15 @@ if args.training:
                 Object(
                     Matching,
                     "training/drill.c",
-                    extra_cflags=training_cflags + tech_pool_cflags + drill_cflags,
+                    extra_cflags=training_cflags + tech_pool_cflags,
                 ),
                 Object(Matching, "training/layout.c", extra_cflags=training_cflags),
                 Object(Matching, "training/authoring.c", extra_cflags=training_cflags),
+                Object(Matching, "training/event.c", extra_cflags=training_cflags),
+                Object(Matching, "training/menu.c", extra_cflags=training_cflags),
+                Object(Matching, "training/pause.c", extra_cflags=training_cflags),
+                Object(Matching, "training/punish_window.c", extra_cflags=training_cflags),
+                Object(Matching, "training/event_list.c", extra_cflags=training_cflags),
             ],
             category="game",
         )

@@ -9,8 +9,8 @@
 
 #include <stdio.h>
 
-/* Position (canvas units) and size of the score text: top left, under the
- * Training Mode logo, clear of the rep result above the damage HUD. Tune by
+/* Position (canvas units) and size of the score text: top left, clear
+ * of the rep result above the damage HUD. Tune by
  * eye with `run`.
  * Line one is successes out of counted reps, line two the success rate. */
 #define SCORE_X 30.0F
@@ -34,7 +34,7 @@ static int line_rate_idx;
  * place", "10/10 100%", "Early", "Late" (about 15 canvas units a character
  * at the table's scale). The gap after the table keeps the larger last line
  * clear of it. Tune by eye with `run`. */
-#define SUMMARY_X 125.0F
+#define SUMMARY_X 265.0F
 #define SUMMARY_Y 90.0F
 #define SUMMARY_LINE_HEIGHT 30.0F
 #define SUMMARY_SCALE_X 1.0F
@@ -45,8 +45,8 @@ static int line_rate_idx;
 #define SUMMARY_TABLE_SCALE_Y 0.75F
 #define SUMMARY_COLUMNS 4
 
-static const float summary_column_x[SUMMARY_COLUMNS] = { SUMMARY_X, 255.0F,
-                                                          430.0F, 530.0F };
+static const float summary_column_x[SUMMARY_COLUMNS] = { SUMMARY_X, 372.0F,
+                                                          497.0F, 570.0F };
 
 static HSD_Text* summary_text;
 /* Canvas y of the next summary line. */
@@ -74,7 +74,7 @@ static void redraw(void)
     training_text_set(score_text, line_rate_idx, line);
 }
 
-/// Zeroes the score. Called when Training Mode is entered.
+/// Zeroes the score. Called when a drill event starts.
 void training_score_init(void)
 {
     summary_text = NULL;
@@ -221,7 +221,8 @@ static void add_option_table(void)
 }
 
 /// Draws the end-of-drill summary: the drill name, score, pass mark, pass or
-/// fail, then the option table (add_option_table).
+/// fail, then the option table (add_option_table). The summary menu
+/// (tech_chase.c) sits to its left.
 void training_summary_show(const Drill* drill)
 {
     char line[TRAINING_TEXT_MAX_CHARS + 1];
@@ -238,7 +239,6 @@ void training_summary_show(const Drill* drill)
     add_summary_line(line);
     add_summary_line(training_score_passed(drill) ? "PASS" : "FAIL");
     add_option_table();
-    add_summary_line("Press A to restart");
 }
 
 /// Hides the summary, if shown.

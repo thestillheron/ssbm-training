@@ -1,0 +1,10 @@
+# Acceptance scenario for drill-select ticket 06 (Training Mode is vanilla).
+# Boots to Training on Final Destination and gives no input for about 20 s.
+# `python dev.py run --scenario training-vanilla` must print no rep log lines
+# at all (no `drill_start`, no `start`, no `drop`, no `outcome`), and the shot
+# shows Training Mode with no score or drill text on screen and the CPU
+# standing (not dropped in by a drill). Needs window focus for the shot.
+include boot-to-training
+wait:600
+shot training-idle
+wait:600

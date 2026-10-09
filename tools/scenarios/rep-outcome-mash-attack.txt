@@ -1,5 +1,5 @@
 # Acceptance scenario for rep-outcome ticket 02 (hit success and void). Boots
-# to Training, then the player repeatedly dashes toward the opponent's drop point
+# to the first drill (Event Match), then the player repeatedly dashes toward the opponent's drop point
 # then mashes jab for about 1.7 s, over about 55 s, with gaps of
 # varied length so the mash lands at varied points of the reps. Reps
 # in which a hit lands on the opponent before it lands log `outcome=void` with
@@ -7,7 +7,7 @@
 # with `hit_kind=hit` (timing is only rough, so which of the two happens is
 # not fixed); reps with no connecting hit log `outcome=failure`. Read the rep
 # log with `dev.py reps` afterwards. No shots are taken.
-include boot-to-training
+include boot-to-event
 wait:20
 stick-right:12
 a:2

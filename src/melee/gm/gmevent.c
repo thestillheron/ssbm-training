@@ -27,6 +27,10 @@
 #include <sysdolphin/baselib/gobjproc.h>
 #include <sysdolphin/baselib/random.h>
 
+#ifdef TRAINING_BUILD
+#include <training/event.h>
+#endif
+
 #ifdef MUST_MATCH
 #include <MetroTRK/intrinsics.h>
 #endif
@@ -249,6 +253,10 @@ void onEnterCss(GameModeState* arg0)
     CSSData* css = gm_GetGameModeStateEnterData(arg0);
     PAD_STACK(8);
 
+#ifdef TRAINING_BUILD
+    if (training_event_enter_css(css)) { return; }
+#endif
+
     gm_801B06B0(css, 0xE, temp_r31->x2, 0, temp_r31->x3, temp_r31->nametag, 0,
                 temp_r31->x6);
     if (temp_r31->x44 == 1) {
@@ -267,6 +275,9 @@ void onExitCss(GameModeState* arg0)
         gm_ChangeGameModeAfterCurrentScene(GM_MENU);
         return;
     }
+#ifdef TRAINING_BUILD
+    if (training_event_exit_css(temp_r3)) { return; }
+#endif
     gm_801B0730(temp_r3, &temp_r31->x2, NULL, &temp_r31->x3,
                 &temp_r31->nametag, NULL);
     temp_r31->x8 = -1;
@@ -370,6 +381,9 @@ void onEnterVs(GameModeState* arg0)
     int i;
     PAD_STACK(0x10);
 
+#ifdef TRAINING_BUILD
+    if (training_event_enter_vs(md)) { return; }
+#endif
     lbArchive_LoadSymbols("GmEvent.dat", &gm_804D6900,
                           "sqEventInitDataLevelTbl", 0);
     levels = gm_804D6900[0];
@@ -642,6 +656,9 @@ void onExitVs(GameModeState* arg0)
     s32 t;
 
     gm_8016A164();
+#ifdef TRAINING_BUILD
+    if (training_event_exit_vs(exit)) { return; }
+#endif
     if (exit->match_end.outcome == OUTCOME_RETRY) {
         s32 do_save = 0;
         if (ev->x20 != 0) {
@@ -941,6 +958,9 @@ void gm_Mode_Event_OnLoad(void)
     if (temp_r29[temp_r28]->player_init[0]->c_kind != 0x21) {
         gm_SetGameModeStateId(1);
     }
+#ifdef TRAINING_BUILD
+    training_event_on_load();
+#endif
 }
 
 void gm_Mode_Event_OnUnload(void) {}

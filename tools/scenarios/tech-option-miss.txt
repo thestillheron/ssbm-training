@@ -1,5 +1,5 @@
 # Acceptance scenario for tech-options ticket 03 (missed tech). Boots to
-# Training, then gives no input for about 30 s so several reps run. With the
+# the first drill (Event Match), then gives no input for about 30 s so several reps run. With the
 # pool set to missed tech only
 # `python dev.py run --tech-pool miss --scenario tech-option-miss` must print, for every rep, a
 # `drop` line with `option=miss` and a `tech` line with `option=miss
@@ -7,7 +7,7 @@
 # `actionable` is the landing plus MISSED_TECH_DOWN_TIME plus the getup (never
 # a getup attack). No shots are taken, so no window focus is needed beyond
 # launching.
-include boot-to-training
+include boot-to-event
 wait:600
 wait:600
 wait:600

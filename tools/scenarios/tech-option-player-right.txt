@@ -7,7 +7,7 @@
 # --scenario tech-option-player-right`: every `tech` line must read
 # `forced_ok=true` and `player_side=right` (rep 1, before the dash: `left`).
 # No shots are taken.
-include boot-to-training
+include boot-to-event
 stick-right:20
 wait:4
 stick-right:20

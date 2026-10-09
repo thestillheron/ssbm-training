@@ -1,0 +1,72 @@
+# Acceptance scenario for drill-select ticket 05 (the drill summary menu:
+# Restart, Next drill, Event list). Authoring build only: it uses the one-rep
+# test drills at the end of the table. Boots to the Event Match list, moves
+# down to drill 13 (`Test: one rep`, Final Destination) and plays it with no
+# input, so its one rep fails and the summary opens:
+#  - shot `summary`: the score, pass mark and FAIL in the centre and the menu
+#    (Restart, Next drill, Event list) at the left.
+#  - Restart (A on the first item): a second `drill_start` for drill 13, the
+#    summary again after its rep.
+#  - Next drill: a `drill_start` for drill 14 (`Test: one rep, last`) on
+#    Battlefield (stage=31), with the same fighters (shot `next-drill`).
+#  - its summary (shot `last-summary`) greys out Next drill: down from Restart
+#    skips to Event list (shot `last-event-list-highlighted`), which reopens
+#    the list on drill 14 (shot `list-after-summary`).
+# `python dev.py run --scenario drill-summary-menu` prints a `menu` line for
+# each choice (menu="Drill over") and the `drill_start` lines in that order:
+# 13, 13, 14. Needs window focus for the shots.
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+shot drill-13
+a:2
+include event-css-to-match
+wait:520
+shot summary
+
+# Restart.
+a:2
+wait:60
+shot restarted
+wait:400
+shot summary-again
+
+# Down to Next drill, choose it.
+stick-down:2
+wait:14
+shot next-highlighted
+a:2
+wait:300
+shot next-drill
+wait:400
+shot last-summary
+
+# Next drill is greyed: down skips from Restart to Event list.
+stick-down:2
+wait:14
+shot last-event-list-highlighted
+a:2
+wait:200
+shot list-after-summary

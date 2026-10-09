@@ -2,7 +2,7 @@
 # missed-tech rep, to read in order: the opponent falling without a tech,
 # lying down after the bounce, and getting up. Needs the pool set to missed
 # tech only (`--tech-pool miss`) and window focus for the shots.
-include boot-to-training
+include boot-to-event
 shot m01
 wait:8
 shot m02

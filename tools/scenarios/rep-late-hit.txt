@@ -1,5 +1,5 @@
 # Acceptance scenario for rep-feedback ticket 04 (late: hit after
-# actionable). Boots to Training and gives no input through each rep's
+# actionable). Boots to the first drill (Event Match) and gives no input through each rep's
 # punish window, then jabs once during the pause after the opponent is
 # actionable, every 179 frames (one rep with no hit in its window, the
 # 120-frame pause included), so every rep is a failure whose late jab lands
@@ -10,7 +10,7 @@
 # second line must read `Nf late` with the N of that rep's `late` line.
 # Run it with `python dev.py run --scenario rep-late-hit`. Needs window
 # focus for the shots.
-include boot-to-training
+include boot-to-event
 wait:60
 a:2
 wait:30

@@ -71,21 +71,6 @@ class FlagParsingTests(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("sideways", r.stdout + r.stderr)
 
-    def test_build_accepts_a_drill_index(self):
-        self.accepted("build", "--authoring", "--drill", "2")
-        r = dev(self.root, "run", "--help")
-        self.assertIn("--drill", r.stdout)
-
-    def test_drill_index_must_be_a_number(self):
-        r = dev(self.root, "build", "--drill", "first")
-        self.assertNotEqual(r.returncode, 0)
-        self.assertIn("drill", r.stdout + r.stderr)
-
-    def test_matching_build_has_no_drill_index(self):
-        r = dev(self.root, "build", "--matching", "--drill", "1")
-        self.assertNotEqual(r.returncode, 0)
-        self.assertIn("drill", r.stdout + r.stderr)
-
     def test_matching_build_has_no_tech_pool(self):
         r = dev(self.root, "build", "--matching", "--tech-pool", "all")
         self.assertNotEqual(r.returncode, 0)

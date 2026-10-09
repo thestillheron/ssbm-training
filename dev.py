@@ -406,26 +406,23 @@ def tech_pool_mask(text):
     return mask
 
 
-def configured_for(mode, authoring=False, tech_pool=None, drill=None):
+def configured_for(mode, authoring=False, tech_pool=None):
     state = load_state()
     return (
         state.get("mode") == mode
         and bool(state.get("authoring")) == authoring
         and state.get("tech_pool") == tech_pool
-        and state.get("drill") == drill
         and state.get("configure_py") == configure_py_fingerprint()
         and (ROOT / "build.ninja").is_file()
     )
 
 
-def configure(mode, authoring=False, tech_pool=None, drill=None):
+def configure(mode, authoring=False, tech_pool=None):
     cmd = [VENV_PYTHON, "configure.py", *MODES[mode][1]]
     if authoring:
         cmd.append("--authoring")
     if tech_pool is not None:
         cmd += ["--tech-pool", str(tech_pool)]
-    if drill is not None:
-        cmd += ["--drill", str(drill)]
     if IS_MAC:
         wine = find_wine()
         if wine:
@@ -437,22 +434,20 @@ def configure(mode, authoring=False, tech_pool=None, drill=None):
         mode=mode,
         authoring=authoring,
         tech_pool=tech_pool,
-        drill=drill,
         configure_py=configure_py_fingerprint(),
     )
 
 
-def build(mode, authoring=False, tech_pool=None, drill=None):
+def build(mode, authoring=False, tech_pool=None):
     """Build `mode` ("matching" or "training"), the training build with its
     authoring tools if `authoring`, and return its main.dol. `tech_pool`, a
     TECH_OPTION_POOL mask, replaces every drill's pool (None: each drill uses
-    its own option_pool in src/training/drill.c). `drill`, an index into the drill table in
-    src/training/drill.c, makes that drill the current one (None: the first)."""
+    its own option_pool in src/training/drill.c)."""
     if not VENV_NINJA.is_file() or not (ORIG / "sys" / "main.dol").is_file():
         raise DevError("run `python dev.py setup <disc image>` first")
     dol = MODES[mode][0]
-    if not configured_for(mode, authoring, tech_pool, drill):
-        configure(mode, authoring, tech_pool, drill)
+    if not configured_for(mode, authoring, tech_pool):
+        configure(mode, authoring, tech_pool)
     label = f"{mode} (authoring)" if authoring else mode
     say(f"Building the {label} build ...")
     if run([VENV_NINJA]).returncode != 0:
@@ -469,15 +464,12 @@ def cmd_build(args):
             raise DevError("--authoring does not apply to the matching build")
         if args.tech_pool is not None:
             raise DevError("--tech-pool does not apply to the matching build")
-        if args.drill is not None:
-            raise DevError("--drill does not apply to the matching build")
         build("matching")
     else:
         build(
             "training",
             authoring=bool(args.authoring),
             tech_pool=args.tech_pool,
-            drill=args.drill,
         )
 
 
@@ -612,7 +604,6 @@ def cmd_run(args):
         "training",
         authoring=args.authoring,
         tech_pool=args.tech_pool,
-        drill=args.drill,
     )
     stop_tracked_dolphin(load_state())
     from tools import reps, shot
@@ -1091,10 +1082,6 @@ def main(argv=None):
         default=None,
         help="include the authoring tools in the training build (default: off)",
     )
-    drill_help = (
-        "index in the drill table (src/training/drill.c) of the drill the rep "
-        "loop runs (default: 0, the first)"
-    )
     tech_pool_help = (
         "tech option pool for this build: all, or a comma list of "
         "in-place,in,away,miss (default: each drill's own pool in "
@@ -1103,7 +1090,6 @@ def main(argv=None):
     b.add_argument(
         "--tech-pool", type=tech_pool_mask, default=None, help=tech_pool_help
     )
-    b.add_argument("--drill", type=int, default=None, help=drill_help)
     b.set_defaults(func=cmd_build)
     r = sub.add_parser("run", help="build the training build and boot it in Dolphin")
     r.add_argument(
@@ -1129,7 +1115,6 @@ def main(argv=None):
     r.add_argument(
         "--tech-pool", type=tech_pool_mask, default=None, help=tech_pool_help
     )
-    r.add_argument("--drill", type=int, default=None, help=drill_help)
     r.set_defaults(func=cmd_run)
     pd = sub.add_parser(
         "pad", help="pilot the training build: send GameCube controls as keystrokes"

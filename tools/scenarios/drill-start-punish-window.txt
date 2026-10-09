@@ -1,0 +1,30 @@
+# Review check for the punish window display (drill-select ticket 03 and
+# spec story 4): the punish window lines with the "--" placeholder before any
+# rep has measured them, at drill start (shot `drill-start`, in the first
+# rep's settle) and in the pause menu (shot `paused-before-measure`); once a
+# rep has measured them the pause menu shows frames (shot `paused-measured`).
+# It repeats event-css-to-match up to the start, then times its own waits:
+# that fragment ends 240 frames into the match, after rep 1.
+include boot-to-event-list
+a:2
+wait:40
+stick-up+stick-left:82
+wait:4
+stick-right:14
+wait:4
+stick-down:13
+wait:4
+a:2
+wait:3
+start:2
+wait:100
+shot drill-start
+wait:70
+start:2
+wait:30
+shot paused-before-measure
+start:2
+wait:600
+start:2
+wait:30
+shot paused-measured

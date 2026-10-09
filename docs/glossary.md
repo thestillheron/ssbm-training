@@ -54,11 +54,11 @@ Short for "damage."
 @section glossary_drill drill
 One configured tech-chasing activity, played as a series of @ref glossary_rep "reps" for a set count or time: the stage, where the opponent drops from and from what heights, where the player starts, which @ref glossary_tech_option "tech options" the opponent picks from, and whether it vanishes mid-tech. Avoid "mini game", "activity" or "exercise".
 
-@section glossary_drill_chooser drill chooser
-The temporary authoring-build control (D-pad right, in Training Mode, until drill-select makes each drill an Event Match event and removes it) that switches to the next @ref glossary_drill "drill" in the @ref glossary_drill_table "drill table" that fits the stage in play, restarting from rep 1 with a clean score and clock. It also lists the drills that need another stage. Avoid "drill picker".
+@section glossary_drill_event drill event
+An Event Match event whose match is a @ref glossary_drill "drill" (ADR-0005): chosen from the @ref glossary_event_list "event list", it opens on the character select, then a match on the drill's own stage where the rep loop runs. It never writes Event Match's scores or cleared bits. Its Start opens the @ref glossary_pause_menu "pause menu", and its end shows the @ref glossary_drill_summary "drill summary". Avoid "drill match" or "drill mode".
 
 @section glossary_drill_summary drill summary
-The screen shown when a @ref glossary_drill "drill" ends: its name, the score, the @ref glossary_pass_mark "pass mark", pass or fail, and for each @ref glossary_tech_option "tech option" the opponent did (not the one the drill aimed for) its success rate and how many of its reps were early or late (their @ref glossary_timing "timing"). Press A to restart the drill.
+The screen shown when a @ref glossary_drill "drill" ends: its name, the score, the @ref glossary_pass_mark "pass mark", pass or fail, and for each @ref glossary_tech_option "tech option" the opponent did (not the one the drill aimed for) its success rate and how many of its reps were early or late (their @ref glossary_timing "timing"). The summary has a menu: Restart (the same drill from rep 1), Next drill (the next entry in the @ref glossary_drill_table "drill table", keeping both fighters and reloading the match scene, so the stage may change; greyed out on the last drill) and Event list (back to the Event Match list on this drill).
 
 @section glossary_drill_table drill table
 The const table of @ref glossary_drill "drills" in `src/training/drill.c`: the @ref glossary_curriculum "curriculum", plus test drills in authoring builds. The rep loop runs one entry, the current drill.
@@ -97,7 +97,7 @@ Short for "index."
 Short for "initial" or any form of the verb "initialize."
 
 @section glossary_invalid_layout invalid layout
-A @ref glossary_layout "layout" that cannot run on the stage in play: no floor below the landing point or the player's start, or no usable drop heights. It is reported in the @ref glossary_rep_log "rep log" and on screen, and the @ref glossary_drill "drill" runs no reps. A stage that no drill in the @ref glossary_drill_table "drill table" fits is reported the same way (`no_drill_for_stage`).
+A @ref glossary_layout "layout" that cannot run on the stage in play: no floor below the landing point or the player's start, or no usable drop heights. It is reported in the @ref glossary_rep_log "rep log" and on screen, and the @ref glossary_drill "drill" runs no reps.
 
 @section glossary_it it
 Short for "item."
@@ -140,6 +140,9 @@ Stands for "motion variables." Used by #HSD_GObj::user_data structs (such as #Fi
 
 @section glossary_pass_mark pass mark
 The number of successful @ref glossary_rep "reps" a @ref glossary_drill "drill" needs for the player to pass it, shown in the @ref glossary_drill_summary "drill summary".
+
+@section glossary_pause_menu pause menu
+The text menu our Start opens in a @ref glossary_drill_event "drill event", over a match frozen with the game's own pause flag, in place of the retail pause (which never runs there): Resume, Restart drill, Change characters and Back to event list, with the @ref glossary_punish_window "punish window" lengths beside it. B does not unpause; only Start or Resume does. Not Training Mode's own pause menu, which is vanilla. Avoid "pause screen".
 
 @section glossary_phys phys
 Short for "physics."

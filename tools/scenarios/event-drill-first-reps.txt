@@ -1,0 +1,25 @@
+# Acceptance scenario for drill-select ticket 01 (one drill as an event).
+# Boots through Event Match to the first event and gives no input for about
+# 20 s, so several reps of drill 1 run. `python dev.py run --scenario
+# event-drill-first-reps` must print a `drill_start` line with drill 1's name
+# (`Tech in place`), then `start`, `drop`, `landing`, `tech`, `actionable` and
+# `outcome=failure` lines for each rep. The `event_save` lines at drill start
+# and at each exit of the match carry the same `cleared` and `best` values: the
+# event never writes Event Match's scores or cleared bits. Then, from the
+# retail pause (until ticket 03 replaces it), Z retries (the match reloads
+# without the character select: a second `drill_start`), and L+R+A+Start quits
+# back to the event list (shot `after-quit`).
+include boot-to-event
+wait:600
+wait:600
+shot after-reps
+start:2
+wait:20
+z:2
+wait:300
+shot after-retry
+start:2
+wait:20
+l+r+a+start:10
+wait:120
+shot after-quit

@@ -3,7 +3,7 @@
 # opponent and hits (c-stick forward smash) or grabs it, then idles, so reps
 # end with the opponent hit away, grabbed or left alone. Every reset must
 # still start a clean rep. Shots every ~0.7 s.
-include boot-to-training
+include boot-to-event
 wait:20
 stick-right:20
 cstick-right:4

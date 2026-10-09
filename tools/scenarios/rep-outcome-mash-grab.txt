@@ -5,7 +5,7 @@
 # ... hit_kind=grab`; one before the opponent lands logs `outcome=void ...
 # hit_kind=grab`; reps without a connecting grab log `outcome=failure`. Timing is
 # only rough, so which happens is not fixed. Read the log with `dev.py reps`.
-include boot-to-training
+include boot-to-event
 wait:20
 stick-right:17
 z:2

@@ -1,5 +1,5 @@
 # Acceptance scenario for the tech-chase first rep (spec stories 15-16). Boots
-# to Training on Final Destination (boot-to-training, frame-exact movie), then
+# to the first drill (boot-to-event, frame-exact movie), then
 # watches the rep loop in src/training/tech_chase.c. The player stays idle; the
 # CPU character may differ per boot.
 #
@@ -10,7 +10,7 @@
 # Part 2, r31..r42: a shot every ~20 frames, covering the ~1 s pause, the reset
 # and the next rep starting.
 # Read r01..r42 in order.
-include boot-to-training
+include boot-to-event
 shot r01
 shot r02
 shot r03

@@ -7,7 +7,7 @@
 # read `forced_ok=true`, all four `option=` values (in-place, in, away, miss)
 # must appear, and `player_side` must be both `left` and `right`. No shots are
 # taken, so no window focus is needed beyond launching.
-include boot-to-training
+include boot-to-event
 # no input: player on the left
 wait:600
 # dash right: player on the right

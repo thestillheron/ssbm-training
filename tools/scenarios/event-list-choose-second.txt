@@ -1,0 +1,16 @@
+# Acceptance scenario for drill-select ticket 02 (event list from the drill
+# table). Boots to the Event Match list (shot `event-list`: the drill table's
+# drills, numbered, and no vanilla event), moves the cursor down one row
+# (shot `drill-2`: drill 2's description and pass mark in the description
+# box), chooses it, then goes through the character select to the match.
+# `python dev.py run --scenario event-list-choose-second` must print a `menu`
+# line naming drill 2, then a `drill_start` line with drill 2's name and
+# stage (in an authoring build drill 2 is the test drill `Test: three
+# heights`, on Final Destination, stage=32).
+include boot-to-event-list
+stick-down:2
+wait:20
+shot drill-2
+a:2
+include event-css-to-match
+wait:300

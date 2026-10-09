@@ -1,0 +1,19 @@
+# Acceptance scenario for drills-as-data ticket 03 (drop height ranges),
+# through Event Match. Chooses drill 3 on the list ("Test: height range", 30
+# to 90), then gives no input for about 60 s so about 24 reps run: every
+# `drop` height is within 30..90 and they differ. The `drill_start` line shows
+# `height_kind=range`. No shots are taken, so no window focus is needed
+# beyond launching.
+include boot-to-event-list
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+a:2
+include event-css-to-match
+wait:600
+wait:600
+wait:600
+wait:600
+wait:600
+wait:600

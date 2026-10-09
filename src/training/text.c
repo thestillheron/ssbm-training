@@ -27,6 +27,37 @@ HSD_Text* training_text_create(void)
     return text;
 }
 
+HSD_Text* training_text_create_on(int canvas)
+{
+    HSD_Text* text = HSD_SisLib_803A6754(0, canvas);
+
+    text->default_kerning = 1;
+    return text;
+}
+
+void training_text_place(HSD_Text* text, float x, float y, float z,
+                         float size)
+{
+    text->pos_x = x;
+    text->pos_y = y;
+    text->pos_z = z;
+    text->font_size.x = size;
+    text->font_size.y = size;
+}
+
+void training_text_set_default_colour(HSD_Text* text, GXColor colour)
+{
+    text->text_color = colour;
+}
+
+void training_text_free(HSD_Text** text)
+{
+    if (*text != NULL) {
+        HSD_SisLib_803A5CC4(*text);
+        *text = NULL;
+    }
+}
+
 /// The SIS font's own character table, lbl_8040C8C0, lists the full-width
 /// form of every printable ASCII character in ASCII order from the space,
 /// with the backquote left out. So the full-width form of `c` is entry
@@ -62,6 +93,14 @@ int training_text_add(HSD_Text* text, float x, float y, float scale_x,
     line = HSD_SisLib_803A6B98(text, x, y, "%s", sis);
     HSD_SisLib_803A7548(text, line, scale_x, scale_y);
     return line;
+}
+
+int training_text_add_line(HSD_Text* text, float y, const char* ascii)
+{
+    char sis[TRAINING_TEXT_MAX_CHARS * 2 + 1];
+
+    training_text_to_sis(sis, ascii);
+    return HSD_SisLib_803A6B98(text, 0.0F, y, "%s", sis);
 }
 
 void training_text_set(HSD_Text* text, int line, const char* ascii)

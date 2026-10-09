@@ -11,7 +11,6 @@
 #include <melee/gm/forward.h>
 #include <melee/gm/gm_1A3F.h>
 #include <melee/gm/gmscene.h>
-#include <melee/gr/stage.h>
 #include <melee/mp/mpcoll.h>
 #include <melee/pl/player.h>
 #include <sysdolphin/baselib/controller.h>
@@ -25,15 +24,16 @@
 #endif
 
 #include "drill.h"
+#include "event.h"
 #include "layout.h"
+#include "menu.h"
+#include "punish_window.h"
 #include "rep_result.h"
 #include "score.h"
+#include "tech_chase.h"
+#include "slots.h"
 #include "text.h"
 #include "tech_options.h"
-
-/* Slot of the human player and of the CPU opponent in Training Mode. */
-#define PLAYER_SLOT 0
-#define OPPONENT_SLOT 1
 
 /* The layout and settings come from the current drill (drill.h); layout.h
  * snaps its points onto the stage. */
@@ -87,13 +87,8 @@ typedef enum RepState {
 #define TECH_CHASE_GOBJ_PRIORITY 0
 #define TECH_CHASE_PROC_PRIORITY 0x15
 
-/* gm_GetDbPauseFlag bit that is set while Training Mode is paused. */
-#define DB_PAUSE_FLAG_TRAINING 2
-
-/* The cpu.kind the game switches the opponent to on Training pause/unpause (a
- * human-driven type); we put it back to the plain CPU type. */
-#define CPU_KIND_HUMAN_DRIVEN 5
-#define CPU_TYPE_CPU 0
+/* The gm_GetDbPauseFlag bit set while a VS match (a drill event) is paused. */
+#define DB_PAUSE_FLAG_VS 1
 
 /// Which side of the opponent the player stands on: 1 for the right, -1 for
 /// the left. The one rule for "toward the player", shared by the stick that
@@ -174,7 +169,7 @@ static TechResult tech_result(Fighter* fp, float px)
 
 /* Rep log (authoring builds only): one `[rep] event=... rep=N frame=F` line per
  * event through OSReport. `frame` counts the frames the rep loop has run since
- * Training Mode was entered (paused frames are not counted). In player builds
+ * the drill event started (paused frames are not counted). In player builds
  * the REP_LOG* hooks are empty, so there is no logging code or text. */
 #ifdef AUTHORING_BUILD
 static int rep_number;
@@ -228,8 +223,6 @@ static void log_drill_end(const Drill* drill)
 #define LOG_INVALID_LAYOUT(drill, status)                                     \
     OSReport("[rep] event=invalid_layout drill=\"%s\" problem=%s\n",        \
              (drill)->name, training_layout_status_name(status))
-#define LOG_NO_DRILL_FOR_STAGE(stage)                                         \
-    OSReport("[rep] event=no_drill_for_stage stage=%d\n", stage)
 #define LOG_LAYOUT(layout)                                                    \
     REP_LOG_WITH("layout",                                                    \
                  " landing_x=%d landing_y=%d start_x=%d start_y=%d",          \
@@ -265,7 +258,6 @@ static void log_drill_start(const Drill* drill)
 #define REP_LOG_RESTART() ((void) 0)
 #define log_drill_end(drill) ((void) 0)
 #define LOG_INVALID_LAYOUT(drill, status) ((void) 0)
-#define LOG_NO_DRILL_FOR_STAGE(stage) ((void) 0)
 #define LOG_LAYOUT(layout) ((void) 0)
 #define log_drill_start(drill) ((void) 0)
 #endif
@@ -320,10 +312,10 @@ static bool prev_grabbed;
 
 /* Set by every run of the rep loop (with both fighters present) and cleared by
  * the opponent's input hook: the hook acts only on a frame the loop ran, i.e.
- * in Training Mode. */
+ * in a drill event. */
 static bool rep_loop_ran;
 
-/* Whether the player has been placed since Training was entered: with reset
+/* Whether the player has been placed since the drill event started: with reset
  * player off, only the first rep places them. */
 static bool player_placed;
 
@@ -674,7 +666,7 @@ static void open_window(Fighter* fp)
  * every time for one opponent character, since the getup input comes at a
  * fixed time (MISSED_TECH_DOWN_TIME): it is learnt from every missed tech that
  * reaches its getup, success or failure, and kept for the character it was
- * learnt from (across Training sessions). NO_FRAME until then. */
+ * learnt from (across drill events). NO_FRAME until then. */
 static int missed_vuln_len = NO_FRAME;
 static int missed_vuln_len_kind;
 
@@ -899,7 +891,7 @@ static void report_late(void)
     training_rep_result_show(rep.tech, RepOutcome_Failure, &timing);
 }
 
-/* The on-screen notice (invalid layout, no drill for the stage, chooser): canvas position and size of its lines. */
+/* The on-screen notice (invalid layout): canvas position and size of its lines. */
 #define NOTICE_X 60.0F
 #define NOTICE_Y 130.0F
 #define NOTICE_LINE_HEIGHT 44.0F
@@ -911,12 +903,9 @@ static void add_notice_line(HSD_Text* text, int row, const char* ascii)
                       NOTICE_SCALE, NOTICE_SCALE, ascii);
 }
 
-/* The on-screen notice of the moment (invalid layout, drill chooser list),
- * hidden when a new drill starts. */
+/* The on-screen notice of the moment (invalid layout), hidden when a drill
+ * starts. */
 static HSD_Text* notice_text;
-/* Frames the notice has been up; negative means it stays until replaced. */
-static int notice_age;
-#define CHOOSER_LIST_FRAMES 600
 
 static void hide_notice(void)
 {
@@ -949,24 +938,9 @@ static void report_invalid_layout(LayoutStatus status)
     LOG_INVALID_LAYOUT(drill, status);
     text = training_text_create();
     notice_text = text;
-    notice_age = -1;
     add_notice_line(text, 0, "Invalid layout");
     add_notice_line(text, 1, problem);
     add_notice_line(text, 2, drill->name);
-}
-
-/// No drill in the table fits the stage in play: say so in the rep log and on
-/// screen, once. The caller then runs no reps.
-static void report_no_drill_for_stage(int stage)
-{
-    HSD_Text* text;
-
-    LOG_NO_DRILL_FOR_STAGE(stage);
-    text = training_text_create();
-    notice_text = text;
-    notice_age = -1;
-    add_notice_line(text, 0, "No drill for this stage");
-    add_notice_line(text, 1, "Pick another stage");
 }
 
 /// Hides or shows the opponent's model and shadow. The game clears both flags
@@ -1051,6 +1025,16 @@ static bool advance_if_landed_or_aborted(Fighter* fp, HitKind hit)
 /// unpunished) and is scored. A window that timed out logs nothing.
 static void finish_rep(void)
 {
+    int window_end = rep.frames.actionable;
+
+    if (window_end == NO_FRAME && rep.frames.predicted_vuln_to != NO_FRAME) {
+        window_end = rep.frames.predicted_vuln_to + 1;
+    }
+    if (window_end != NO_FRAME && rep.frames.window_open != NO_FRAME) {
+        training_punish_window_record(
+            GET_FIGHTER(Player_GetEntity(OPPONENT_SLOT))->kind, rep.tech,
+            window_end - rep.frames.window_open);
+    }
     if (rep.frames.hit.frame != NO_FRAME) {
         training_score_record(rep.tech, true);
         report_outcome(RepOutcome_Success);
@@ -1080,6 +1064,66 @@ static bool drill_length_reached(void)
     return training_score_counted() >= drill->length;
 }
 
+/* The summary's menu (Restart, Next drill, Event list), shown beside the
+ * summary text while the rep loop is in RepState_Summary. A on an item sets
+ * `summary_choice`; the summary state acts on it. */
+typedef enum SummaryChoice {
+    SummaryChoice_None,
+    SummaryChoice_Restart,
+    SummaryChoice_NextDrill,
+    SummaryChoice_EventList,
+} SummaryChoice;
+
+static SummaryChoice summary_choice;
+
+static void choose_summary_restart(void)
+{
+    summary_choice = SummaryChoice_Restart;
+}
+
+static void choose_summary_next_drill(void)
+{
+    summary_choice = SummaryChoice_NextDrill;
+}
+
+static void choose_summary_event_list(void)
+{
+    summary_choice = SummaryChoice_EventList;
+}
+
+/* The summary menu's items, in order. */
+enum {
+    SUMMARY_ITEM_RESTART,
+    SUMMARY_ITEM_NEXT_DRILL,
+    SUMMARY_ITEM_EVENT_LIST,
+};
+
+static TrainingMenuItem summary_items[] = {
+    { "Restart", "Play it again", true, choose_summary_restart },
+    { "Next drill", "Next in list", true, choose_summary_next_drill },
+    { "Event list", "Pick a drill", true, choose_summary_event_list },
+};
+
+/* Left of the summary text (score.c). */
+#define SUMMARY_MENU_X 30.0F
+#define SUMMARY_MENU_Y 160.0F
+
+static TrainingMenu summary_menu = { "Drill over", summary_items,
+                                     ARRAY_SIZE(summary_items), 0, 0, NULL,
+                                     SUMMARY_MENU_X, SUMMARY_MENU_Y };
+
+/// Shows the summary's menu, with Next drill greyed out on the last drill.
+static void show_summary_menu(void)
+{
+    summary_items[SUMMARY_ITEM_NEXT_DRILL].enabled =
+        training_drill_has_next();
+    summary_choice = SummaryChoice_None;
+    /* The text from the last time stays; only the cursor starts over. */
+    summary_menu.cursor = 0;
+    summary_menu.top = 0;
+    training_menu_show(&summary_menu);
+}
+
 /// Starts the current drill from rep 1, clearing everything of the previous
 /// run: the notice, summary and rep result, the score, the drill clock, the
 /// player's placement and any vanish in progress (the opponent is shown
@@ -1088,62 +1132,29 @@ static void start_drill(Fighter* opp_fp)
 {
     hide_notice();
     training_rep_result_hide();
+    training_punish_window_panel_show();
     training_summary_hide();
+    training_menu_hide(&summary_menu);
     training_score_clear();
     end_vanish(opp_fp);
     player_placed = false;
     drill_frames = 0;
+    /* A tech press due this frame belongs to the run being thrown away. */
+    rep.press_pending = false;
     REP_LOG_RESTART();
     log_drill_start(training_drill_current());
     set_state(RepState_Reset);
 }
 
-#ifdef AUTHORING_BUILD
-/// The temporary drill chooser (until drill-select exists): the D-pad moves
-/// to the next drill that fits the stage in play. The new drill's name is
-/// shown with the drills that need another stage and the stage each needs
-/// (also in the rep log), then the drill starts from rep 1.
-static void choose_next_drill(Fighter* opp_fp)
+/// Restarts the drill in play from rep 1 (the pause menu's Restart drill).
+void training_tech_chase_restart(void)
 {
-    int stage = Stage_80225194();
-    int i;
-    int row = 1;
-    char needs[48];
-    const char* n;
-    HSD_Text* text;
+    HSD_GObj* opp = Player_GetEntity(OPPONENT_SLOT);
 
-    if (!training_drill_choose_next(stage)) {
-        return;
-    }
-    start_drill(opp_fp);
-    text = training_text_create();
-    notice_text = text;
-    notice_age = 0;
-    add_notice_line(text, 0, training_drill_current()->name);
-    OSReport("[rep] event=drill_choose name=\"%s\" stage_in_play=%d\n",
-             training_drill_current()->name, stage);
-    for (i = 0; i < training_drill_count(); i++) {
-        const Drill* drill = training_drill_at(i);
-
-        if (!training_drill_fits_stage(drill, stage)) {
-            const char* name = training_drill_stage_name(drill->stage);
-            char* p = needs;
-
-            OSReport("[rep] event=drill_needs name=\"%s\" stage=%d\n",
-                     drill->name, drill->stage);
-            add_notice_line(text, row++, drill->name);
-            for (n = "needs "; *n != 0; n++) {
-                *p++ = *n;
-            }
-            while (*name != 0 && p < needs + sizeof(needs) - 1) {
-                *p++ = *name++;
-            }
-            *p = 0;
-            add_notice_line(text, row++, needs);
-        }
+    if (opp != NULL) {
+        start_drill(GET_FIGHTER(opp));
     }
 }
-#endif
 
 static void think(HSD_GObj* gobj)
 {
@@ -1156,36 +1167,14 @@ static void think(HSD_GObj* gobj)
         return;
     }
     rep_loop_ran = true;
-    if (gm_GetDbPauseFlag(DB_PAUSE_FLAG_TRAINING)) {
+    if (gm_GetDbPauseFlag(DB_PAUSE_FLAG_VS)) {
         return;
     }
-    /* Training's pause/unpause can switch the CPU to a human-driven type;
-     * keep it CPU controlled so our hook silences it. */
-    if (GET_FIGHTER(opp)->cpu.kind == CPU_KIND_HUMAN_DRIVEN) {
-        Player_SetPlayerAndEntityCpuType(OPPONENT_SLOT, CPU_TYPE_CPU);
-    }
-
     frames_in_state++;
     if (rep_state != RepState_Settle && rep_state != RepState_Summary) {
         drill_frames++;
     }
     REP_LOG_TICK();
-    if (notice_text != NULL && notice_age >= 0 &&
-        ++notice_age > CHOOSER_LIST_FRAMES)
-    {
-        hide_notice();
-    }
-#ifdef AUTHORING_BUILD
-    /* Temporary drill chooser: D-pad right, in any state once the scene has
-     * settled. */
-    if (rep_state != RepState_Settle &&
-        (HSD_PadGameStatus[Player_GetPadPort(PLAYER_SLOT)].trigger &
-         HSD_PAD_DPADRIGHT))
-    {
-        choose_next_drill(GET_FIGHTER(opp));
-        return;
-    }
-#endif
     hit = poll_player_hit(GET_FIGHTER(opp));
     if (rep_state >= RepState_Drop && rep_state <= RepState_Pause) {
         /* A rep is under way: count its frame before anything measures it.
@@ -1198,6 +1187,15 @@ static void think(HSD_GObj* gobj)
         if (frames_in_state == 1) {
             training_score_show();
             training_rep_result_create();
+            training_punish_window_panel_show();
+        }
+        /* A VS match (a drill event) holds the fighters through its
+         * Ready/GO countdown: settle from the GO, or the first rep's tech
+         * press is ignored. */
+        if (GET_FIGHTER(player)->input_disabled ||
+            GET_FIGHTER(opp)->input_disabled)
+        {
+            frames_in_state = 1;
         }
         if (frames_in_state >= SETTLE_FRAMES) {
             measure_reach(player, opp);
@@ -1216,14 +1214,8 @@ static void think(HSD_GObj* gobj)
         training_rep_result_hide();
         {
             Layout layout;
-            int stage = Stage_80225194();
             LayoutStatus status;
 
-            if (!training_drill_fits_stage(training_drill_current(), stage)) {
-                report_no_drill_for_stage(stage);
-                set_state(RepState_Invalid);
-                break;
-            }
             status = training_layout_resolve(
                 training_drill_current(), player_reach + opponent_reach,
                 &layout);
@@ -1269,6 +1261,8 @@ static void think(HSD_GObj* gobj)
          * while hidden, shows the opponent here). */
         end_vanish(GET_FIGHTER(opp));
         finish_rep();
+        /* The start-of-drill panel goes once a rep has measured a window. */
+        training_punish_window_panel_hide();
         if (rep.frames.late_hit.frame != NO_FRAME || record_late_hit(hit)) {
             report_late();
         }
@@ -1293,6 +1287,7 @@ static void think(HSD_GObj* gobj)
                 training_rep_result_hide();
                 log_drill_end(training_drill_current());
                 training_summary_show(training_drill_current());
+                show_summary_menu();
                 set_state(RepState_Summary);
             } else {
                 set_state(RepState_Reset);
@@ -1300,24 +1295,52 @@ static void think(HSD_GObj* gobj)
         }
         break;
     case RepState_Summary:
-        /* Restart is the only action until drill-select exists. */
-        if (HSD_PadGameStatus[Player_GetPadPort(PLAYER_SLOT)].trigger &
-            HSD_PAD_A)
-        {
+        /* The match is not paused here, so ending it works directly. B and
+         * Start do nothing on the summary. */
+        summary_choice = SummaryChoice_None;
+        training_menu_update(&summary_menu, Player_GetPadPort(PLAYER_SLOT));
+        switch (summary_choice) {
+        case SummaryChoice_Restart:
             start_drill(GET_FIGHTER(opp));
+            break;
+        case SummaryChoice_NextDrill:
+            training_menu_hide(&summary_menu);
+            training_event_end_match(TrainingEventExit_NextDrill);
+            break;
+        case SummaryChoice_EventList:
+            training_menu_hide(&summary_menu);
+            training_event_end_match(TrainingEventExit_EventList);
+            break;
+        default:
+            break;
         }
         break;
     }
 }
 
-/// Called from gm_Scene_Training_OnEnter.
+/// Writes a rep log line `event` with the rep loop's progress (rep state,
+/// frames into the rep, the drill clock and the score), then `extra`, so two
+/// such lines show whether anything moved between them (a pause). Authoring
+/// builds only; a no-op otherwise.
+void training_tech_chase_log_progress(const char* event, const char* extra)
+{
+#ifdef AUTHORING_BUILD
+    OSReport("[rep] event=%s rep=%d frame=%d state=%d frames_in_state=%d "
+             "rep_frames=%d drill_frames=%d score=%d/%d%s\n",
+             event, rep_number, rep_frame, rep_state, frames_in_state,
+             rep.rep_frames, drill_frames, training_score_successes(),
+             training_score_counted(), extra);
+#endif
+}
+
+/// Called as a drill event's match start (src/training/event.c).
 void training_tech_chase_init(void)
 {
     set_state(RepState_Settle);
     drill_frames = 0;
     training_rep_result_init();
     notice_text = NULL;
-    training_drill_fit_to_stage(Stage_80225194());
+    training_punish_window_panel_reset();
     prev_percent = 0.0F;
     prev_grabbed = false;
     player_placed = false;
@@ -1325,6 +1348,7 @@ void training_tech_chase_init(void)
     log_drill_start(training_drill_current());
     reset_rep_data(0.0F);
     training_score_init();
+    training_menu_reset(&summary_menu);
     HSD_GObj_SetupProc(GObj_Create(TECH_CHASE_GOBJ_CLASS,
                                    TECH_CHASE_GOBJ_PLINK,
                                    TECH_CHASE_GOBJ_PRIORITY),
@@ -1389,8 +1413,8 @@ static void feed_option_input(Fighter* fp, TechOption option, bool press)
 }
 
 /// Called from Fighter_procCpu after the CPU tick: replaces the opponent's
-/// input with neutral so the AI does nothing (ADR-0004). Only in Training
-/// Mode: whether the rep loop ran this frame scopes it without a scene-exit hook (the
+/// input with neutral so the AI does nothing (ADR-0004). Only in a drill
+/// event: whether the rep loop ran this frame scopes it without a scene-exit hook (the
 /// scene index is the mode's state index, not the scene kind, so it cannot).
 void training_cpu_input(Fighter_GObj* gobj)
 {

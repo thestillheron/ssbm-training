@@ -62,30 +62,24 @@ typedef struct Drill {
 } Drill;
 
 /// The drill the rep loop runs: the table entry chosen with
-/// training_drill_choose_next (at first the compiled-in index).
+/// training_drill_select (at first the first entry).
 const Drill* training_drill_current(void);
+
+/// The table index of the current drill.
+int training_drill_current_index(void);
 
 /// The number of drills in the table.
 int training_drill_count(void);
 
+/// True when the current drill is not the last one in the table.
+bool training_drill_has_next(void);
+
 /// The table entry at `index`.
 const Drill* training_drill_at(int index);
 
-/// True when `drill` can run on `stage` (an external stage id): a curriculum
-/// drill runs only on its named stage.
-bool training_drill_fits_stage(const Drill* drill, int stage);
-
-/// Makes the current drill the first one that fits `stage`, if the current
-/// one does not. Leaves it alone when none fits.
-void training_drill_fit_to_stage(int stage);
-
-/// Moves the current drill to the next table entry that fits `stage`,
-/// wrapping round. Returns false (and changes nothing) when no other drill
-/// fits.
-bool training_drill_choose_next(int stage);
-
-/// A short name for an external stage id, for on-screen text.
-const char* training_drill_stage_name(int stage);
+/// Makes the table entry at `index` the current drill (ignored when out of
+/// range). A drill event selects its own drill this way.
+void training_drill_select(int index);
 
 /// A drop height for one rep: the only height, one of a list at random, or a
 /// uniform pick from a range (game units above the landing surface).

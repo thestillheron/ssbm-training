@@ -24,6 +24,10 @@
 #include <sysdolphin/baselib/memory.h>
 #include <sysdolphin/baselib/sislib.h>
 
+#ifdef TRAINING_BUILD
+#include <training/event_list.h>
+#endif
+
 StaticModelDesc MenMainConEv;
 StaticModelDesc MenMainMarkEv;
 static HSD_GObj* mnEvent_804D6C60;
@@ -57,6 +61,9 @@ s32 mnEvent_8024CE74(
 {
     s32 count;
 
+#ifdef TRAINING_BUILD
+    return training_event_list_last_top();
+#endif
     if (DbLevel > DbLKind_DebugDevelop) {
         return 0x2A;
     }
@@ -224,6 +231,9 @@ void mnEvent_8024D15C(s32 idx, s32 event_id)
             HSD_GObjFree(old_gobj);
             data->gobjs[idx] = NULL;
         }
+#ifdef TRAINING_BUILD
+        { training_event_list_row(data, idx, event_id, &pos); return; }
+#endif
 
         if (gmMainLib_8015CEFC(event_id) != 0) {
             mnEvent_CreateIconForSlot(idx, &data->gobjs[idx], &icon_jobj_0A,
@@ -368,6 +378,9 @@ static inline void mnEvent_ShowSelected(MnEventData* user_data,
     s32 event_id;
     HSD_GObj* event_gobj;
 
+#ifdef TRAINING_BUILD
+    { training_event_list_show(mnEvent_804D6C60); return; }
+#endif
     event =
         gm_801BEBA8((u32) (user_data->first_event + user_data->page) & 0xFF);
     event_gobj = mnEvent_804D6C60;
@@ -510,6 +523,9 @@ void mnEvent_8024D864(HSD_GObj* gobj)
             }
             PAD_STACK(4);
         } else if (inputs & MenuInput_Down) {
+#ifdef TRAINING_BUILD
+            if (training_event_list_at_end(data)) { return; }
+#endif
             page = data->page;
             if (page < 8) {
                 HSD_JObj* jobj_09;

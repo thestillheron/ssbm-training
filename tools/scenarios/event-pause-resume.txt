@@ -1,0 +1,40 @@
+# Acceptance scenario for drill-select ticket 03 (our pause menu, Resume).
+# Boots through Event Match into drill 1, lets a few reps run, then:
+#  - Start opens our pause menu over a frozen match, with no retail pause UI
+#    (shot `paused`); two seconds later nothing has moved (shot
+#    `still-paused`: same fighters, same score, same rep result).
+#  - B does not unpause (shot `after-b`: the menu is still up).
+#  - A on Resume (the first item) unpauses (shot `resumed`), and the reps
+#    carry on.
+#  - A second pause is closed with Start instead.
+# `python dev.py run --scenario event-pause-resume` prints a `pause` line
+# and a `resume` line for each pause with the same rep, frame, rep state,
+# rep frames, drill clock and score (nothing ran while paused), a
+# `menu menu="Pause" item="Resume"` line before the first resume
+# (`by=resume`), `by=start` on the second, and reps after both.
+include boot-to-event
+wait:600
+shot before-pause
+wait:10
+start:2
+wait:30
+shot paused
+wait:120
+shot still-paused
+b:2
+wait:30
+shot after-b
+wait:60
+shot after-b-later
+wait:10
+a:2
+wait:60
+shot resumed
+wait:400
+start:2
+wait:60
+shot paused-again
+wait:10
+start:2
+wait:600
+shot after-reps

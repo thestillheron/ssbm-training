@@ -12,12 +12,6 @@
 #define POOL_FOR(drill_pool) (drill_pool)
 #endif
 
-/* dev.py --drill N compiles in the index of the current drill, so acceptance
- * scenarios can run the test drills below. Default: the first entry. */
-#ifndef TRAINING_DRILL_INDEX
-#define TRAINING_DRILL_INDEX 0
-#endif
-
 /* Fields in the order of struct Drill (drill.h); the compiler has no
  * designated initialisers. */
 static const Drill drills[] = {
@@ -41,7 +35,8 @@ static const Drill drills[] = {
         7,
     },
 #ifdef AUTHORING_BUILD
-    /* Test drills, for the acceptance scenarios (--drill N). */
+    /* Test drills, for the acceptance scenarios (chosen from the event
+     * list by position). */
     {
         "Test: three heights",
         "Drop height picked from a list of three.",
@@ -82,7 +77,7 @@ static const Drill drills[] = {
     },
     {
         "Test: platform",
-        "Opponent lands on the top platform, player on the floor below.",
+        "Opponent lands on the top platform; player on the floor.",
         DRILL_STAGE_BATTLEFIELD,
         0.0F,
         54.0F,
@@ -251,21 +246,71 @@ static const Drill drills[] = {
         10,
         7,
     },
+    /* One-rep drills, for the summary menu's Next drill: from the first to
+     * the second changes the stage, and the second is the last drill. */
+    {
+        "Test: one rep",
+        "Authoring test: ends after one rep.",
+        DRILL_STAGE_FINAL_DESTINATION,
+        0.0F,
+        0.0F,
+        DrillHeight_List,
+        1,
+        { 40.0F },
+        0.0F,
+        0.0F,
+        DrillFacing_TowardPlayer,
+        true,
+        POOL_FOR(TECH_OPTION_BIT(TechOption_InPlace)),
+        false,
+        DrillLength_Reps,
+        1,
+        1,
+    },
+    {
+        "Test: one rep, last",
+        "Authoring test: the last drill, on Battlefield.",
+        DRILL_STAGE_BATTLEFIELD,
+        0.0F,
+        54.0F,
+        DrillHeight_List,
+        1,
+        { 40.0F },
+        0.0F,
+        0.0F,
+        DrillFacing_TowardPlayer,
+        true,
+        POOL_FOR(TECH_OPTION_BIT(TechOption_InPlace)),
+        false,
+        DrillLength_Reps,
+        1,
+        1,
+    },
 #endif
 };
 
 #define DRILL_COUNT ((int) (sizeof(drills) / sizeof(drills[0])))
 
-static int current_index = TRAINING_DRILL_INDEX;
+static int current_index;
 
 int training_drill_count(void)
 {
     return DRILL_COUNT;
 }
 
+bool training_drill_has_next(void)
+{
+    return current_index + 1 < DRILL_COUNT;
+}
+
 const Drill* training_drill_at(int index)
 {
     return &drills[index];
+}
+
+int training_drill_current_index(void)
+{
+    return current_index;
 }
 
 const Drill* training_drill_current(void)
@@ -276,50 +321,10 @@ const Drill* training_drill_current(void)
     return &drills[current_index];
 }
 
-bool training_drill_fits_stage(const Drill* drill, int stage)
+void training_drill_select(int index)
 {
-    return drill->stage == stage;
-}
-
-void training_drill_fit_to_stage(int stage)
-{
-    int i;
-
-    if (training_drill_fits_stage(training_drill_current(), stage)) {
-        return;
-    }
-    for (i = 0; i < DRILL_COUNT; i++) {
-        if (training_drill_fits_stage(&drills[i], stage)) {
-            current_index = i;
-            return;
-        }
-    }
-}
-
-bool training_drill_choose_next(int stage)
-{
-    int i;
-
-    for (i = 1; i < DRILL_COUNT; i++) {
-        int index = (current_index + i) % DRILL_COUNT;
-
-        if (training_drill_fits_stage(&drills[index], stage)) {
-            current_index = index;
-            return true;
-        }
-    }
-    return false;
-}
-
-const char* training_drill_stage_name(int stage)
-{
-    switch (stage) {
-    case DRILL_STAGE_BATTLEFIELD:
-        return "Battlefield";
-    case DRILL_STAGE_FINAL_DESTINATION:
-        return "Final Destination";
-    default:
-        return "another stage";
+    if (index >= 0 && index < DRILL_COUNT) {
+        current_index = index;
     }
 }
 

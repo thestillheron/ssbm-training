@@ -1,4 +1,4 @@
-# Shots of the early timing (rep-feedback ticket 03). Boots to Training
+# Shots of the early timing (rep-feedback ticket 03). Boots to the first drill (Event Match)
 # (drill 0, tech in place), leaves rep 1 alone and shoots its result
 # (`none`: "No attack"), then jabs once per rep, 3 frames earlier each rep:
 # the first press is about 7 frames before the opponent's first vulnerable
@@ -11,7 +11,7 @@
 # about movie frame L + 495), so which reps whiff and by how much can change
 # when the rep loop's timing does. Run it with
 # `python dev.py run --scenario rep-early-shots`. Needs window focus.
-include boot-to-training
+include boot-to-event
 wait:40
 shot none
 wait:162

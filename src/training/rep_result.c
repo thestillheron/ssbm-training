@@ -2,15 +2,13 @@
 
 #include "rep_result.h"
 
+#include "slots.h"
 #include "text.h"
 
 #include <melee/if/ifall.h>
 #include <sysdolphin/baselib/sislib.h>
 
 #include <stdio.h>
-
-/* Slot of the player whose damage HUD the result sits above. */
-#define RESULT_PLAYER_SLOT 0
 
 /* The damage HUD position (ifAll_GetPlayerHUDPosition) is in the HUD's own
  * units, with y up; the text canvas has y down. canvas = origin + hud * scale,
@@ -224,7 +222,7 @@ static int longest_line(void)
 /// made.
 void training_rep_result_create(void)
 {
-    Vec3* hud = ifAll_GetPlayerHUDPosition(RESULT_PLAYER_SLOT);
+    Vec3* hud = ifAll_GetPlayerHUDPosition(PLAYER_SLOT);
     float x = HUD_CANVAS_ORIGIN_X + hud->x * HUD_CANVAS_SCALE_X;
     float y = HUD_CANVAS_ORIGIN_Y +
               (hud->y + RESULT_HUD_Y_OFFSET) * HUD_CANVAS_SCALE_Y;

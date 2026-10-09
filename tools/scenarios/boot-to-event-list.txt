@@ -1,0 +1,25 @@
+# Boot to the Event Match list (ADR-0005): from a freshly launched training
+# build, 1-P Mode, then Event Match, ending on the event list with the cursor
+# on its first row (shot `event-list`). Reusable prefix: `include` it, then
+# move the cursor and choose an event. `boot-to-event` goes on to the first
+# event, the character select and the match.
+#
+# Timing is frame-exact (movie frames from power-on, fast disc loads; see
+# docs/developer-workflow.md). Presses are 2 frames. Where a press waits on a
+# load it has about 10 frames or more of margin past what was measured.
+# The list opens on the event last chosen since power-on, so on the first row
+# after a fresh boot.
+
+include boot-to-main-menu
+shot main-menu
+
+# 145: 1-P Mode. The submenu reads input from 6 frames after the `a`; down
+# moves from Regular Match to Event Match, which takes `a` from the frame
+# after the down is released (no load).
+a:2
+wait:14
+stick-down:2
+wait:4
+a:2
+wait:40
+shot event-list

@@ -17,6 +17,24 @@
  * drawn. */
 HSD_Text* training_text_create(void);
 
+/* Creates an empty text object on one of the game's existing text canvases
+ * (the retail menus' canvas 1, for example) instead of a canvas of its own.
+ * Place it with training_text_place before adding lines. */
+HSD_Text* training_text_create_on(int canvas);
+
+/* Puts the text object at (x, y, z) in its canvas's units with `size` as its
+ * font size in both directions. Lines added with training_text_add_line are
+ * placed relative to it. */
+void training_text_place(HSD_Text* text, float x, float y, float z,
+                         float size);
+
+/* Colours every line added from now on. */
+void training_text_set_default_colour(HSD_Text* text, GXColor colour);
+
+/* Frees a text object made by training_text_create_on and clears the
+ * pointer; a NULL object is left alone. */
+void training_text_free(HSD_Text** text);
+
 /* Writes `ascii` into `sis` (room for TRAINING_TEXT_MAX_CHARS * 2 + 1 bytes)
  * as full-width Shift-JIS: every printable ASCII character except the
  * backquote; anything else becomes a space. */
@@ -25,6 +43,10 @@ void training_text_to_sis(char* sis, const char* ascii);
 /* Adds a line of ASCII text at (x, y), scaled, and returns its index. */
 int training_text_add(HSD_Text* text, float x, float y, float scale_x,
                       float scale_y, const char* ascii);
+
+/* Adds a line of ASCII text `y` below the text object's own position, at its
+ * font size, and returns its index. */
+int training_text_add_line(HSD_Text* text, float y, const char* ascii);
 
 /* Replaces the text of line `line`. The new text may be longer than the
  * old. */
