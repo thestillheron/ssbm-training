@@ -1,0 +1,31 @@
+# Shots of the drill summary's per-option breakdown (rep-feedback ticket
+# 05). Boots to Training (drill 0, tech in place, 10 reps) and pilots each
+# rep to one timing class with a single jab: S on a vulnerable frame
+# (success), E into the intangibility (early), L in the pause after
+# actionable (late), N no input (none). Plan, one letter per rep:
+# SELNSELSLN. Timing is only rough (loop frame L is about movie
+# frame L + 495), so a rep can come out in another class. After the last
+# rep the summary is shot (`summary`): its row for each tech the opponent
+# did must match the `option_summary` lines after `drill_end`, and those must
+# match the reps' `timing` fields (a `late` line replaces its outcome
+# line's). Run it with `python dev.py run --scenario rep-summary-timing`.
+# Needs window focus for the shot.
+include boot-to-training
+wait:26
+a:2
+wait:169
+a:2
+wait:217
+a:2
+wait:322
+a:2
+wait:169
+a:2
+wait:217
+a:2
+wait:143
+a:2
+wait:209
+a:2
+wait:496
+shot summary

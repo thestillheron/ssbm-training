@@ -1,0 +1,54 @@
+# Acceptance scenario for rep-feedback ticket 04 (late: hit after
+# actionable). Boots to Training and gives no input through each rep's
+# punish window, then jabs once during the pause after the opponent is
+# actionable, every 179 frames (one rep with no hit in its window, the
+# 120-frame pause included), so every rep is a failure whose late jab lands
+# at about the same frame after actionable. The rep log must show only
+# failures, each followed by a `late` line with `timing=late_Nf` (or no late
+# line, `none`, if the jab misses): timing is approximate. A shot
+# 30 frames after each jab (`l01`, `l02`, ...) shows the result; its
+# second line must read `Nf late` with the N of that rep's `late` line.
+# Run it with `python dev.py run --scenario rep-late-hit`. Needs window
+# focus for the shots.
+include boot-to-training
+wait:60
+a:2
+wait:30
+shot l01
+wait:147
+a:2
+wait:30
+shot l02
+wait:147
+a:2
+wait:30
+shot l03
+wait:147
+a:2
+wait:30
+shot l04
+wait:147
+a:2
+wait:30
+shot l05
+wait:147
+a:2
+wait:30
+shot l06
+wait:147
+a:2
+wait:30
+shot l07
+wait:147
+a:2
+wait:30
+shot l08
+wait:147
+a:2
+wait:30
+shot l09
+wait:147
+a:2
+wait:30
+shot l10
+wait:147

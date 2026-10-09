@@ -1,0 +1,45 @@
+# Shots of the early timing (rep-feedback ticket 03). Boots to Training
+# (drill 0, tech in place), leaves rep 1 alone and shoots its result
+# (`none`: "No attack"), then jabs once per rep, 3 frames earlier each rep:
+# the first press is about 7 frames before the opponent's first vulnerable
+# frame, so the jabs whiff into its intangibility (one whose hitbox lasts
+# into the first vulnerable frame connects instead). A whiffed rep logs
+# `outcome=failure ... timing=early_Nf` and its shot (`e02`, `e03`, ...,
+# taken during the rep's pause, named by rep) reads "Nf early" with the
+# same N, N growing by about 3 per rep; a jab that connects on a vulnerable
+# frame logs `success_k/n` instead. Timing is only rough (loop frame L is
+# about movie frame L + 495), so which reps whiff and by how much can change
+# when the rep loop's timing does. Run it with
+# `python dev.py run --scenario rep-early-shots`. Needs window focus.
+include boot-to-training
+wait:40
+shot none
+wait:162
+a:2
+wait:58
+shot e02
+wait:116
+a:2
+wait:58
+shot e03
+wait:116
+a:2
+wait:58
+shot e04
+wait:116
+a:2
+wait:58
+shot e05
+wait:116
+a:2
+wait:58
+shot e06
+wait:116
+a:2
+wait:58
+shot e07
+wait:116
+a:2
+wait:58
+shot e08
+wait:116

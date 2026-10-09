@@ -2088,6 +2088,8 @@ if args.training:
                     extra_cflags=training_cflags,
                 ),
                 Object(Matching, "training/score.c", extra_cflags=training_cflags),
+                Object(Matching, "training/text.c", extra_cflags=training_cflags),
+                Object(Matching, "training/rep_result.c", extra_cflags=training_cflags),
                 Object(
                     Matching,
                     "training/drill.c",

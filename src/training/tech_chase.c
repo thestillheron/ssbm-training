@@ -1,6 +1,7 @@
 #ifdef TRAINING_BUILD
 
 #include <melee/ft/fighter.h>
+#include <melee/ft/ftanim.h>
 #include <melee/ft/ft_0D4D.h>
 #include <melee/ft/ftcommon.h>
 #include <melee/ft/ftlib.h>
@@ -25,7 +26,9 @@
 
 #include "drill.h"
 #include "layout.h"
+#include "rep_result.h"
 #include "score.h"
+#include "text.h"
 #include "tech_options.h"
 
 /* Slot of the human player and of the CPU opponent in Training Mode. */
@@ -60,7 +63,7 @@ typedef enum RepState {
 } RepState;
 
 /* Frames between the opponent becoming actionable and the next drop. */
-#define PAUSE_FRAMES 60
+#define PAUSE_FRAMES 120
 
 /* A rep that has not ended this many frames after its drop is abandoned, so a
  * rep can never hang (opponent hit away, grabbed, stuck). */
@@ -112,28 +115,6 @@ static float player_x(void)
     return GET_FIGHTER(Player_GetEntity(PLAYER_SLOT))->cur_pos.x;
 }
 
-/* Rep log (authoring builds only): one `[rep] event=... rep=N frame=F` line per
- * event through OSReport. `frame` counts the frames the rep loop has run since
- * Training Mode was entered (paused frames are not counted). In player builds
- * the REP_LOG* hooks are empty, so there is no logging code or text. */
-#ifdef AUTHORING_BUILD
-static int rep_number;
-static int rep_frame;
-
-static const char* tech_option_name(TechOption option)
-{
-    switch (option) {
-    case TechOption_InPlace:
-        return "in-place";
-    case TechOption_In:
-        return "in";
-    case TechOption_Away:
-        return "away";
-    default:
-        return "miss";
-    }
-}
-
 /* What the game actually entered on landing, kept apart from TechOption (what
  * the drill aimed for): a result can be one no option aims for (wall and
  * ceiling techs), and a failed press knocks the opponent down, which is only
@@ -146,7 +127,23 @@ typedef enum TechResult {
     TechResult_Wall,
     TechResult_WallJump,
     TechResult_Ceil,
+    TechResult_Count,
 } TechResult;
+
+/* What each landing result amounts to, in TechResult's order: the tech the
+ * rep result and the summary name, and the rep log's `result_state`. */
+static const struct {
+    RepTech tech;
+    REP_LOG_ONLY(const char* log_name;)
+} tech_results[TechResult_Count] = {
+    { RepTech_InPlace REP_LOG_ONLY(, "in-place") },
+    { RepTech_In REP_LOG_ONLY(, "in") },
+    { RepTech_Away REP_LOG_ONLY(, "away") },
+    { RepTech_Missed REP_LOG_ONLY(, "knockdown") },
+    { RepTech_Wall REP_LOG_ONLY(, "wall") },
+    { RepTech_Wall REP_LOG_ONLY(, "walljump") },
+    { RepTech_Ceiling REP_LOG_ONLY(, "ceil") },
+};
 
 /// Maps the opponent's landing state to what it amounts to. A roll is forward
 /// or back relative to the opponent's facing; the player-relative name follows
@@ -175,39 +172,23 @@ static TechResult tech_result(Fighter* fp, float px)
     }
 }
 
+/* Rep log (authoring builds only): one `[rep] event=... rep=N frame=F` line per
+ * event through OSReport. `frame` counts the frames the rep loop has run since
+ * Training Mode was entered (paused frames are not counted). In player builds
+ * the REP_LOG* hooks are empty, so there is no logging code or text. */
+#ifdef AUTHORING_BUILD
+static int rep_number;
+static int rep_frame;
+
+static const char* tech_option_name(TechOption option)
+{
+    return training_rep_tech_log_name(training_rep_tech_of_option(option));
+}
+
 /// True when the game did what the option aimed for.
 static bool result_matches(TechOption option, TechResult result)
 {
-    switch (option) {
-    case TechOption_InPlace:
-        return result == TechResult_InPlace;
-    case TechOption_In:
-        return result == TechResult_In;
-    case TechOption_Away:
-        return result == TechResult_Away;
-    default:
-        return result == TechResult_Knockdown;
-    }
-}
-
-static const char* tech_result_name(TechResult result)
-{
-    switch (result) {
-    case TechResult_InPlace:
-        return "in-place";
-    case TechResult_In:
-        return "in";
-    case TechResult_Away:
-        return "away";
-    case TechResult_Wall:
-        return "wall";
-    case TechResult_WallJump:
-        return "walljump";
-    case TechResult_Ceil:
-        return "ceil";
-    default:
-        return "knockdown";
-    }
+    return tech_results[result].tech == training_rep_tech_of_option(option);
 }
 
 /* The common `[rep] event=E rep=N frame=F` prefix; `extra` is a printf format
@@ -223,13 +204,26 @@ static const char* tech_result_name(TechResult result)
 #define REP_LOG_START() (rep_number++, REP_LOG("start"))
 #define REP_LOG_RESTART() (rep_number = 0)
 
+/// Writes the `drill_end` line, then an `option_summary` line for each tech
+/// the opponent did in a counted rep: what the summary's option table shows.
 static void log_drill_end(const Drill* drill)
 {
     int successes = training_score_successes();
+    int i;
 
     REP_LOG_WITH("drill_end", " score=%d/%d pass_mark=%d passed=%s", successes,
                  training_score_counted(), drill->pass_mark,
                  training_score_passed(drill) ? "true" : "false");
+    for (i = 0; i < RepTech_Count; i++) {
+        TechScore o = training_score_tech((RepTech) i);
+
+        if (o.counted != 0) {
+            REP_LOG_WITH("option_summary",
+                         " option=%s counted=%d successes=%d early=%d late=%d",
+                         training_rep_tech_log_name((RepTech) i), o.counted,
+                         o.successes, o.early, o.late);
+        }
+    }
 }
 #define LOG_INVALID_LAYOUT(drill, status)                                     \
     OSReport("[rep] event=invalid_layout drill=\"%s\" problem=%s\n",        \
@@ -276,13 +270,6 @@ static void log_drill_start(const Drill* drill)
 #define log_drill_start(drill) ((void) 0)
 #endif
 
-/* How the player's punish reached the opponent. */
-typedef enum HitKind {
-    HitKind_None,
-    HitKind_Hit,
-    HitKind_Grab,
-} HitKind;
-
 #ifdef AUTHORING_BUILD
 static const char* hit_kind_name(HitKind kind)
 {
@@ -297,9 +284,6 @@ static const char* hit_kind_name(HitKind kind)
 }
 #endif
 
-/* Frame number meaning "has not happened (yet) in this rep". */
-#define NO_FRAME (-1)
-
 /* Per-rep state, reset together at the start of every rep. Frames are counted
  * from the rep's drop (rep_frames), so they match across reps. */
 typedef struct RepData {
@@ -308,21 +292,19 @@ typedef struct RepData {
     bool press_pending;
     int rep_frames;
     bool seen_tech;
-    /* The punish window, measured from the opponent's live state: it opens on
-     * the landing frame and closes on the first actionable frame. The
-     * vulnerable frames are the window frames in which the opponent can be
-     * hit or grabbed. */
-    int window_open;
-    int vuln_from;
-    int vuln_to;
-    int actionable;
-    /* The player's hit on the opponent: the frame it happened, or NO_FRAME. */
-    int hit_frame;
-    HitKind hit_kind;
-    /* The rep was voided by an early hit. */
-    bool voided;
+    /* The punish window and the player's hits, measured from the
+     * opponent's live state (rep_result.h). */
+    RepFrames frames;
+    /* frames.early_attack_frame is not yet followed by a vulnerable or
+     * actionable frame, so its frames early are not known yet. */
+    bool early_pending;
+    /* The rep was scored as a failure, so its timing class goes into the
+     * summary's early and late counts once final (at the end of the pause). */
+    bool scored_failure;
     /* The tech option chosen for this rep, before the drop. */
     TechOption option;
+    /* What the opponent did on landing (set when the window opens). */
+    RepTech tech;
     /* Vanish: the opponent is hidden now; the first hidden frame. */
     bool vanish_hidden;
     int vanish_from;
@@ -362,14 +344,22 @@ static void reset_rep_data(float floor_y)
     rep.press_pending = false;
     rep.rep_frames = 0;
     rep.seen_tech = false;
-    rep.window_open = NO_FRAME;
-    rep.vuln_from = NO_FRAME;
-    rep.vuln_to = NO_FRAME;
-    rep.actionable = NO_FRAME;
-    rep.hit_frame = NO_FRAME;
-    rep.hit_kind = HitKind_None;
-    rep.voided = false;
+    rep.frames.window_open = NO_FRAME;
+    rep.frames.vuln_from = NO_FRAME;
+    rep.frames.vuln_to = NO_FRAME;
+    rep.frames.actionable = NO_FRAME;
+    rep.frames.predicted_vuln_to = NO_FRAME;
+    rep.frames.hit.frame = NO_FRAME;
+    rep.frames.hit.kind = HitKind_None;
+    rep.frames.early_attack_frame = NO_FRAME;
+    rep.frames.early_frames = NO_FRAME;
+    rep.early_pending = false;
+    rep.frames.late_hit.frame = NO_FRAME;
+    rep.frames.late_hit.kind = HitKind_None;
+    rep.frames.voided = false;
+    rep.scored_failure = false;
     rep.option = TechOption_InPlace;
+    rep.tech = RepTech_InPlace;
     rep.vanish_hidden = false;
     rep.vanish_from = NO_FRAME;
 }
@@ -404,8 +394,8 @@ static TechOption choose_tech_option(void)
 /// Records the player's hit or grab on the opponent at the current rep frame.
 static void record_hit(HitKind hit)
 {
-    rep.hit_frame = rep.rep_frames;
-    rep.hit_kind = hit;
+    rep.frames.hit.frame = rep.rep_frames;
+    rep.frames.hit.kind = hit;
 }
 
 static void clear_fighter_motion(Fighter* fp)
@@ -658,7 +648,8 @@ static HitKind poll_player_hit(Fighter* fp)
 static void open_window(Fighter* fp)
 {
     rep.seen_tech = true;
-    rep.window_open = rep.rep_frames;
+    rep.frames.window_open = rep.rep_frames;
+    rep.tech = tech_results[tech_result(fp, player_x())].tech;
     REP_LOG("landing");
 #ifdef AUTHORING_BUILD
     {
@@ -667,7 +658,8 @@ static void open_window(Fighter* fp)
 
         REP_LOG_WITH("tech",
                      " option=%s result_state=%s forced_ok=%s player_side=%s",
-                     tech_option_name(rep.option), tech_result_name(result),
+                     tech_option_name(rep.option),
+                     tech_results[result].log_name,
                      result_matches(rep.option, result) ? "true" : "false",
                      side_of_player(fp->cur_pos.x, fp->facing_dir, px) < 0
                          ? "left"
@@ -676,22 +668,115 @@ static void open_window(Fighter* fp)
 #endif
 }
 
+/* A missed tech's window spans several motions (bounce, lying, getup), so
+ * before the getup its last vulnerable frame cannot be read from the
+ * animation. Its length (last vulnerable frame - window_open) is the same
+ * every time for one opponent character, since the getup input comes at a
+ * fixed time (MISSED_TECH_DOWN_TIME): it is learnt from every missed tech that
+ * reaches its getup, success or failure, and kept for the character it was
+ * learnt from (across Training sessions). NO_FRAME until then. */
+static int missed_vuln_len = NO_FRAME;
+static int missed_vuln_len_kind;
+
+/// True for the motions that run to the opponent's first actionable frame in
+/// one animation: the techs on the floor and the getup after a missed tech.
+static bool runs_to_actionable(int motion)
+{
+    switch (motion) {
+    case ftCo_MS_Passive:
+    case ftCo_MS_PassiveStandF:
+    case ftCo_MS_PassiveStandB:
+    case ftCo_MS_DownStandU:
+    case ftCo_MS_DownStandD:
+        return true;
+    default:
+        return false;
+    }
+}
+
+/// Predicts the window's last vulnerable frame from the animation the opponent
+/// is in: the frame before its animation ends at its current rate (the end is
+/// the actionable frame, which is not in the window). A hit replaces the
+/// animation, so the prediction of the frame before the hit is the one a
+/// success uses. A missed tech before its getup uses the learnt length
+/// (missed_vuln_len); other motions leave the prediction alone.
+static void predict_vuln_to(Fighter* fp)
+{
+    if (runs_to_actionable(fp->motion_id)) {
+        float left = ftAnim_8006F484(fp->gobj) - ftAnim_8006F3DC(fp->gobj);
+        int frames = 0;
+
+        if (fp->frame_speed_mul > 0.0F && left > 0.0F) {
+            frames = (int) (left / fp->frame_speed_mul + 0.999F);
+        }
+        /* On a failure this equals the measured vuln_to (the outcome line's
+         * pred_vuln_to). */
+        rep.frames.predicted_vuln_to = rep.rep_frames + frames - 1;
+        if (rep.tech == RepTech_Missed) {
+            missed_vuln_len =
+                rep.frames.predicted_vuln_to - rep.frames.window_open;
+            missed_vuln_len_kind = fp->kind;
+        }
+    } else if (rep.tech == RepTech_Missed && missed_vuln_len != NO_FRAME &&
+               missed_vuln_len_kind == fp->kind &&
+               rep.frames.predicted_vuln_to == NO_FRAME)
+    {
+        rep.frames.predicted_vuln_to =
+            rep.frames.window_open + missed_vuln_len;
+    }
+}
+
+/// True when the player has a hitbox out this frame. Grab boxes are hitboxes
+/// too (the catch element), so a grab counts.
+static bool player_attack_out(void)
+{
+    Fighter* fp = GET_FIGHTER(Player_GetEntity(PLAYER_SLOT));
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(fp->x914); i++) {
+        if (fp->x914[i].state != HitCapsule_Disabled) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/// On the first vulnerable or actionable frame after an early attack: the
+/// attack was this many frames early. A later early attack replaces it.
+static void resolve_early_attack(void)
+{
+    if (rep.early_pending) {
+        rep.frames.early_frames =
+            rep.rep_frames - rep.frames.early_attack_frame;
+        rep.early_pending = false;
+    }
+}
+
 /// Measures the current frame of the punish window. True when the window
 /// closed this frame (the opponent is actionable, back in Wait) or the rep
 /// timed out. Expects the frame to be counted already.
 static bool measure_window(Fighter* fp)
 {
-    if (opponent_vulnerable(fp)) {
-        if (rep.vuln_from == NO_FRAME) {
-            rep.vuln_from = rep.rep_frames;
-        }
-        rep.vuln_to = rep.rep_frames;
-    }
     if (fp->motion_id == ftCo_MS_Wait) {
-        rep.actionable = rep.rep_frames;
+        /* The actionable frame closes the window and is not part of it. */
+        rep.frames.actionable = rep.rep_frames;
+        resolve_early_attack();
         REP_LOG("actionable");
         return true;
     }
+    if (opponent_vulnerable(fp)) {
+        if (rep.frames.vuln_from == NO_FRAME) {
+            rep.frames.vuln_from = rep.rep_frames;
+        }
+        rep.frames.vuln_to = rep.rep_frames;
+        resolve_early_attack();
+    } else if (player_attack_out()) {
+        /* Intangible: an attack out now whiffs (an early attack), however
+         * many vulnerable frames came before (a missed tech's getup). */
+        rep.frames.early_attack_frame = rep.rep_frames;
+        rep.early_pending = true;
+    }
+    predict_vuln_to(fp);
     return rep.rep_frames >= REP_TIMEOUT;
 }
 
@@ -732,53 +817,86 @@ static void update_tech_press(Fighter* fp)
     }
 }
 
+/// The rep's timing class (rep_result.h), from the frames it measured.
+static RepTiming classify_timing(void)
+{
+    return training_rep_classify(&rep.frames);
+}
+
+#ifdef AUTHORING_BUILD
 /// Writes the rep's outcome line. The window fields are -1 when the window
 /// never opened or closed; hit_frame is -1 and hit_kind=none for no punish.
-static void log_outcome(const char* outcome)
+/// `timing` is the timing class (training_rep_timing_log_value).
+static void log_outcome(RepOutcome outcome, const RepTiming* timing)
 {
+    char value[REP_TIMING_LOG_MAX];
+
+    training_rep_timing_log_value(value, timing);
     REP_LOG_WITH("outcome",
                  " outcome=%s window_open=%d vuln_from=%d vuln_to=%d "
-                 "actionable=%d hit_frame=%d hit_kind=%s",
-                 outcome, rep.window_open, rep.vuln_from, rep.vuln_to,
-                 rep.actionable, rep.hit_frame,
-                 hit_kind_name(rep.hit_kind));
+                 "actionable=%d hit_frame=%d hit_kind=%s timing=%s"
+                 " pred_vuln_to=%d",
+                 training_rep_outcome_log_name(outcome),
+                 rep.frames.window_open, rep.frames.vuln_from,
+                 rep.frames.vuln_to, rep.frames.actionable,
+                 rep.frames.hit.frame, hit_kind_name(rep.frames.hit.kind),
+                 value, rep.frames.predicted_vuln_to);
+}
+#else
+#define log_outcome(outcome, timing) ((void) 0)
+#endif
+
+/// Ends the rep with `outcome`: classifies its timing, writes the outcome line
+/// and shows the result for the pause.
+static void report_outcome(RepOutcome outcome)
+{
+    RepTiming timing = classify_timing();
+
+    log_outcome(outcome, &timing);
+    training_rep_result_show(rep.tech, outcome, &timing);
 }
 
-/* The "early" notice shown for a void rep: position (canvas units) and size.
- * Tune by eye with `run`. The text is the full-width Shift-JIS the game's SIS
- * font expects. */
-#define EARLY_X 270.0F
-#define EARLY_Y 150.0F
-#define EARLY_SCALE 1.4F
-static char early_str[] = "\x82\x85\x82\x81\x82\x92\x82\x8C\x82\x99";
-
-static HSD_Text* early_text;
-
-/// Creates the "early" text, hidden, once the scene has settled; text made
-/// during the scene's own setup is not drawn. Showing and hiding it flips its
-/// hidden flag.
-static void create_early(void)
+#ifdef AUTHORING_BUILD
+/// Writes the rep's `late` line: a hit or grab after a failure, during the
+/// pause. Its `timing` (late_Nf) is the rep's final timing class and replaces
+/// the outcome line's; the outcome line itself stays as written.
+static void log_late(const RepTiming* timing)
 {
-    int idx;
+    char value[REP_TIMING_LOG_MAX];
 
-    early_text = training_text_create();
-    idx = HSD_SisLib_803A6B98(early_text, EARLY_X, EARLY_Y, "%s", early_str);
-    HSD_SisLib_803A7548(early_text, idx, EARLY_SCALE, EARLY_SCALE);
-    early_text->hidden = true;
+    training_rep_timing_log_value(value, timing);
+    REP_LOG_WITH("late", " actionable=%d hit_frame=%d hit_kind=%s timing=%s",
+                 rep.frames.actionable, rep.frames.late_hit.frame,
+                 hit_kind_name(rep.frames.late_hit.kind), value);
 }
+#else
+#define log_late(timing) ((void) 0)
+#endif
 
-static void show_early(void)
+/// Records `hit` as the rep's late hit if it is one: the rep failed (the
+/// opponent became actionable unpunished) and has no late hit yet. True when
+/// recorded.
+static bool record_late_hit(HitKind hit)
 {
-    if (early_text != NULL) {
-        early_text->hidden = false;
+    if (hit == HitKind_None || rep.frames.actionable == NO_FRAME ||
+        rep.frames.hit.frame != NO_FRAME ||
+        rep.frames.late_hit.frame != NO_FRAME)
+    {
+        return false;
     }
+    rep.frames.late_hit.frame = rep.rep_frames;
+    rep.frames.late_hit.kind = hit;
+    return true;
 }
 
-static void hide_early(void)
+/// A failed rep turned late: writes the late line and shows the late result
+/// for the rest of the pause. Still a failure, and the score is unchanged.
+static void report_late(void)
 {
-    if (early_text != NULL) {
-        early_text->hidden = true;
-    }
+    RepTiming timing = classify_timing();
+
+    log_late(&timing);
+    training_rep_result_show(rep.tech, RepOutcome_Failure, &timing);
 }
 
 /* The on-screen notice (invalid layout, no drill for the stage, chooser): canvas position and size of its lines. */
@@ -787,40 +905,10 @@ static void hide_early(void)
 #define NOTICE_LINE_HEIGHT 44.0F
 #define NOTICE_SCALE 0.9F
 
-/// Writes `src` into `dst` as the full-width Shift-JIS the game's SIS font
-/// expects: letters, digits and space; anything else becomes a space.
-static void put_fullwidth(char* dst, const char* src)
-{
-    for (; *src != 0; src++) {
-        int hi = 0x81;
-        int lo = 0x40;
-
-        if (*src >= '0' && *src <= '9') {
-            hi = 0x82;
-            lo = 0x4F + (*src - '0');
-        } else if (*src >= 'A' && *src <= 'Z') {
-            hi = 0x82;
-            lo = 0x60 + (*src - 'A');
-        } else if (*src >= 'a' && *src <= 'z') {
-            hi = 0x82;
-            lo = 0x81 + (*src - 'a');
-        }
-        *dst++ = (char) hi;
-        *dst++ = (char) lo;
-    }
-    *dst = 0;
-}
-
 static void add_notice_line(HSD_Text* text, int row, const char* ascii)
 {
-    char sjis[96];
-    int idx;
-
-    put_fullwidth(sjis, ascii);
-    idx = HSD_SisLib_803A6B98(text, NOTICE_X,
-                              NOTICE_Y + NOTICE_LINE_HEIGHT * row, "%s",
-                              sjis);
-    HSD_SisLib_803A7548(text, idx, NOTICE_SCALE, NOTICE_SCALE);
+    training_text_add(text, NOTICE_X, NOTICE_Y + NOTICE_LINE_HEIGHT * row,
+                      NOTICE_SCALE, NOTICE_SCALE, ascii);
 }
 
 /* The on-screen notice of the moment (invalid layout, drill chooser list),
@@ -833,7 +921,7 @@ static int notice_age;
 static void hide_notice(void)
 {
     if (notice_text != NULL) {
-        notice_text->hidden = true;
+        training_text_set_visible(notice_text, false);
         notice_text = NULL;
     }
 }
@@ -909,12 +997,12 @@ static void update_vanish(Fighter* fp)
     bool hide;
 
     if (!training_drill_current()->vanish || rep.option == TechOption_Miss ||
-        rep.window_open == NO_FRAME)
+        rep.frames.window_open == NO_FRAME)
     {
         return;
     }
-    hide = rep.vuln_from == NO_FRAME &&
-           rep.rep_frames - rep.window_open >= VANISH_VISIBLE_FRAMES;
+    hide = rep.frames.vuln_from == NO_FRAME &&
+           rep.rep_frames - rep.frames.window_open >= VANISH_VISIBLE_FRAMES;
     if (hide) {
         if (!rep.vanish_hidden) {
             rep.vanish_hidden = true;
@@ -928,14 +1016,11 @@ static void update_vanish(Fighter* fp)
 
 /// Per-frame check for the Drop and Wait states: ends the rep (into Pause) if
 /// it was aborted, or if the player hit the opponent before it landed (void,
-/// "early" shown), or moves to Landed, opening the punish window, when the
+/// result shown), or moves to Landed, opening the punish window, when the
 /// opponent lands (straight to Outcome, as a success, if it is hit that same
 /// frame). True when the state changed.
 static bool advance_if_landed_or_aborted(Fighter* fp, HitKind hit)
 {
-    /* The frame is counted here for Drop and Wait; the Landed state counts its
-     * own. rep_aborted and measure_window rely on the count being current. */
-    rep.rep_frames++;
     if (rep_aborted(fp)) {
         set_state(RepState_Pause);
         return true;
@@ -952,8 +1037,9 @@ static bool advance_if_landed_or_aborted(Fighter* fp, HitKind hit)
     }
     if (hit != HitKind_None) {
         record_hit(hit);
-        log_outcome("void");
-        rep.voided = true;
+        rep.frames.voided = true;
+        rep.tech = training_rep_tech_of_option(rep.option);
+        report_outcome(RepOutcome_Void);
         set_state(RepState_Pause);
         return true;
     }
@@ -965,12 +1051,13 @@ static bool advance_if_landed_or_aborted(Fighter* fp, HitKind hit)
 /// unpunished) and is scored. A window that timed out logs nothing.
 static void finish_rep(void)
 {
-    if (rep.hit_frame != NO_FRAME) {
-        training_score_record(rep.option, true);
-        log_outcome("success");
-    } else if (rep.actionable != NO_FRAME) {
-        training_score_record(rep.option, false);
-        log_outcome("failure");
+    if (rep.frames.hit.frame != NO_FRAME) {
+        training_score_record(rep.tech, true);
+        report_outcome(RepOutcome_Success);
+    } else if (rep.frames.actionable != NO_FRAME) {
+        training_score_record(rep.tech, false);
+        rep.scored_failure = true;
+        report_outcome(RepOutcome_Failure);
     }
 }
 
@@ -994,13 +1081,13 @@ static bool drill_length_reached(void)
 }
 
 /// Starts the current drill from rep 1, clearing everything of the previous
-/// run: the notice, summary and "early" text, the score, the drill clock, the
+/// run: the notice, summary and rep result, the score, the drill clock, the
 /// player's placement and any vanish in progress (the opponent is shown
 /// again). Restarting a finished drill and switching drills both start here.
 static void start_drill(Fighter* opp_fp)
 {
     hide_notice();
-    hide_early();
+    training_rep_result_hide();
     training_summary_hide();
     training_score_clear();
     end_vanish(opp_fp);
@@ -1100,11 +1187,17 @@ static void think(HSD_GObj* gobj)
     }
 #endif
     hit = poll_player_hit(GET_FIGHTER(opp));
+    if (rep_state >= RepState_Drop && rep_state <= RepState_Pause) {
+        /* A rep is under way: count its frame before anything measures it.
+         * The count runs on through the outcome and the pause, so a late hit
+         * is timed from the actionable frame. */
+        rep.rep_frames++;
+    }
     switch (rep_state) {
     case RepState_Settle:
         if (frames_in_state == 1) {
             training_score_show();
-            create_early();
+            training_rep_result_create();
         }
         if (frames_in_state >= SETTLE_FRAMES) {
             measure_reach(player, opp);
@@ -1120,7 +1213,7 @@ static void think(HSD_GObj* gobj)
         {
             break;
         }
-        hide_early();
+        training_rep_result_hide();
         {
             Layout layout;
             int stage = Stage_80225194();
@@ -1158,12 +1251,12 @@ static void think(HSD_GObj* gobj)
         advance_if_landed_or_aborted(GET_FIGHTER(opp), hit);
         break;
     case RepState_Landed:
-        /* Count this frame before measuring it (see
-         * advance_if_landed_or_aborted for Drop and Wait). */
-        rep.rep_frames++;
         window_closed = measure_window(GET_FIGHTER(opp));
         update_vanish(GET_FIGHTER(opp));
         if (window_closed) {
+            /* A hit on the actionable frame itself is late by 0 frames
+             * (reported at the outcome). */
+            record_late_hit(hit);
             set_state(RepState_Outcome);
         } else if (hit != HitKind_None) {
             /* Hit or grab inside the window: success, the rep ends at once. */
@@ -1176,17 +1269,28 @@ static void think(HSD_GObj* gobj)
          * while hidden, shows the opponent here). */
         end_vanish(GET_FIGHTER(opp));
         finish_rep();
+        if (rep.frames.late_hit.frame != NO_FRAME || record_late_hit(hit)) {
+            report_late();
+        }
         set_state(RepState_Pause);
         break;
     case RepState_Pause:
-        if (rep.voided) {
-            show_early();
+        /* The rep's result stays on screen for the whole pause. After a
+         * failure the first hit or grab in it makes the rep late. */
+        if (record_late_hit(hit)) {
+            report_late();
         }
         if (frames_in_state >= PAUSE_FRAMES) {
+            /* The pause is over, so a failure can no longer turn late: its
+             * timing class is final and counts towards the summary. */
+            if (rep.scored_failure) {
+                training_score_record_timing(rep.tech,
+                                             classify_timing().kind);
+            }
             if (drill_length_reached()) {
                 /* The last rep has finished: stop dropping, show the
                  * summary. */
-                hide_early();
+                training_rep_result_hide();
                 log_drill_end(training_drill_current());
                 training_summary_show(training_drill_current());
                 set_state(RepState_Summary);
@@ -1211,7 +1315,7 @@ void training_tech_chase_init(void)
 {
     set_state(RepState_Settle);
     drill_frames = 0;
-    early_text = NULL;
+    training_rep_result_init();
     notice_text = NULL;
     training_drill_fit_to_stage(Stage_80225194());
     prev_percent = 0.0F;
@@ -1273,8 +1377,8 @@ static void feed_option_input(Fighter* fp, TechOption option, bool press)
         /* No L/R and no A/B while falling, so the opponent bounces and lies
          * down; once it has lain for the down time, a plain getup (stick up,
          * held until it stands). */
-        if (rep.window_open != NO_FRAME &&
-            rep.rep_frames - rep.window_open >= MISSED_TECH_DOWN_TIME)
+        if (rep.frames.window_open != NO_FRAME &&
+            rep.rep_frames - rep.frames.window_open >= MISSED_TECH_DOWN_TIME)
         {
             fp->cpu.lstick.y = 127;
         }

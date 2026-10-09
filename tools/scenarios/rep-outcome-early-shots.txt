@@ -1,5 +1,5 @@
 # Shot variant of rep-outcome-mash-attack (ticket 02): a shot after every
-# cycle (a burst of 24 after the tenth), to catch the "early" notice of a void rep and the score changing. Boots
+# cycle (a burst of 24 after the tenth), to catch the rep result of a void rep and the score changing. Boots
 # to Training, then the player repeatedly dashes toward the opponent's drop point
 # then mashes jab for about 1.7 s, over about 55 s, with gaps of
 # varied length so the mash lands at varied points of the reps. Reps

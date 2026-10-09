@@ -4,11 +4,18 @@
 
 **Blocked by:** 02 (rep result for success, none and void).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] A hit or grab that connects during the pause after a failure logs `timing=late_Nf`, with N the frames after actionable
-- [ ] The rep is still scored as a failure
-- [ ] The on-screen result shows "Nf late" with the same N
-- [ ] A new scenario that attacks very late gives `late` or `none`. This is a loose check, since piloting timing is approximate
-- [ ] A shot of a late result matches its logged timing
-- [ ] `dev.py check` passes
+- [x] A hit or grab that connects during the pause after a failure logs `timing=late_Nf`, with N the frames after actionable
+- [x] The rep is still scored as a failure
+- [x] The on-screen result shows "Nf late" with the same N
+- [x] A new scenario that attacks very late gives `late` or `none`. This is a loose check, since piloting timing is approximate
+- [x] A shot of a late result matches its logged timing
+- [x] `dev.py check` passes
+
+## Comments
+
+- **Log-line choice:** the late hit gets its own `late` line, written when it connects during the pause, after the outcome line: `[rep] event=late ... actionable=<n> hit_frame=<n> hit_kind=hit|grab timing=late_Nf`, with N = `hit_frame - actionable` in rep frames (these now keep counting through Outcome and Pause). Its `timing` is the rep's final timing class and replaces the outcome line's. The outcome line stays where it was, so a restart during the pause never loses it. This is documented at `log_late` (tech_chase.c) and in the Rep log section of docs/developer-workflow.md. A hit on the actionable frame itself, which used to be dropped, is `late_0f` on both the outcome line and the late line.
+- When a failure has both an early attack and a late hit, late wins, because the hit connecting is the stronger fact.
+- Scenario `rep-late-hit`: every rep is a failure with `late_31f` to `late_33f`, score 0/10. Shot l03 ("32f late", score 0/3) matches rep 3's `late_32f`. In an earlier calibration run, l01 "8f late" matched `late_8f` and l09 "10f late" matched `late_10f`.
+- Review: the actionable frame is no longer counted as vulnerable (see 02), so a hit on it being `late_0f` is now consistent with the window. `rep-late-hit` unchanged: late_31f..32f every rep.

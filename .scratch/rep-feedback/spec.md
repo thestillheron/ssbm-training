@@ -1,6 +1,6 @@
 # Rep feedback: what happened, and how early or late
 
-Status: ready-for-agent
+Status: resolved
 
 ## Problem Statement
 

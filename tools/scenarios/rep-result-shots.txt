@@ -1,0 +1,504 @@
+# Shots of the rep result (rep-feedback ticket 02). Boots to Training, waits
+# through rep 1 with no input and shoots its result during the pause
+# (`none`: "No attack"). Then the player jabs: each cycle mashes jab for
+# 32 frames then waits, 186 frames in all, a little longer than a rep
+# with no hit (179 frames: the 120-frame pause included), so the mash drifts
+# through the reps and lands before the landing (void), during the
+# intangibility (a whiff, so a failure), on a vulnerable frame (success)
+# or in the pause after a failure (late).
+# A shot every 90 frames (`r01`, `r02`, ...), shorter than the pause,
+# catches every rep's result at least once. Match each shot to its rep by
+# the score and the result: line 2 must read exactly what the rep's final
+# `timing` says (the `late` line's if it has one, else the outcome line's:
+# `Frame k/n` for success_k/n, `Nf early` for early_Nf, `Nf late` for
+# late_Nf, `No attack` for none, `Early: hit before landing` for void).
+# Last measured (rep-feedback review): rep 1 none, rep 2 void, rep 3
+# success_2/2, reps 4 to 11 late_3f to late_53f (each about 7f later), the
+# summary after rep 11 (score 1/10, In place late 8), then the mash restarts
+# the drill and repeats much the same. Timing is only rough, so which reps
+# get which result can change when the rep loop's timing does. Run it with
+# `python dev.py run --scenario rep-result-shots`. Needs window focus.
+include boot-to-training
+wait:100
+shot none
+wait:60
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r01
+wait:2
+wait:30
+wait:30
+wait:30
+shot r02
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r03
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r04
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r05
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r06
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r07
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r08
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r09
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r10
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r11
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r12
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r13
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r14
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r15
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r16
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r17
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r18
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r19
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r20
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r21
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r22
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r23
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r24
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r25
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r26
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r27
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r28
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r29
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r30
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r31
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r32
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r33
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r34
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r35
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r36
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r37
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r38
+wait:30
+wait:30
+wait:4
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+wait:2
+a:2
+shot r39
+wait:2
+a:2
+wait:2
+wait:30
+wait:30
+wait:30
+shot r40
+wait:30
+wait:30
+wait:4

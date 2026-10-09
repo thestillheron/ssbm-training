@@ -58,7 +58,7 @@ One configured tech-chasing activity, played as a series of @ref glossary_rep "r
 The temporary authoring-build control (D-pad right, in Training Mode, until drill-select makes each drill an Event Match event and removes it) that switches to the next @ref glossary_drill "drill" in the @ref glossary_drill_table "drill table" that fits the stage in play, restarting from rep 1 with a clean score and clock. It also lists the drills that need another stage. Avoid "drill picker".
 
 @section glossary_drill_summary drill summary
-The screen shown when a @ref glossary_drill "drill" ends: its name, the score, the @ref glossary_pass_mark "pass mark", pass or fail, and the successes per @ref glossary_tech_option "tech option". Press A to restart the drill.
+The screen shown when a @ref glossary_drill "drill" ends: its name, the score, the @ref glossary_pass_mark "pass mark", pass or fail, and for each @ref glossary_tech_option "tech option" the opponent did (not the one the drill aimed for) its success rate and how many of its reps were early or late (their @ref glossary_timing "timing"). Press A to restart the drill.
 
 @section glossary_drill_table drill table
 The const table of @ref glossary_drill "drills" in `src/training/drill.c`: the @ref glossary_curriculum "curriculum", plus test drills in authoring builds. The rep loop runs one entry, the current drill.
@@ -160,16 +160,19 @@ Short for "position."
 Short for "previous."
 
 @section glossary_punish_window punish window
-The frames from the opponent landing to its first actionable frame. A hit or grab that connects in the punish window makes the @ref glossary_rep "rep" a success; once it is actionable, the rep is a failure.
+The frames from the opponent landing up to, but not including, its first actionable frame. A hit or grab that connects in the punish window makes the @ref glossary_rep "rep" a success; once it is actionable, the rep is a failure, so a hit on the actionable frame itself is late (by 0 frames).
 
 @section glossary_rad rad
 Short for "radians."
 
 @section glossary_rep rep
-One cycle of a @ref glossary_drill "drill": the opponent drops in tumble, lands, carries out its @ref glossary_tech_option "tech option", and the rep ends as a success or failure. A rep is void, and doesn't count, if the player hits the opponent before it lands. Avoid "round", "attempt" or "instance".
+One cycle of a @ref glossary_drill "drill": the opponent drops in tumble, lands, carries out its @ref glossary_tech_option "tech option", and the rep ends as a success (the player hit or grabbed it in the @ref glossary_punish_window "punish window") or a failure (it became actionable unpunished). A rep is void, and doesn't count, if the player hits the opponent before it lands. Each rep ends with a @ref glossary_rep_result "rep result". Avoid "round", "attempt" or "instance".
 
 @section glossary_rep_log rep log
 The text record the @ref glossary_training_build "training build" writes when @ref glossary_authoring_tools "authoring tools" are on: one line per @ref glossary_rep "rep" event, such as the tech option chosen, the frames of the @ref glossary_punish_window "punish window" and the outcome. It lets a rep be checked as text instead of from screenshots.
+
+@section glossary_rep_result rep result
+What the player is shown during the pause after a @ref glossary_rep "rep": what the opponent did (the tech option it carried out, or a wall or ceiling tech), the outcome (success, failure or void) and the rep's @ref glossary_timing "timing". Avoid "feedback" or "message" for the result itself.
 
 @section glossary_rot rot
 Short for "rotation."
@@ -210,6 +213,14 @@ What the opponent does on landing: @ref glossary_tech_in_place "tech in place", 
 @section glossary_tgt tgt
 Short for "target."
 
+@section glossary_timing timing
+How a @ref glossary_rep "rep"'s punish lined up with the @ref glossary_punish_window "punish window", one class per rep:
+- success k/n: the hit or grab landed on vulnerable frame k of the n there were (counted from the first @ref glossary_vulnerable_frames "vulnerable frame" to the last, from 1). Shown "Frame k/n".
+- early: a failure in which the player had a hitbox or grab box out while the opponent was intangible in the window; N frames early is how long before the next vulnerable frame the last such frame was. Shown "Nf early".
+- late: a failure whose hit or grab connected N frames after the opponent's first actionable frame, during the pause. Wins over early. Shown "Nf late".
+- none: a failure with no attack out while the opponent was intangible and no late hit. Shown "No attack".
+- void: a hit before the landing (a void rep). Shown "Early: hit before landing".
+
 @section glossary_training_build training build
 The game code plus this fork's training features, compiled without the byte-identical check so it can differ from the original. Avoid calling it the "modded" or "non-matching" build: upstream uses "non-matching" for code that is merely equivalent, and "debug" already names a different `configure.py` mode.
 
@@ -229,7 +240,8 @@ Short for "velocity."
 Short for "vertex."
 
 @section glossary_vulnerable_frames vulnerable frames
-The part of the @ref glossary_punish_window "punish window" in which the opponent can be hit or grabbed, i.e. after any tech intangibility has ended. A tech's vulnerable frames are short and come at the end; a @ref glossary_missed_tech "missed tech" is vulnerable almost throughout.
+The part of the @ref glossary_punish_window "punish window" in which the opponent can be hit or grabbed, i.e. after any tech intangibility has ended. The actionable frame is not one of them: it closes the window. A tech's vulnerable frames are short and come at the end; a @ref glossary_missed_tech "missed tech" is vulnerable almost throughout.
+
 @section glossary_vic vic
 Short for "victim."
 
