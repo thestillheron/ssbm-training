@@ -72,6 +72,9 @@ Short for "dynamic."
 @section glossary_ecb ECB
 Stands for "environmental collision box."
 
+@section glossary_edit_layout Edit layout
+The @ref glossary_pause_menu "pause menu" item that opens the layout editor over the frozen match, in every @ref glossary_training_build "training build". It edits the current @ref glossary_drill "drill"'s @ref glossary_session_copy "session copy" of its @ref glossary_layout "layout", with the fighters as markers: the opponent hangs at the selected drop height over the landing point, the player stands at its start. The stick moves the landing point (a flick up or down steps between surfaces), the C-stick the player's start (x along the floor, y choosing the surface), the d-pad selects, raises, lowers, adds (X) and removes (Y) drop heights, holding Z or a trigger makes moves fine, and A reverts to the compiled layout. Values are kept in tenths of a unit and shown as text. B or Start leaves: if the layout changed, the drill restarts from rep 1 with it; otherwise it carries on. Avoid "layout mode" or "level editor".
+
 @section glossary_event_list event list
 The Event Match select screen, which in the @ref glossary_training_build "training build" lists the @ref glossary_drill "drills" in @ref glossary_curriculum "curriculum" order, one event per drill, instead of the vanilla events (ADR-0005). Avoid "drill menu" or "ESS" outside code.
 
@@ -142,7 +145,7 @@ Stands for "motion variables." Used by #HSD_GObj::user_data structs (such as #Fi
 The number of successful @ref glossary_rep "reps" a @ref glossary_drill "drill" needs for the player to pass it, shown in the @ref glossary_drill_summary "drill summary".
 
 @section glossary_pause_menu pause menu
-The text menu our Start opens in a @ref glossary_drill_event "drill event", over a match frozen with the game's own pause flag, in place of the retail pause (which never runs there): Resume, Restart drill, Change characters and Back to event list, with the @ref glossary_punish_window "punish window" lengths beside it. B does not unpause; only Start or Resume does. Not Training Mode's own pause menu, which is vanilla. Avoid "pause screen".
+The text menu our Start opens in a @ref glossary_drill_event "drill event", over a match frozen with the game's own pause flag, in place of the retail pause (which never runs there): Resume, Restart drill, Change characters, Back to event list and @ref glossary_edit_layout "Edit layout", then @ref glossary_print_layout "Print layout" in authoring builds, with the @ref glossary_punish_window "punish window" lengths beside it. B on the menu does nothing; only Start or Resume unpauses (or leaving Edit layout, with B or Start). Not Training Mode's own pause menu, which is vanilla. Avoid "pause screen".
 
 @section glossary_phys phys
 Short for "physics."
@@ -161,6 +164,9 @@ Short for "position."
 
 @section glossary_prev prev
 Short for "previous."
+
+@section glossary_print_layout Print layout
+The @ref glossary_pause_menu "pause menu" item, in builds with @ref glossary_authoring_tools "authoring tools" only, that writes the current @ref glossary_drill "drill"'s @ref glossary_session_copy "session copy" layout to the @ref glossary_rep_log "rep log" as C initializer text (a `[rep] layout:` line) ready to paste into the @ref glossary_drill_table "drill table"; `dev.py reps --layout` lists those lines. The values are in tenths, as @ref glossary_edit_layout "Edit layout" keeps them, so the pasted layout is the one that was tried.
 
 @section glossary_punish_window punish window
 The frames from the opponent landing up to, but not including, its first actionable frame. A hit or grab that connects in the punish window makes the @ref glossary_rep "rep" a success; once it is actionable, the rep is a failure, so a hit on the actionable frame itself is late (by 0 frames).
@@ -185,6 +191,9 @@ The throwaway copy of the @ref glossary_memory_card_snapshot "memory card snapsh
 
 @section glossary_scenario scenario
 A committed, named input script that takes the training build from boot to a known game state, optionally taking screenshots along the way. A scenario is usually piloting that has been written down, and is played as a @ref glossary_movie "movie". Avoid "macro" or "pre-canned results": the scenario is the script, not the screenshots it produces or the movie it compiles to.
+
+@section glossary_session_copy session copy
+The working copy of the current @ref glossary_drill "drill" that the rep loop runs and @ref glossary_edit_layout "Edit layout" edits (`training_drill_session` in `src/training/drill.c`). It is copied from the @ref glossary_drill_table "drill table" when a different drill is selected, so edits last through restarts and re-entering the same drill but are never saved and never change the table. Avoid "working drill" or "edited drill".
 
 @section glossary_sfx sfx
 Short for "sound effect(s)."

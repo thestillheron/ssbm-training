@@ -1,0 +1,44 @@
+# Acceptance scenario for layout-editor ticket 03 (range heights). Chooses
+# drill 3 on the event list ("Test: height range", 30 to 90), lets a few
+# reps run, then opens Edit layout (the last pause item). The range is
+# edited as two heights, min and max: d-pad down for 10 frames lowers the
+# min to 20 (shot `range-min`), d-pad right selects the max (shot
+# `range-max-selected`: the opponent marker at 90), d-pad up for 20 frames
+# raises it to 110; X and Y do nothing on a range. B leaves: `drill_start`
+# reads height_kind=range heights=20,110 and every `drop` height is within
+# 20..110.
+include boot-to-event-list
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+a:2
+include event-css-to-match
+wait:400
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+dpad-down:10
+wait:10
+shot range-min
+dpad-right:2
+wait:20
+shot range-max-selected
+dpad-up:20
+wait:10
+x:2
+wait:20
+y:2
+wait:20
+b:2
+wait:1200

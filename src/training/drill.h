@@ -61,9 +61,42 @@ typedef struct Drill {
     int pass_mark;
 } Drill;
 
-/// The drill the rep loop runs: the table entry chosen with
-/// training_drill_select (at first the first entry).
+/// The drill the rep loop runs: the session copy of the table entry chosen
+/// with training_drill_select (at first the first entry).
 const Drill* training_drill_current(void);
+
+/// The same session copy, writable: the layout editor edits it. It is copied
+/// from the table when a different drill is selected, so edits last until
+/// then (restarts and retries keep them); the compiled table is never
+/// modified.
+Drill* training_drill_session(void);
+
+/// Puts the compiled table entry's layout (landing point, drop heights,
+/// player start) back into the session copy, discarding the edits.
+void training_drill_revert_layout(void);
+
+/// True when `a` and `b` have the same layout (landing point, drop heights,
+/// player start); their other fields are not compared.
+bool training_drill_same_layout(const Drill* a, const Drill* b);
+
+/* Edited layout values are kept in tenths of a game unit, the precision
+ * Print layout writes, so a printed layout pasted into the table is exactly
+ * the layout that was tried. */
+
+/// `value` rounded to the nearest tenth.
+float training_drill_round_tenths(float value);
+
+/// Writes `value` rounded to tenths with one decimal ("-12.3") to `out`, and
+/// returns the end (the terminating 0).
+char* training_drill_format_tenths(char* out, float value);
+
+#ifdef AUTHORING_BUILD
+/// Print layout: writes the current drill's (session copy's) layout fields,
+/// landing_x to start_dy in the order of struct Drill, to the rep log as C
+/// initializer text, ready to paste into the table in drill.c:
+/// `[rep] layout: 60.0F, 0.0F, DrillHeight_List, 2, { 40.0F, 70.0F }, 0.0F, 0.0F,`
+void training_drill_print_layout(void);
+#endif
 
 /// The table index of the current drill.
 int training_drill_current_index(void);

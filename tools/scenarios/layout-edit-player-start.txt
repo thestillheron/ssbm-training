@@ -1,0 +1,60 @@
+# Acceptance scenario for layout-editor ticket 02 (player start via the
+# C-stick, fine/coarse movement). Boots through Event Match into drill 1
+# (Final Destination, landing x 0, start_dx 0), lets a few reps run, then:
+#  - pause, down four to Edit layout, choose it (shot `editor-open`).
+#  - C-stick right for 40 frames (1 unit a frame): the player marker moves
+#    right (shot `start-moved`), B: the drill restarts with start_dx=40.
+#  - edit again, Z + C-stick left for 100 frames (fine, 0.1 unit a frame):
+#    start_dx 30; Z + stick right for 100 frames: landing_x 10; Start leaves.
+#  - edit again, C-stick left for 300 frames: the start clamps at the left
+#    edge, where it still has floor (shot `start-clamped-left`), B leaves.
+# `python dev.py run --scenario layout-edit-player-start` prints `drill_start`
+# lines with start_dx=0 (compiled), then 40, then 30 with landing_x=10, then
+# the clamped value (negative), each followed by `layout` lines whose
+# start_x moves with it.
+include boot-to-event
+wait:400
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+shot editor-open
+cstick-right:40
+wait:10
+shot start-moved
+wait:30
+b:2
+wait:200
+
+start:2
+wait:30
+a:2
+wait:30
+z+cstick-left:100
+wait:10
+z+stick-right:100
+wait:10
+shot fine-moved
+wait:30
+start:2
+wait:200
+
+start:2
+wait:30
+a:2
+wait:30
+cstick-left:300
+wait:10
+shot start-clamped-left
+wait:30
+b:2
+wait:300

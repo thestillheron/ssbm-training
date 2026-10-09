@@ -22,6 +22,10 @@
  * items. In authoring builds each confirm writes a `menu` line to the rep
  * log. */
 
+/* lbAudioAx_80024030's menu back sound, which the menu plays on B; for
+ * screens that leave the same way. */
+#define TRAINING_MENU_SOUND_BACK 0
+
 typedef struct TrainingMenuItem {
     const char* label;
     /* One line, shown while the item is highlighted; NULL for none. */

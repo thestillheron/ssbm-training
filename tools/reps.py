@@ -12,6 +12,8 @@ No Dolphin here, so it is testable on fixture files. Entry points:
   read_reps(log, since=0)             -> [str]  (the `[rep]` lines after offset
                                                  `since`, prefix included, as
                                                  printed by the game)
+  layout_lines(lines)                 -> [str]  (only the Print layout lines,
+                                                 `[rep] layout: ...`)
 
 `read_reps` is the reusable reader: anything that has a marker (`run`'s
 launch, a scenario's start) passes it as `since`.
@@ -20,6 +22,8 @@ launch, a scenario's start) passes it as `since`.
 from pathlib import Path
 
 PREFIX = "[rep]"
+# Print layout's line (not `key=value`; unrelated to `event=layout`).
+LAYOUT_PREFIX = PREFIX + " layout: "
 
 # Per-launch Dolphin config overrides (`-C Section.Key=value`) that turn on
 # file logging and the OSReport log types.
@@ -87,3 +91,8 @@ def read_reps(log, since=0):
         if i >= 0:
             out.append(line[i:].rstrip())
     return out
+
+
+def layout_lines(lines):
+    """The Print layout lines among `lines` (as read_reps returns them)."""
+    return [line for line in lines if line.startswith(LAYOUT_PREFIX)]

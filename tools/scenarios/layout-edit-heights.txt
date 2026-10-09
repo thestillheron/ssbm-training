@@ -1,0 +1,54 @@
+# Acceptance scenario for layout-editor ticket 03 (drop heights). Boots
+# through Event Match into drill 1 (one height, 40), lets a few reps run,
+# then:
+#  - Edit layout (the last pause item), X: adds a copy of the selected
+#    height and selects it (shot `height-added`); d-pad up for 30 frames
+#    raises it by 30 (shot `height-raised`: the opponent marker follows).
+#    B leaves: `drill_start` reads heights=40,70 and the `drop` lines show
+#    both heights.
+#  - Edit layout again, d-pad left selects the first height (shot
+#    `first-selected`: the marker drops back to 40), Y removes it, Y again
+#    does nothing (the last height stays), d-pad down for 20 frames lowers
+#    it to 50. Start leaves: `drill_start` reads heights=50 and every
+#    `drop` line height=50.
+include boot-to-event
+wait:400
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+x:2
+wait:20
+shot height-added
+dpad-up:30
+wait:10
+shot height-raised
+wait:40
+b:2
+wait:900
+
+start:2
+wait:30
+a:2
+wait:30
+dpad-left:2
+wait:20
+shot first-selected
+y:2
+wait:20
+y:2
+wait:20
+dpad-down:20
+wait:10
+shot height-lowered
+start:2
+wait:600

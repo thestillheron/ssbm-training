@@ -1,0 +1,86 @@
+# Acceptance scenario for the player start height (start_dy) and fine height
+# edits. Chooses drill 4 on the Event Match list ("Test: platform",
+# Battlefield, landing on the top platform at y 54, start_dy 0: the player on
+# the floor beneath it), lets a few reps run, then:
+#  - pause, Edit layout (the fifth item; shot `edit-layout-highlighted`
+#    shows its description; shot `start-floor`), C-stick up for
+#    20 frames (1 unit a frame): start_dy 20, and the player marker snaps up
+#    onto the top platform beside the opponent (shot `start-platform`), B.
+#  - edit again, Z + C-stick down for 100 frames (fine, 0.1 unit a frame):
+#    start_dy 10, still on the platform; Z + d-pad up for 15 frames (fine):
+#    the height goes from 40 to 41.5 (shot `fine-height`), B. Pause, down one
+#    to Print layout, A: writes the edited layout; Start closes the menu.
+#  - pause, up one to Edit layout, C-stick down for 30 frames: start_dy -20,
+#    0 or less on a platform landing, so the player is back on the floor
+#    (shot `start-floor-again`), B.
+# `python dev.py run --scenario layout-edit-start-height` prints `drill_start`
+# lines with start_dy=0, 20, 10, -20, followed by `layout` lines with
+# start_y=0, 54, 54, 0, and before the third drill_start the print line
+#   [rep] layout: 0.0F, 54.0F, DrillHeight_List, 1, { 41.5F }, 0.0F, 10.0F,
+# Needs window focus for the shots.
+include boot-to-event-list
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+a:2
+include event-css-to-match
+wait:400
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+shot edit-layout-highlighted
+wait:20
+a:2
+wait:30
+shot start-floor
+cstick-up:20
+wait:10
+shot start-platform
+wait:30
+b:2
+wait:300
+
+start:2
+wait:30
+a:2
+wait:30
+z+cstick-down:100
+wait:10
+z+dpad-up:15
+wait:10
+shot fine-height
+wait:30
+b:2
+wait:120
+start:2
+wait:30
+stick-down:2
+wait:14
+a:2
+wait:20
+start:2
+wait:200
+
+start:2
+wait:30
+stick-up:2
+wait:14
+a:2
+wait:30
+cstick-down:30
+wait:10
+shot start-floor-again
+wait:30
+b:2
+wait:300

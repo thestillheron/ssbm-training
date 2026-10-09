@@ -1,0 +1,66 @@
+# Acceptance scenario for layout-editor ticket 01 (Edit layout shell). Boots
+# through Event Match into drill 1 (Final Destination, landing x 0), lets a
+# few reps run, then:
+#  - pause, down four to Edit layout (the last item), choose it: the editor
+#    opens over the frozen match, the opponent hanging at the drop height
+#    over the landing point and the player standing at its start (shot
+#    `editor-open`).
+#  - stick right for 60 frames (shot `moved-right`: both markers moved
+#    right), B: the drill restarts with the edited layout (shot
+#    `after-edit`).
+#  - edit again, stick right for 300 frames: clamped at the right edge
+#    (shot `clamped-right`), Start leaves.
+#  - edit again, stick left for 400 frames: clamped at the left edge, where
+#    the player's start still has floor (shot `clamped-left`), B leaves.
+# `python dev.py run --scenario layout-edit-move` prints, after each leave, a
+# `drill_start` whose landing_x is the edited one (60, then the right edge,
+# then the left edge) and `layout` lines with the same landing_x; the first
+# `drill_start` (landing_x=0) is the compiled drill's.
+include boot-to-event
+wait:400
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+shot edit-highlighted
+a:2
+wait:30
+shot editor-open
+stick-right:60
+wait:10
+shot moved-right
+wait:60
+b:2
+wait:120
+shot after-edit
+wait:200
+
+start:2
+wait:30
+a:2
+wait:30
+stick-right:300
+wait:10
+shot clamped-right
+wait:60
+start:2
+wait:300
+
+start:2
+wait:30
+a:2
+wait:30
+stick-left:400
+wait:10
+shot clamped-left
+wait:60
+b:2
+wait:300
+shot after-left

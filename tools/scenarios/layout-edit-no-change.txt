@@ -1,0 +1,52 @@
+# Acceptance scenario for leaving the layout editor without a change. Boots
+# through Event Match into drill 1 (Final Destination), lets a few reps run,
+# then:
+#  - pause, Edit layout (the fifth item), B at once: nothing changed, so the
+#    drill carries on: no new `drill_start`, the rep in progress is dropped
+#    and the next one starts with the following rep number, and the score is
+#    kept.
+#  - pause, Edit layout, stick right for 30 frames, A (revert), B: the layout
+#    is as it was when the editor opened, so again no restart.
+#  - pause, Edit layout, stick right for 30 frames, B: changed, so the drill
+#    restarts from rep 1 with landing_x=30.
+# `python dev.py run --scenario layout-edit-no-change` prints one
+# `drill_start` (landing_x=0), `start` lines with rep numbers that keep
+# rising across the first two edits, then a second `drill_start` with
+# landing_x=30 and `start rep=1`.
+include boot-to-event
+wait:600
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+b:2
+wait:400
+
+start:2
+wait:30
+a:2
+wait:30
+stick-right:30
+wait:10
+a:2
+wait:20
+b:2
+wait:400
+
+start:2
+wait:30
+a:2
+wait:30
+stick-right:30
+wait:10
+b:2
+wait:400

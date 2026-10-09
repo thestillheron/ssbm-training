@@ -981,16 +981,20 @@ def cmd_scenario(args):
 REP_LOG_SETTLE_S = 1.0  # Dolphin may write the last events just after a scenario's end
 
 
-def print_rep_lines(log, since, window):
-    """Print the `[rep]` lines in `log` after offset `since`; if there are
-    none, say so on stderr, naming `window` (the span that was searched)."""
+def print_rep_lines(log, since, window, layout=False):
+    """Print the `[rep]` lines in `log` after offset `since` (with `layout`,
+    only the Print layout lines); if there are none, say so on stderr, naming
+    `window` (the span that was searched)."""
     from tools import reps
 
     lines = reps.read_reps(log, since)
+    if layout:
+        lines = reps.layout_lines(lines)
     for line in lines:
         say(line)
     if not lines:
-        print(f"no [rep] lines in {log} {window}", file=sys.stderr)
+        what = reps.LAYOUT_PREFIX.strip() if layout else reps.PREFIX
+        print(f"no {what} lines in {log} {window}", file=sys.stderr)
 
 
 def print_rep_log(since):
@@ -1033,7 +1037,7 @@ def cmd_reps(args):
         else:
             reps.require_logging(dolphin_user_dir())
             log = reps.log_path(dolphin_user_dir())
-        print_rep_lines(log, since, window)
+        print_rep_lines(log, since, window, layout=args.layout)
     except reps.RepsError as e:
         raise DevError(str(e))
 
@@ -1155,6 +1159,9 @@ def main(argv=None):
         "reps", help="print the [rep] lines Dolphin logged since the last run started (only reads a log file)"
     )
     rp.add_argument("--log", metavar="PATH", help="read this log file instead of Dolphin's")
+    rp.add_argument(
+        "--layout", action="store_true", help="only the `[rep] layout:` lines Print layout wrote"
+    )
     rp.add_argument(
         "--since", type=int, metavar="BYTES", help="start marker: a log offset (default: set by run)"
     )

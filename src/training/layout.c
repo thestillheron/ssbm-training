@@ -73,6 +73,31 @@ LayoutStatus training_layout_resolve(const Drill* drill, float start_gap,
     return Layout_Ok;
 }
 
+bool training_layout_step_surface(float x, float y, bool up, float* out_y)
+{
+    Vec3 hit;
+    float from_y;
+    bool found = false;
+
+    if (!up) {
+        if (!find_floor_below(x, y - SURFACE_CLEARANCE, &hit)) {
+            return false;
+        }
+        *out_y = hit.y;
+        return true;
+    }
+    /* Walk down from high above, surface by surface, keeping the lowest one
+     * still above `y`. */
+    from_y = y + RAY_BELOW_START;
+    while (find_floor_below(x, from_y, &hit) && hit.y > y + SURFACE_CLEARANCE)
+    {
+        *out_y = hit.y;
+        found = true;
+        from_y = hit.y - SURFACE_CLEARANCE;
+    }
+    return found;
+}
+
 const char* training_layout_status_name(LayoutStatus status)
 {
     switch (status) {

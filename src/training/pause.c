@@ -4,6 +4,7 @@
 
 #include "drill.h"
 #include "event.h"
+#include "layout_editor.h"
 #include "menu.h"
 #include "punish_window.h"
 #include "rep_result.h"
@@ -21,10 +22,10 @@
 #include <sysdolphin/baselib/gobjproc.h>
 #include <sysdolphin/baselib/rumble.h>
 
+#include <dolphin/os.h>
 #include <dolphin/pad.h>
 
 #include <stdio.h>
-
 
 /* The game's pause flag bit for a VS match (what retail VS pause sets). */
 #define DB_PAUSE_FLAG_VS 1
@@ -46,12 +47,16 @@ typedef enum Choice {
     Choice_Restart,
     Choice_ChangeCharacters,
     Choice_EventList,
+    Choice_EditLayout,
 } Choice;
 
 static Choice chosen;
-/* Resume was chosen: the menu is gone, and the match unfreezes once the A
- * that chose it is released (held into the match it would be an attack). */
+/* Resume was chosen (or the layout editor left): the menu is gone, and the
+ * match unfreezes once the A or B that chose it is released (held into the
+ * match it would be an attack). */
 static bool resume_pending;
+/* The layout editor is open over the frozen match, driven by pause_port. */
+static bool editor_open;
 
 static void choose_resume(void)
 {
@@ -73,6 +78,12 @@ static void choose_event_list(void)
     chosen = Choice_EventList;
 }
 
+static void choose_edit_layout(void)
+{
+    chosen = Choice_EditLayout;
+}
+
+
 static TrainingMenuItem items[] = {
     { "Resume", "Carry on with the drill", true, choose_resume },
     { "Restart drill", "Start again from rep 1", true, choose_restart },
@@ -80,6 +91,13 @@ static TrainingMenuItem items[] = {
       choose_change_characters },
     { "Back to event list", "Leave the drill and pick another", true,
       choose_event_list },
+    { "Edit layout", "Change the landing, heights and start", true,
+      choose_edit_layout },
+#ifdef AUTHORING_BUILD
+    /* Authoring only: stays paused, so it can be chosen again. */
+    { "Print layout", "Write the layout to the rep log", true,
+      training_drill_print_layout },
+#endif
 };
 
 static TrainingMenu menu = { "Paused", items, ARRAY_SIZE(items) };
@@ -209,10 +227,19 @@ static void think(HSD_GObj* gobj)
         return;
     }
     if (resume_pending) {
-        if (!(gm_GetButtonsPressed((u8) pause_port) & PAD_BUTTON_A)) {
+        if (!(gm_GetButtonsPressed((u8) pause_port) &
+              (PAD_BUTTON_A | PAD_BUTTON_B)))
+        {
             resume_pending = false;
             LOG_RESUME("resume");
             unpause();
+        }
+        return;
+    }
+    if (editor_open) {
+        if (!training_layout_editor_update(pause_port)) {
+            editor_open = false;
+            resume_pending = true;
         }
         return;
     }
@@ -253,6 +280,11 @@ static void think(HSD_GObj* gobj)
     case Choice_EventList:
         leave_match(TrainingEventExit_EventList);
         break;
+    case Choice_EditLayout:
+        hide_menu();
+        training_layout_editor_open();
+        editor_open = true;
+        break;
     default:
         break;
     }
@@ -262,8 +294,10 @@ void training_pause_init(void)
 {
     paused = false;
     resume_pending = false;
+    editor_open = false;
     chosen = Choice_None;
     training_menu_reset(&menu);
+    training_layout_editor_init();
     HSD_GObj_SetupProc(
         GObj_Create(PAUSE_GOBJ_CLASS, PAUSE_GOBJ_PLINK, PAUSE_GOBJ_PRIORITY),
         (HSD_GObjEvent) think, PAUSE_PROC_PRIORITY);

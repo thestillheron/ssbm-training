@@ -1156,6 +1156,69 @@ void training_tech_chase_restart(void)
     }
 }
 
+/* Edit mode: the layout editor has the fighters as markers (see
+ * tech_chase.h). Set from edit_begin to edit_end; the opponent's fed input
+ * is neutral meanwhile. */
+static bool edit_mode;
+
+void training_tech_chase_edit_begin(void)
+{
+    HSD_GObj* opp = Player_GetEntity(OPPONENT_SLOT);
+
+    edit_mode = true;
+    /* A press due now belonged to the rep the markers displace. */
+    rep.press_pending = false;
+    training_rep_result_hide();
+    if (opp != NULL) {
+        end_vanish(GET_FIGHTER(opp));
+    }
+}
+
+LayoutStatus training_tech_chase_edit_place(int height_index, Layout* out)
+{
+    const Drill* drill = training_drill_current();
+    Layout layout;
+    LayoutStatus status;
+    Vec3 drop;
+
+    status = training_layout_resolve(drill, player_reach + opponent_reach,
+                                     &layout);
+    if (status != Layout_Ok) {
+        return status;
+    }
+    if (height_index < 0 || height_index >= drill->height_count) {
+        height_index = 0;
+    }
+    drop = layout.landing;
+    drop.y += drill->heights[height_index];
+    Player_SetFacingDirection(PLAYER_SLOT, 1.0F);
+    teleport(PLAYER_SLOT, &layout.start, true);
+    Player_SetFacingDirection(OPPONENT_SLOT,
+                              opponent_facing(drill->opponent_facing, drop.x,
+                                              layout.start.x));
+    teleport(OPPONENT_SLOT, &drop, false);
+    if (out != NULL) {
+        *out = layout;
+    }
+    return Layout_Ok;
+}
+
+void training_tech_chase_edit_end(bool layout_changed)
+{
+    edit_mode = false;
+    if (layout_changed) {
+        training_tech_chase_restart();
+        return;
+    }
+    /* The same layout: carry on. A rep under way was displaced by the
+     * markers, so it is dropped (not counted) and the next one starts. A
+     * rep in its pause has already been scored and finishes it; settle, the
+     * summary and an invalid layout stay as they were. */
+    if (rep_state >= RepState_Reset && rep_state < RepState_Pause) {
+        set_state(RepState_Reset);
+    }
+}
+
 static void think(HSD_GObj* gobj)
 {
     HSD_GObj* player = Player_GetEntity(PLAYER_SLOT);
@@ -1344,6 +1407,7 @@ void training_tech_chase_init(void)
     prev_percent = 0.0F;
     prev_grabbed = false;
     player_placed = false;
+    edit_mode = false;
     REP_LOG_RESET();
     log_drill_start(training_drill_current());
     reset_rep_data(0.0F);
@@ -1431,6 +1495,10 @@ void training_cpu_input(Fighter_GObj* gobj)
     fp->cpu.cstick.y = 0;
     fp->cpu.ltrigger = 0;
     fp->cpu.rtrigger = 0;
+    if (edit_mode) {
+        rep.press_pending = false;
+        return;
+    }
     feed_option_input(fp, rep.option, rep.press_pending);
     rep.press_pending = false;
 }

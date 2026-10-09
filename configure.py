@@ -2084,6 +2084,7 @@ if args.training:
                     extra_cflags=training_cflags + tech_pool_cflags,
                 ),
                 Object(Matching, "training/layout.c", extra_cflags=training_cflags),
+                Object(Matching, "training/layout_editor.c", extra_cflags=training_cflags),
                 Object(Matching, "training/authoring.c", extra_cflags=training_cflags),
                 Object(Matching, "training/event.c", extra_cflags=training_cflags),
                 Object(Matching, "training/menu.c", extra_cflags=training_cflags),

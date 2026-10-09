@@ -1,0 +1,72 @@
+# Acceptance scenario for layout-editor ticket 04 (surface stepping). Chooses
+# drill 4 on the Event Match list ("Test: platform", Battlefield, landing on
+# the top platform at y 54), lets a few reps run, then:
+#  - pause, Edit layout (the last item): the opponent hangs over the top
+#    platform (shot `editor-platform`).
+#  - stick down: the landing point steps down to the floor (shot
+#    `stepped-down`), B: the drill restarts on the floor.
+#  - edit again, stick up: back up onto the top platform (shot
+#    `stepped-up`), B.
+#  - edit again, stick down to the floor, stick left 40 frames (under the
+#    left platform), stick up: onto the left platform (shot
+#    `left-platform`), B.
+# `python dev.py run --scenario layout-edit-step` prints `drill_start` lines
+# with landing_y=54 (compiled), 0, 54, then the left platform's height (27),
+# each followed by `layout` lines with the same landing_y. Needs window focus
+# for the shots.
+include boot-to-event-list
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+a:2
+include event-css-to-match
+wait:400
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+shot editor-platform
+stick-down:4
+wait:20
+shot stepped-down
+wait:30
+b:2
+wait:300
+
+start:2
+wait:30
+a:2
+wait:30
+stick-up:4
+wait:20
+shot stepped-up
+wait:30
+b:2
+wait:300
+
+start:2
+wait:30
+a:2
+wait:30
+stick-down:4
+wait:20
+stick-left:40
+wait:10
+stick-up:4
+wait:20
+shot left-platform
+wait:30
+b:2
+wait:300

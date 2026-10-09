@@ -21,6 +21,9 @@ from .support import (
 # Compiled in by the authoring macro only (src/training/authoring.c).
 MARKER = b"AUTHORING_BUILD_MARKER"
 REP_PREFIX = b"[rep]"  # the rep log prefix, authoring-only
+# Print layout (src/training/pause.c, drill.c): its menu entry and its rep
+# log line.
+PRINT_LAYOUT = (b"Print layout", b"[rep] layout: ")
 REP_EVENTS = (b"start", b"drop", b"landing", b"tech", b"actionable", b"outcome")
 COMPILE_LINE = re.compile(r"\] MWCC (\S+)")
 
@@ -102,6 +105,8 @@ class AuthoringBuildTests(unittest.TestCase):
         self.build()
         self.assertNotIn(MARKER, self.dol())
         self.assertNotIn(REP_PREFIX, self.dol())
+        for text in PRINT_LAYOUT:
+            self.assertNotIn(text, self.dol())
         self.assertFalse(state(self.root)["authoring"])
 
     def test_authoring_build_includes_them_and_records_the_variant(self):
@@ -110,6 +115,8 @@ class AuthoringBuildTests(unittest.TestCase):
         for event in REP_EVENTS:
             self.assertIn(REP_PREFIX + b" event=" + event, self.dol())
         self.assertNotIn(b"event=probe", self.dol())
+        for text in PRINT_LAYOUT:
+            self.assertIn(text, self.dol())
         for field in (b"window_open=", b"vuln_from=", b"vuln_to=", b"actionable="):
             self.assertIn(field, self.dol())
         self.assertTrue(state(self.root)["authoring"])

@@ -40,6 +40,10 @@ typedef struct Layout {
 LayoutStatus training_layout_resolve(const Drill* drill, float start_gap,
                                      Layout* out);
 
+/// The next surface above (`up`) or below the surface at height `y`, at `x`:
+/// puts its height in `out_y`. False if there is none.
+bool training_layout_step_surface(float x, float y, bool up, float* out_y);
+
 const char* training_layout_status_name(LayoutStatus status);
 
 #endif

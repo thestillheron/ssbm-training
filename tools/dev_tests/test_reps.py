@@ -80,6 +80,38 @@ class RepsCliTests(unittest.TestCase):
         r = dev(root, "reps", "--log", str(fixture))
         self.assertEqual(r.stdout.splitlines(), ["[rep] event=probe"])
 
+    def test_layout_filter_prints_only_print_layout_lines(self):
+        pre = "00:01:000 Core/HW/EXI/EXI_DeviceIPL.cpp:306 N[OSREPORT]: "
+        log = "".join(
+            pre + line + "\r\r\n"
+            for line in [
+                "[rep] event=start rep=1 frame=100",
+                "[rep] event=layout rep=1 landing_x=0 landing_y=0 start_x=-20 start_y=0",
+                "[rep] layout: 0.0F, 0.0F, DrillHeight_List, 1, { 40.0F }, 0.0F, 0.0F,",
+                "something else",
+                "[rep] layout: 60.0F, 0.0F, DrillHeight_List, 2, { 40.0F, 70.0F }, 0.0F, 0.0F,",
+            ]
+        )
+        root, _ = self.sandbox(log=None)
+        fixture = root / "fixture.log"
+        fixture.write_bytes(log.encode())
+        r = dev(root, "reps", "--layout", "--log", str(fixture))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(
+            r.stdout.splitlines(),
+            [
+                "[rep] layout: 0.0F, 0.0F, DrillHeight_List, 1, { 40.0F }, 0.0F, 0.0F,",
+                "[rep] layout: 60.0F, 0.0F, DrillHeight_List, 2, { 40.0F, 70.0F }, 0.0F, 0.0F,",
+            ],
+        )
+
+    def test_layout_filter_with_no_layout_lines_says_so(self):
+        root, _ = self.sandbox()
+        r = dev(root, "reps", "--layout")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(r.stdout.strip(), "")
+        self.assertIn("no [rep] layout: lines", r.stderr)
+
     def test_dry_run_is_not_an_option_because_reps_only_ever_reads(self):
         root, _ = self.sandbox()
         r = dev(root, "reps", "--dry-run")

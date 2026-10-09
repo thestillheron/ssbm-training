@@ -1,0 +1,51 @@
+# Acceptance scenario for layout-editor ticket 05 (values text and Revert).
+# Boots through Event Match into drill 1 (Final Destination, landing x 0,
+# start_dx 0, one height 40), lets a few reps run, then:
+#  - Edit layout (the last pause item; shot `editor-values`: the values
+#    text reads the compiled layout). Stick right for 40 frames, C-stick
+#    right for 20, X (adds a copy of the height), d-pad up for 30 (raises
+#    it): the values text updates live (shot `values-edited`: landing x 40,
+#    heights 40 and 70, start 20). B leaves: `drill_start` reads
+#    landing_x=40 start_dx=20 heights=40,70.
+#  - Edit layout again, A reverts to the compiled layout (shot `reverted`:
+#    the markers and the values text are back to x 0, height 40, start 0).
+#    B leaves: `drill_start` reads landing_x=0 start_dx=0 heights=40.
+include boot-to-event
+wait:400
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+shot editor-values
+stick-right:40
+wait:10
+cstick-right:20
+wait:10
+x:2
+wait:20
+dpad-up:30
+wait:10
+shot values-edited
+wait:40
+b:2
+wait:300
+
+start:2
+wait:30
+a:2
+wait:30
+a:2
+wait:20
+shot reverted
+wait:40
+b:2
+wait:300

@@ -4,6 +4,12 @@
 
 #include <sysdolphin/baselib/random.h>
 
+#ifdef AUTHORING_BUILD
+#include <dolphin/os.h>
+#endif
+
+#include <stdio.h>
+
 /* dev.py --tech-pool compiles a pool mask in for acceptance scenarios; it
  * replaces the pool of every drill. Otherwise each drill's own pool is used. */
 #ifdef TECH_OPTION_POOL
@@ -293,6 +299,13 @@ static const Drill drills[] = {
 
 static int current_index;
 
+/* The session copy of the current drill: what the rep loop runs and the
+ * layout editor edits. Copied from the table when a different drill is
+ * selected (or on first use); until then edits survive restarts, retries and
+ * re-entering the same drill. The table itself is never written. */
+static Drill session;
+static int session_index = -1;
+
 int training_drill_count(void)
 {
     return DRILL_COUNT;
@@ -313,12 +326,121 @@ int training_drill_current_index(void)
     return current_index;
 }
 
-const Drill* training_drill_current(void)
+Drill* training_drill_session(void)
 {
     if (current_index < 0 || current_index >= DRILL_COUNT) {
         current_index = 0;
     }
-    return &drills[current_index];
+    if (session_index != current_index) {
+        session = drills[current_index];
+        session_index = current_index;
+    }
+    return &session;
+}
+
+void training_drill_revert_layout(void)
+{
+    Drill* drill = training_drill_session();
+    const Drill* compiled = &drills[session_index];
+    int i;
+
+    drill->landing_x = compiled->landing_x;
+    drill->landing_y = compiled->landing_y;
+    drill->height_kind = compiled->height_kind;
+    drill->height_count = compiled->height_count;
+    for (i = 0; i < DRILL_MAX_HEIGHTS; i++) {
+        drill->heights[i] = compiled->heights[i];
+    }
+    drill->start_dx = compiled->start_dx;
+    drill->start_dy = compiled->start_dy;
+}
+
+bool training_drill_same_layout(const Drill* a, const Drill* b)
+{
+    int i;
+
+    if (a->landing_x != b->landing_x || a->landing_y != b->landing_y ||
+        a->height_kind != b->height_kind ||
+        a->height_count != b->height_count || a->start_dx != b->start_dx ||
+        a->start_dy != b->start_dy)
+    {
+        return false;
+    }
+    for (i = 0; i < a->height_count && i < DRILL_MAX_HEIGHTS; i++) {
+        if (a->heights[i] != b->heights[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/// `value` in whole tenths, rounded to the nearest.
+static int to_tenths(float value)
+{
+    return (int) (value * 10.0F + (value < 0.0F ? -0.5F : 0.5F));
+}
+
+float training_drill_round_tenths(float value)
+{
+    return (float) to_tenths(value) / 10.0F;
+}
+
+char* training_drill_format_tenths(char* out, float value)
+{
+    int tenths = to_tenths(value);
+
+    if (tenths < 0) {
+        *out++ = '-';
+        tenths = -tenths;
+    }
+    return out + sprintf(out, "%d.%d", tenths / 10, tenths % 10);
+}
+
+#ifdef AUTHORING_BUILD
+/* Room for the longest Print layout payload: six floats, four heights and
+ * the height kind's name, with their separators. */
+#define LAYOUT_LINE_MAX 192
+
+/// Appends `value` as a C float literal rounded to tenths ("-7.5F").
+static char* print_float(char* p, float value)
+{
+    p = training_drill_format_tenths(p, value);
+    *p++ = 'F';
+    *p = 0;
+    return p;
+}
+
+void training_drill_print_layout(void)
+{
+    const Drill* drill = training_drill_current();
+    char line[LAYOUT_LINE_MAX];
+    char* p = line;
+    int i;
+
+    p = print_float(p, drill->landing_x);
+    p += sprintf(p, ", ");
+    p = print_float(p, drill->landing_y);
+    p += sprintf(p, ", %s, %d, { ",
+                 drill->height_kind == DrillHeight_Range ? "DrillHeight_Range"
+                                                         : "DrillHeight_List",
+                 drill->height_count);
+    for (i = 0; i < drill->height_count; i++) {
+        if (i > 0) {
+            p += sprintf(p, ", ");
+        }
+        p = print_float(p, drill->heights[i]);
+    }
+    p += sprintf(p, " }, ");
+    p = print_float(p, drill->start_dx);
+    p += sprintf(p, ", ");
+    p = print_float(p, drill->start_dy);
+    OSReport("[rep] layout: %s,\n", line);
+}
+#endif
+
+const Drill* training_drill_current(void)
+{
+    return training_drill_session();
 }
 
 void training_drill_select(int index)

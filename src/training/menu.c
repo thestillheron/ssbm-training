@@ -27,8 +27,8 @@
 #define MENU_ROW_SCALE 0.75F
 #define MENU_DESCRIPTION_SCALE 0.65F
 
-/* Sounds of lbAudioAx_80024030, the game's menu sounds. */
-#define SOUND_BACK 0
+/* Sounds of lbAudioAx_80024030, the game's menu sounds (back is
+ * TRAINING_MENU_SOUND_BACK, menu.h). */
 #define SOUND_CONFIRM 1
 #define SOUND_MOVE 2
 
@@ -199,7 +199,7 @@ TrainingMenuAction training_menu_update(TrainingMenu* menu, int port)
         return TrainingMenuAction_Close;
     }
     if (pressed & PAD_BUTTON_B) {
-        lbAudioAx_80024030(SOUND_BACK);
+        lbAudioAx_80024030(TRAINING_MENU_SOUND_BACK);
         LOG_MENU_BACK(menu);
         return TrainingMenuAction_Back;
     }
