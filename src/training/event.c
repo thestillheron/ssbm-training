@@ -23,6 +23,10 @@
 #define CSS_TYPE_PLAYER_AND_CPU 0x17
 #define EVENT_COUNT 51
 #define CPU_LEVEL 9
+/* Event Match's scene states (gm_Mode_Event_States, gmevent.c). */
+#define STATE_CSS 0
+#define STATE_VS 1
+#define STATE_SSS 2
 
 
 /* Set by training_event_end_match, read by onExitVs. */
@@ -40,7 +44,7 @@ int training_event_drill_index(void)
      * it is a drill's index in the table. */
     int index = event_data()->unk_535;
 
-    if (index < training_drill_count()) {
+    if (index < training_drill_event_count()) {
         return index;
     }
     return -1;
@@ -149,7 +153,39 @@ bool training_event_exit_css(CSSData* css)
     gm_801B0730(css, &player_ckind, NULL, &player_color, &player_nametag,
                 NULL);
     gm_801B07E8(css, &cpu_ckind, NULL, &cpu_color, &cpu_nametag, NULL);
+    if (training_drill_is_custom(training_event_drill_index())) {
+        /* The Custom drill picks its stage next; the curriculum's drills
+         * bring their own. */
+        gm_SetNextGameModeStateId(STATE_SSS);
+    }
     return true;
+}
+
+/* The Custom drill's stage select (Training Mode's, which is the retail
+ * screen with the stage list). It is state 2, after the match: only the
+ * Custom drill's character select routes to it. */
+SSSData training_event_sss_data;
+
+void training_event_enter_sss(GameModeState* state)
+{
+    SSSData* sss = gm_GetGameModeStateEnterData(state);
+
+    sss->x1 = 0;
+    sss->force_stage_id = -1;
+    sss->unk_stage = 0;
+}
+
+void training_event_exit_sss(GameModeState* state)
+{
+    SSSData* sss = gm_GetGameModeStateExitData(state);
+
+    if (!sss->start_game) {
+        /* B: back to the character select. */
+        gm_SetNextGameModeStateId(STATE_CSS);
+        return;
+    }
+    training_drill_custom_set_stage(sss->vs.start.rules.stkind);
+    gm_SetNextGameModeStateId(STATE_VS);
 }
 
 /// Tells the loader which fighters, stage and sound banks the match needs,

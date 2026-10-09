@@ -1,0 +1,73 @@
+# Acceptance scenario for custom-drills ticket 06 (Edit layout on the custom
+# drill). It includes custom-drill-battlefield (the Custom drill on
+# Battlefield, landing point on the main floor), then from the pause menu
+# chooses Edit layout (fifth item), flicks the stick up (the landing point
+# steps onto the top platform at the same x; shot `editor-platform`) and
+# leaves with B: the drill restarts. Then it checks the edit is kept:
+#  - Restart drill from the pause menu (the cursor is still on Edit layout, so
+#    up three; shot `restarted`).
+#  - Back to event list (the cursor is on Restart drill, so down two), Custom drill again, the same fighters and Battlefield
+#    (shot `reentered`): the edited layout is still the custom drill's.
+# `python dev.py run --scenario custom-drill-edit-layout` prints a first
+# `drill_start name="Custom drill" stage=31` with `landing_y=0`, then three
+# more (after the edit, the restart and the re-entry) with `landing_y=54`,
+# and `layout` lines after each with `landing_y=54` and `start_y=0`: the
+# opponent drops onto the platform. Needs window focus for the shots.
+include custom-drill-battlefield
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+stick-up:4
+wait:20
+shot editor-platform
+wait:30
+b:2
+wait:300
+
+start:2
+wait:30
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+a:2
+wait:60
+shot restarted
+wait:300
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:120
+shot event-list
+
+wait:40
+a:2
+include event-css
+wait:2
+stick-down+stick-left:50
+wait:4
+stick-right:17
+wait:4
+stick-up:8
+wait:4
+a:2
+wait:300
+shot reentered
+wait:600

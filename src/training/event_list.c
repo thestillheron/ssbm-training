@@ -42,7 +42,7 @@ static GXColor row_number_colour = { 0xCA, 0xBC, 0x9F, 0xFF };
 
 int training_event_list_last_top(void)
 {
-    int count = training_drill_count();
+    int count = training_drill_event_count();
 
     return count > LIST_ROWS ? count - LIST_ROWS : 0;
 }
@@ -55,7 +55,7 @@ void training_event_list_row(MnEventData* data, int line, int event,
 
     training_text_free(&data->texts[line]);
     training_text_free(&data->icons[line]);
-    if (event < 0 || event >= training_drill_count()) {
+    if (event < 0 || event >= training_drill_event_count()) {
         return;
     }
 
@@ -133,7 +133,9 @@ static void show_description(MnEventData* data, const Drill* drill)
         training_text_add_line(text, n * DESC_LINE_STEP, line);
         n++;
     }
-    if (drill->length_kind == DrillLength_Time) {
+    if (!training_drill_has_pass_mark(drill)) {
+        strcpy(line, "No pass mark");
+    } else if (drill->length_kind == DrillLength_Time) {
         sprintf(line, "Pass mark: %d in %d s", drill->pass_mark,
                 drill->length);
     } else {
@@ -148,8 +150,8 @@ void training_event_list_show(HSD_GObj* gobj)
     int event = data->first_event + data->page;
     HSD_JObj* jobj;
 
-    if (event >= training_drill_count()) {
-        event = training_drill_count() - 1;
+    if (event >= training_drill_event_count()) {
+        event = training_drill_event_count() - 1;
     }
     /* No retail event portrait, best score or score kind. */
     mnEvent_8024D0CC(gobj, ChKind_None);
@@ -164,7 +166,24 @@ void training_event_list_show(HSD_GObj* gobj)
 
 bool training_event_list_at_end(const MnEventData* data)
 {
-    return data->first_event + data->page >= training_drill_count() - 1;
+    return data->first_event + data->page >= training_drill_event_count() - 1;
+}
+
+void training_event_list_set_visible(MnEventData* data, bool visible)
+{
+    int i;
+
+    for (i = 0; i < LIST_ROWS; i++) {
+        if (data->texts[i] != NULL) {
+            training_text_set_visible(data->texts[i], visible);
+        }
+        if (data->icons[i] != NULL) {
+            training_text_set_visible(data->icons[i], visible);
+        }
+    }
+    if (data->desc_text != NULL) {
+        training_text_set_visible(data->desc_text, visible);
+    }
 }
 
 #endif

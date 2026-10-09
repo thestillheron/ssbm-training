@@ -32,6 +32,10 @@ void training_event_list_show(HSD_GObj* gobj);
 /// move further down.
 bool training_event_list_at_end(const MnEventData* data);
 
+/// Shows or hides the screen's rows and description (the Custom drill's
+/// settings menu is drawn over the list).
+void training_event_list_set_visible(MnEventData* data, bool visible);
+
 #endif
 
 #endif

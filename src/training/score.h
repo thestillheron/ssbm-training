@@ -29,7 +29,7 @@ TechScore training_score_tech(RepTech tech);
 void training_score_clear(void);
 int training_score_successes(void);
 int training_score_counted(void);
-/* True when the current score has reached the drill's pass mark. */
+/* True when the drill has a pass mark and the current score has reached it. */
 bool training_score_passed(const Drill* drill);
 
 /* End-of-drill summary (score.c): shown when the drill's length is reached. */

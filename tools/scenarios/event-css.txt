@@ -1,0 +1,28 @@
+# Fragment, not a scenario of its own: the player + CPU character select of
+# an Event Match event (Training's own, type 0x17), from the moment the event
+# is chosen to the Start that leaves it. Picks Ness for the player; the CPU
+# keeps the character select's default. What follows Start depends on the
+# event: a curriculum drill goes straight to its match (event-css-to-match),
+# the Custom drill goes to the stage select first (custom-drill-defaults).
+# `include` it right after the `a` that chooses the event.
+#
+# The character select hand accelerates with how long the stick is held, so a
+# move is "clamp to a corner, let go, then hold one direction for a fixed
+# number of frames", as in boot-to-training. Assumes a save with every
+# character unlocked.
+
+wait:40
+
+# Clamp the hand to the top-left corner, then right and down onto Ness
+# (second row).
+stick-up+stick-left:82
+wait:4
+stick-right:14
+wait:4
+stick-down:13
+wait:4
+shot hover-player
+# Pick Ness, then start.
+a:2
+wait:3
+start:2

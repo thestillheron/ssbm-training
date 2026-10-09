@@ -108,10 +108,12 @@ int training_score_counted(void)
     return counted;
 }
 
-/// True when the successes so far reach the drill's pass mark.
+/// True when the drill has a pass mark and the successes so far reach it
+/// (a drill with no pass mark is never passed).
 bool training_score_passed(const Drill* drill)
 {
-    return successes >= drill->pass_mark;
+    return training_drill_has_pass_mark(drill) &&
+           successes >= drill->pass_mark;
 }
 
 /// Creates the score text, once the scene has settled (text made during the
@@ -233,11 +235,14 @@ void training_summary_show(const Drill* drill)
     add_summary_line(drill->name);
     format_fraction(line, "Score", successes, counted);
     add_summary_line(line);
-    format_fraction(line, "Pass mark", drill->pass_mark,
-                    drill->length_kind == DrillLength_Time ? counted
-                                                           : drill->length);
-    add_summary_line(line);
-    add_summary_line(training_score_passed(drill) ? "PASS" : "FAIL");
+    if (training_drill_has_pass_mark(drill)) {
+        format_fraction(line, "Pass mark", drill->pass_mark,
+                        drill->length_kind == DrillLength_Time
+                            ? counted
+                            : drill->length);
+        add_summary_line(line);
+        add_summary_line(training_score_passed(drill) ? "PASS" : "FAIL");
+    }
     add_option_table();
 }
 

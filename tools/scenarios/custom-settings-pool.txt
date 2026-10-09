@@ -1,0 +1,97 @@
+# Acceptance scenario for custom-drills ticket 02 (settings menu with the tech
+# option pool). Boots to the Event Match list, moves to the last row (Custom
+# drill) and chooses it: the settings menu opens (shot settings-menu: Start and
+# one row per tech option, all on). It turns off Tech in place, Tech in and
+# Miss tech, then tries to turn off Tech away, the last one on: refused, with
+# an on-screen message (shot refused). It then goes up to Start, through the
+# character select and the stage select (Final Destination) and gives no
+# input for the drill's 10 reps.
+# `python dev.py run --scenario custom-settings-pool` prints `menu` lines for
+# the toggles and Start, then `drill_start name="Custom drill"` with pool=4
+# (tech away only) and 10 reps, each `option=away`, then `drill_end`.
+# Needs window focus for the shots. In a player build the Custom drill is
+# row 2.
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+wait:120
+a:2
+wait:30
+wait:70
+shot settings-menu
+wait:70
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+wait:70
+shot toggled
+wait:70
+stick-up:2
+wait:14
+a:2
+wait:20
+wait:70
+shot refused
+wait:70
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+a:2
+wait:30
+include event-css
+wait:2
+stick-down+stick-left:50
+wait:4
+stick-right:22
+wait:4
+stick-up:8
+wait:4
+a:2
+wait:300
+wait:70
+shot in-custom-drill
+wait:2400

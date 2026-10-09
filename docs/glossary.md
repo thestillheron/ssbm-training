@@ -37,7 +37,7 @@ Short for "current" or "cursor."
 The fixed, ordered set of @ref glossary_drill "drills" designed to teach tech chasing step by step, from one landing timing and one @ref glossary_tech_option "tech option" up to mixed timing and a random choice of options. Avoid "lesson plan" or "course".
 
 @section glossary_custom_drill custom drill
-A @ref glossary_drill "drill" whose settings the player chooses, as opposed to one from the @ref glossary_curriculum "curriculum".
+A @ref glossary_drill "drill" whose settings the player chooses, as opposed to one from the @ref glossary_curriculum "curriculum". It is the last event on the Event Match list, runs on whichever stage the player picks on its stage select, and its settings last for the session.
 
 @section glossary_deg deg
 Short for "degrees."

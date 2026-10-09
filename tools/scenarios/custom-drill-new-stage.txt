@@ -1,0 +1,101 @@
+# Acceptance scenario for custom-drills ticket 01's stage handling. Boots to
+# the Custom drill on Final Destination (as custom-drill-defaults), lets a
+# few reps run, moves the landing point to FD's right edge in the layout
+# editor (Edit layout, stick right until clamped, Start), then pauses, Change
+# characters, and picks Battlefield on the stage select. The edited landing
+# x has no floor on Battlefield (it is narrower than Final Destination), so
+# the Custom drill falls back to its defaults there: `python dev.py run
+# --scenario custom-drill-new-stage` prints `drill_start stage=32` with
+# landing_x=0, then one with the edited landing_x (the right edge), then
+# `drill_start stage=31` with landing_x=0 again and `layout` lines with
+# landing_x=0, and no `invalid_layout`. Needs window focus for the shots.
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:120
+a:2
+include event-css
+wait:2
+
+# Final Destination, as in custom-drill-defaults.
+stick-down+stick-left:50
+wait:4
+stick-right:22
+wait:4
+stick-up:8
+wait:4
+a:2
+wait:500
+
+# Pause, down four to Edit layout, choose it, clamp right, leave with Start.
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+stick-right:300
+wait:10
+shot edited-right
+wait:60
+start:2
+wait:300
+
+# Pause (the cursor stays on Edit layout), up two to Change characters,
+# choose it; start again, then the stage select: Battlefield.
+start:2
+wait:30
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+a:2
+wait:200
+shot css-again
+start:2
+wait:60
+shot stage-select
+wait:90
+stick-down+stick-left:80
+wait:4
+stick-right:19
+wait:4
+stick-up:8
+wait:4
+shot hover-battlefield
+a:2
+wait:500
+shot on-battlefield

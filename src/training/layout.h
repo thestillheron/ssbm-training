@@ -44,6 +44,15 @@ LayoutStatus training_layout_resolve(const Drill* drill, float start_gap,
 /// puts its height in `out_y`. False if there is none.
 bool training_layout_step_surface(float x, float y, bool up, float* out_y);
 
+/// Casts down at `x` from just above the y hint, as the landing point's cast
+/// does, and puts the floor it meets in `out`. False if there is none.
+bool training_layout_landing_floor(float x, float y_hint, Vec3* out);
+
+/// The default landing point for a stage: x at the stage centre, y the lowest
+/// floor under it (the main floor; platforms are higher). False if there is
+/// no floor there.
+bool training_layout_default_landing(float* x, float* y);
+
 const char* training_layout_status_name(LayoutStatus status);
 
 #endif

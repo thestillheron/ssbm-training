@@ -2,6 +2,8 @@
 
 #include "drill.h"
 
+#include "layout.h"
+
 #include <sysdolphin/baselib/random.h>
 
 #ifdef AUTHORING_BUILD
@@ -297,6 +299,36 @@ static const Drill drills[] = {
 
 #define DRILL_COUNT ((int) (sizeof(drills) / sizeof(drills[0])))
 
+/* The Custom drill: one session-scoped record of the same type, listed after
+ * the table. Its stage is the stage select's pick, and its layout is fitted
+ * to that stage (training_drill_custom_fit). */
+#define CUSTOM_BASE_HEIGHT 40.0F
+#define CUSTOM_REPS 10
+static Drill custom = {
+    "Custom drill",
+    "Your own drill on any stage.",
+    DRILL_STAGE_FINAL_DESTINATION,
+    0.0F,
+    0.0F,
+    DrillHeight_List,
+    1,
+    { CUSTOM_BASE_HEIGHT },
+    0.0F,
+    0.0F,
+    DrillFacing_TowardPlayer,
+    true,
+    POOL_FOR(TECH_OPTION_BIT(TechOption_InPlace) |
+             TECH_OPTION_BIT(TechOption_In) |
+             TECH_OPTION_BIT(TechOption_Away) |
+             TECH_OPTION_BIT(TechOption_Miss)),
+    false,
+    DrillLength_Reps,
+    CUSTOM_REPS,
+    0, /* no pass mark */
+};
+/* The stage the custom layout was last fitted to; -1 before the first. */
+static int custom_fitted_stage = -1;
+
 static int current_index;
 
 /* The session copy of the current drill: what the rep loop runs and the
@@ -316,9 +348,74 @@ bool training_drill_has_next(void)
     return current_index + 1 < DRILL_COUNT;
 }
 
+int training_drill_event_count(void)
+{
+    return DRILL_COUNT + 1;
+}
+
+int training_drill_custom_index(void)
+{
+    return DRILL_COUNT;
+}
+
+bool training_drill_is_custom(int index)
+{
+    return index == DRILL_COUNT;
+}
+
+void training_drill_custom_set_stage(int stage)
+{
+    custom.stage = stage;
+}
+
+/// Puts the custom layout at the defaults: landing point (`x`, `y`) and the
+/// default player start. The drop heights are a setting and are kept.
+static void set_default_custom_layout(float x, float y)
+{
+    custom.landing_x = x;
+    custom.landing_y = y;
+    custom.start_dx = 0.0F;
+    custom.start_dy = 0.0F;
+}
+
+void training_drill_custom_fit(void)
+{
+    Vec3 floor;
+    float x;
+    float y;
+
+    if (!training_drill_is_custom(current_index) || custom_fitted_stage == custom.stage) {
+        return;
+    }
+    if (custom_fitted_stage >= 0 &&
+        training_layout_landing_floor(custom.landing_x, custom.landing_y,
+                                      &floor))
+    {
+        custom_fitted_stage = custom.stage;
+        return;
+    }
+    if (training_layout_default_landing(&x, &y)) {
+        set_default_custom_layout(x, y);
+        custom_fitted_stage = custom.stage;
+    }
+}
+
+Drill* training_drill_custom(void)
+{
+    return &custom;
+}
+
 const Drill* training_drill_at(int index)
 {
+    if (training_drill_is_custom(index)) {
+        return &custom;
+    }
     return &drills[index];
+}
+
+bool training_drill_has_pass_mark(const Drill* drill)
+{
+    return drill->pass_mark != 0;
 }
 
 int training_drill_current_index(void)
@@ -328,6 +425,9 @@ int training_drill_current_index(void)
 
 Drill* training_drill_session(void)
 {
+    if (training_drill_is_custom(current_index)) {
+        return &custom;
+    }
     if (current_index < 0 || current_index >= DRILL_COUNT) {
         current_index = 0;
     }
@@ -341,8 +441,18 @@ Drill* training_drill_session(void)
 void training_drill_revert_layout(void)
 {
     Drill* drill = training_drill_session();
-    const Drill* compiled = &drills[session_index];
+    const Drill* compiled;
     int i;
+
+    if (training_drill_is_custom(current_index)) {
+        float x = 0.0F;
+        float y = 0.0F;
+
+        training_layout_default_landing(&x, &y);
+        set_default_custom_layout(x, y);
+        return;
+    }
+    compiled = &drills[session_index];
 
     drill->landing_x = compiled->landing_x;
     drill->landing_y = compiled->landing_y;
@@ -445,7 +555,7 @@ const Drill* training_drill_current(void)
 
 void training_drill_select(int index)
 {
-    if (index >= 0 && index < DRILL_COUNT) {
+    if (index >= 0 && index <= DRILL_COUNT) {
         current_index = index;
     }
 }

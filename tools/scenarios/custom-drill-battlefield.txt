@@ -1,0 +1,63 @@
+# Acceptance scenario for custom-drills ticket 01 (Custom drill event with
+# defaults). Boots to the Event Match list and presses down 15 times: the
+# cursor stops on the last row, Custom drill (shot custom-row: its description
+# and "No pass mark"). It chooses it, goes through the character select and
+# the stage select (Final Destination), then gives no input for the drill's
+# 10 reps. `python dev.py run --scenario custom-drill-defaults` prints a
+# `menu` line for the Custom drill, then `drill_start name="Custom drill"
+# stage=32` with one height (40), landing_x=0 landing_y=0, start_dx=0
+# start_dy=0, pool=15 (all four options), vanish=0 reset=1 facing=0
+# length=reps/10 pass=0, then 10 reps and `drill_end`. Needs window focus for
+# the shots. In a player build the Custom drill is row 2.
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+wait:120
+shot custom-row
+a:2
+include event-css
+wait:2
+
+# Stage select: a clamp gets the crosshair to the bottom-left corner about 35
+# frames after it starts; this one runs 50. Then right and up onto Final
+# Destination (small icon, bottom row, second from the left), as in
+# boot-to-training.
+stick-down+stick-left:50
+wait:4
+stick-right:17
+wait:4
+stick-up:8
+wait:4
+shot hover-battlefield
+a:2
+wait:300
+shot in-battlefield
+wait:600

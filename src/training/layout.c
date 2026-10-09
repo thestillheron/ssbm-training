@@ -14,6 +14,11 @@
  * surface itself so the cast finds the floor beneath. */
 #define SURFACE_CLEARANCE 1.0F
 
+/* The default landing point's cast starts this far above the stage centre
+ * and follows at most this many surfaces down. */
+#define DEFAULT_CAST_FROM 500.0F
+#define DEFAULT_MAX_SURFACES 16
+
 /* mpCheckMultiple `checks` bit for floors only. */
 #define CHECK_FLOORS 1
 
@@ -94,6 +99,34 @@ bool training_layout_step_surface(float x, float y, bool up, float* out_y)
         *out_y = hit.y;
         found = true;
         from_y = hit.y - SURFACE_CLEARANCE;
+    }
+    return found;
+}
+
+bool training_layout_landing_floor(float x, float y_hint, Vec3* out)
+{
+    return find_floor_below(x, y_hint + RAY_ABOVE_HINT, out);
+}
+
+bool training_layout_default_landing(float* x, float* y)
+{
+    Vec3 hit;
+    float from_y = DEFAULT_CAST_FROM;
+    bool found = false;
+    int i;
+
+    /* Walk down the surfaces at the stage centre; the last one is the main
+     * floor. */
+    for (i = 0; i < DEFAULT_MAX_SURFACES; i++) {
+        if (!find_floor_below(0.0F, from_y, &hit)) {
+            break;
+        }
+        *y = hit.y;
+        found = true;
+        from_y = hit.y - SURFACE_CLEARANCE;
+    }
+    if (found) {
+        *x = 0.0F;
     }
     return found;
 }

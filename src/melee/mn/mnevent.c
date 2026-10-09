@@ -25,6 +25,7 @@
 #include <sysdolphin/baselib/sislib.h>
 
 #ifdef TRAINING_BUILD
+#include <training/custom_settings.h>
 #include <training/event_list.h>
 #endif
 
@@ -446,6 +447,10 @@ void mnEvent_8024D864(HSD_GObj* gobj)
         }
 
         inputs = mn_804A04F0.buttons = mn_80229624(4);
+
+#ifdef TRAINING_BUILD
+        if (training_custom_settings_input(mnEvent_804D6C60, &inputs)) { return; }
+#endif
 
         if (inputs & MenuInput_Back) {
             sfxBack();

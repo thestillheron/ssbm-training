@@ -204,6 +204,20 @@ GameModeState gm_Mode_Event_States[] = {
             &vs_exit_data,
         },
     },
+#ifdef TRAINING_BUILD
+    {
+        2,
+        lbDvdPreload_3,
+        0,
+        training_event_enter_sss,
+        training_event_exit_sss,
+        {
+            GS_SSS,
+            &training_event_sss_data,
+            &training_event_sss_data,
+        },
+    },
+#endif
     { -1 },
 };
 

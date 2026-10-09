@@ -1279,6 +1279,7 @@ static void think(HSD_GObj* gobj)
             Layout layout;
             LayoutStatus status;
 
+            training_drill_custom_fit();
             status = training_layout_resolve(
                 training_drill_current(), player_reach + opponent_reach,
                 &layout);
@@ -1409,6 +1410,7 @@ void training_tech_chase_init(void)
     player_placed = false;
     edit_mode = false;
     REP_LOG_RESET();
+    training_drill_custom_fit();
     log_drill_start(training_drill_current());
     reset_rep_data(0.0F);
     training_score_init();

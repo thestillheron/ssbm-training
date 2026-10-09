@@ -4,7 +4,7 @@
 
 **Blocked by:** 01, and the custom-drills feature
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Edit layout is reachable from a custom drill and edits that drill's working copy
-- [ ] Print layout and developer text remain absent in non-authoring builds
+- [x] Edit layout is reachable from a custom drill and edits that drill's working copy
+- [x] Print layout and developer text remain absent in non-authoring builds

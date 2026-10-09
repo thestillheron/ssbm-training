@@ -1,0 +1,129 @@
+# Acceptance scenario for custom-drills ticket 04 (drop height settings).
+# Boots to the Event Match list, chooses the last row (Custom drill) and
+# edits the drop heights in the settings menu: Drop heights to List (A), Height
+# 1 raised 40 to 50, Heights 2 and 3 added (40) and Height 3 raised to 50
+# (shot list: 50, 40, 50). Then Drop heights to Range, which takes the lowest
+# height and adds 30 (40 to 70), and the max is raised to 90; the cursor then
+# moves down to Length type (shot range: Heights 3 and 4 greyed out).
+# Starts the drill (Final Destination) and gives no input for its 10 reps.
+# `python dev.py run --scenario custom-drop-heights` prints `drill_start`
+# with height_kind=range heights=40,90 and 10 reps whose `drop` lines show
+# heights from 40 to 90, then `drill_end`. Needs window focus for the shots.
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+wait:120
+a:2
+wait:30
+wait:70
+shot settings-menu
+wait:70
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+a:2
+wait:14
+wait:70
+shot list
+wait:70
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+wait:70
+shot range
+wait:70
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+a:2
+wait:30
+include event-css
+wait:2
+stick-down+stick-left:50
+wait:4
+stick-right:22
+wait:4
+stick-up:8
+wait:4
+a:2
+wait:300
+wait:70
+shot in-custom-drill
+wait:2400

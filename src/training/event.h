@@ -29,6 +29,13 @@ bool training_event_enter_css(CSSData* css);
 /// player's and the CPU's picks.
 bool training_event_exit_css(CSSData* css);
 
+/// The Custom drill's stage select state (gm_Mode_Event_States): its scene
+/// data and enter/exit hooks. Exiting with a stage sets the Custom drill's
+/// stage and goes to the match; B goes back to the character select.
+extern SSSData training_event_sss_data;
+void training_event_enter_sss(GameModeState* state);
+void training_event_exit_sss(GameModeState* state);
+
 /// From onEnterVs: the match setup built from the drill (its stage, the two
 /// fighters from the character select, an endless match) in place of the
 /// event data file; the drill starts when the match does.
