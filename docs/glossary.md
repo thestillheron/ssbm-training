@@ -55,7 +55,7 @@ Short for "damage."
 One configured tech-chasing activity, played as a series of @ref glossary_rep "reps" for a set count or time: the stage, where the opponent drops from and from what heights, where the player starts, which @ref glossary_tech_option "tech options" the opponent picks from, and whether it vanishes mid-tech. Avoid "mini game", "activity" or "exercise".
 
 @section glossary_drill_chooser drill chooser
-The temporary authoring-build control (D-pad right, until drill select exists) that switches to the next @ref glossary_drill "drill" in the @ref glossary_drill_table "drill table" that fits the stage in play, restarting from rep 1 with a clean score and clock. It also lists the drills that need another stage. Avoid "drill picker".
+The temporary authoring-build control (D-pad right, in Training Mode, until drill-select makes each drill an Event Match event and removes it) that switches to the next @ref glossary_drill "drill" in the @ref glossary_drill_table "drill table" that fits the stage in play, restarting from rep 1 with a clean score and clock. It also lists the drills that need another stage. Avoid "drill picker".
 
 @section glossary_drill_summary drill summary
 The screen shown when a @ref glossary_drill "drill" ends: its name, the score, the @ref glossary_pass_mark "pass mark", pass or fail, and the successes per @ref glossary_tech_option "tech option". Press A to restart the drill.
@@ -71,6 +71,9 @@ Short for "dynamic."
 
 @section glossary_ecb ECB
 Stands for "environmental collision box."
+
+@section glossary_event_list event list
+The Event Match select screen, which in the @ref glossary_training_build "training build" lists the @ref glossary_drill "drills" in @ref glossary_curriculum "curriculum" order, one event per drill, instead of the vanilla events (ADR-0005). Avoid "drill menu" or "ESS" outside code.
 
 @section glossary_ft ft
 Short for "fighter."

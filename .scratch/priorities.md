@@ -1,6 +1,6 @@
 # Priorities
 
-The order of work for the tech-chasing curriculum. Each item is a feature with its own spec at `.scratch/<slug>/spec.md`. Work top to bottom; an item can start once everything in its `Blocked by` is done. Glossary terms: `docs/glossary.md`. Decisions: ADR-0003 (start inside Training Mode), ADR-0004 (force tech options through CPU input).
+The order of work for the tech-chasing curriculum. Each item is a feature with its own spec at `.scratch/<slug>/spec.md`. Work top to bottom; an item can start once everything in its `Blocked by` is done. Glossary terms: `docs/glossary.md`. Decisions: ADR-0003 (start inside Training Mode, superseded by ADR-0005: drills are Event Match events), ADR-0004 (force tech options through CPU input).
 
 | # | Slug | Status | Blocked by | Summary |
 |---|---|---|---|---|
@@ -12,7 +12,7 @@ The order of work for the tech-chasing curriculum. Each item is a feature with i
 | 6 | [tech-vanish](tech-vanish/spec.md) | done | 3, 5 | Hide model and shadow from frame 8 of a tech until its first vulnerable frame. |
 | 7 | [unclepunch-ui-research](unclepunch-ui-research/spec.md) | done | — | `ref/` folder; how UnclePunch does menus, feedback, mode entry and saves. |
 | 8 | [rep-feedback](rep-feedback/spec.md) | ready-for-agent | 3, 4, 7 | Per-rep option, outcome, frames early/late; per-option summary. |
-| 9 | [drill-select](drill-select/spec.md) | ready-for-agent | 5, 7 | In-match drill list, pause menu (resume, restart, drill select, quit); Training Mode's own UI suppressed. |
+| 9 | [drill-select](drill-select/spec.md) | ready-for-agent | 5, 7 | Each drill an Event Match event; pause menu (resume, restart, change characters, event list); summary menu; Training Mode back to vanilla (ADR-0005). |
 | 10 | [layout-editor](layout-editor/spec.md) | ready-for-agent | 2, 5, 9 | Edit layout in game with the fighters as markers; Print layout in authoring builds only. |
 | 11 | [curriculum-v1](curriculum-v1/spec.md) | ready-for-human | 5, 6, 10 | Design and play-test the first curriculum along the agreed skeleton. |
 | 12 | [custom-drills](custom-drills/spec.md) | ready-for-agent | 9, 10 | Custom drill settings menu, any stage, layout editor for players; session only. |
@@ -23,7 +23,7 @@ Item 7 is done; its findings ([unclepunch-ui-research/findings.md](unclepunch-ui
 
 Not ordered and not specced yet. Each gets a spec when triaged.
 
-- **Game mode of its own** (needs-triage): drills in their own mode with a 1P menu entry and a drill-select screen that sets the stage, replacing the Training Mode hosting (ADR-0003).
+- **Game mode of its own** (needs-triage): mostly covered by drill-select taking over Event Match (ADR-0005). What remains is a main-menu entry and label of our own, if ever wanted.
 - **Memory card saves** (needs-triage): persist custom drills, and possibly curriculum progress and locking.
 - **Patch-based release** (needs-triage): a way for players to apply the training build to their own disc image, with authoring tools off.
 - **Missed-tech getup options** (needs-triage): getup attack, getup rolls, and staying down after a missed tech, as a "Part 2" curriculum.

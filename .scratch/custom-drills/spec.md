@@ -39,6 +39,8 @@ It works on any stage. The defaults are a sensible layout in the middle of the m
 
 ## Implementation Decisions
 
+- **Note (drill-select, ADR-0005):** drills are now Event Match events and Training Mode is vanilla. "Custom drill entry in drill select" means one more event at the end of the Event Match list. Since events fix the stage, the Custom drill event needs a stage select step (the findings' added `GS_SSS` state), and "kept while I stay in Training Mode" means kept for the session.
+
 - **Settings menu** built with drill-select's menu component. Each item edits a field of a session-scoped custom drill record (the same record type as curriculum drills).
 - **Defaults:** landing point at the main floor's middle (found by a floor ray-cast at the stage's centre), one drop height (the curriculum's base height), player start at the curriculum's default offset, all four options, vanish off, 10 reps, no pass mark, reset on, facing the player.
 - **Any stage:** the custom drill takes the stage in play. If the stored layout has no floor on a new stage, it falls back to the defaults.
