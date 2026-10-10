@@ -239,6 +239,9 @@ The game code plus this fork's training features, compiled without the byte-iden
 @section glossary_unk unk
 Short for "unknown."
 
+@section glossary_vanish vanish
+A @ref glossary_drill "drill" setting that hides the opponent, model and shadow, after the first 5 frames of its @ref glossary_tech_option "tech option" until its first actionable frame, whichever option it is, including a @ref glossary_missed_tech "missed tech". The player has to commit to a punish from the early read; the opponent reappearing is the cue that the punish was late. The tech sound and flash are kept. Avoid "invisible" or "hide".
+
 @section glossary_vec vec
 Short for "vector."
 

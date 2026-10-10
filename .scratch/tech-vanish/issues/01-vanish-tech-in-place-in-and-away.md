@@ -21,4 +21,6 @@
 
 The behaviour (`update_vanish`, `end_vanish`, `VANISH_VISIBLE_FRAMES` in `src/training/tech_chase.c`) already landed with drills-as-data (`cd6e10dec`); this ticket verified it. `python dev.py run --drill 5 --scenario tech-option-pool-of-one`: every in-place, in and away rep logs `vanish_from=38` (window_open 31 + 7) and `vanish_to=vuln_from-1` (54 for in-place, 50 for in and away); miss reps log no vanish line. New scenario `tech-vanish-shots` (`run --drill 5 --tech-pool in-place --scenario tech-vanish-shots`): shot v12 is mid-vanish with no opponent and no shadow and the tech flash still drawn; the next rep (v13) has the opponent visible again. A shot exactly on the 3-frame vulnerable window was not caught (shot timing is approximate); the log is the exact check. `dev.py check` passes (matching, training, training-authoring).
 
+Superseded 2026-10-10: vanish now lasts until the actionable frame and covers missed tech, see curriculum-v1 issue 01. The notes above describe the behaviour as first built.
+
 Not verified: a second opponent character. Training keeps one CPU character per boot (Pichu here) and the timing uses live-measured frames with no per-character tables, so it holds by construction.
