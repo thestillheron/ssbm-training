@@ -50,6 +50,12 @@ int training_event_drill_index(void)
     return -1;
 }
 
+bool training_event_cstick_enabled(void)
+{
+    return gm_GetCurrentGameMode() == GM_EVENT &&
+           training_event_drill_index() >= 0;
+}
+
 /* The characters picked on the drill events' character select, kept across
  * drills, retries and visits to the event list. The CPU starts as the
  * character Training Mode's own select would give it. */

@@ -17,6 +17,11 @@
 /// The drill table index of the event in play, or -1 for a vanilla event.
 int training_event_drill_index(void);
 
+/// True while a drill event is in play. Fighter_procInput reads the human's
+/// C-stick in it: retail zeroes the C-stick in every 1-P mode, Event Match
+/// included, and drills need smash and aerial attacks on it.
+bool training_event_cstick_enabled(void);
+
 /// From gm_Mode_Event_OnLoad: a drill event always opens on the character
 /// select (retail skips it for events with a fixed character).
 void training_event_on_load(void);

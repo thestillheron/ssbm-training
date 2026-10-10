@@ -43,10 +43,17 @@ int training_punish_window(int opponent_kind, RepTech tech)
 #define PANEL_Y 90.0F
 #define PANEL_LINE_HEIGHT 24.0F
 #define PANEL_SCALE 0.65F
+/* The backdrop behind it: padding round the text, and the width, which fits
+ * "Punish window". */
+#define PANEL_PAD_X 12.0F
+#define PANEL_PAD_Y 8.0F
+#define PANEL_PAD_BOTTOM 8.0F
+#define PANEL_WIDTH 215.0F
 
 /* The panel's text: a heading, then one line per tech in the drill's pool.
  * Built the first time it is shown in a match. */
 static HSD_Text* panel_text;
+static TrainingPanel backdrop;
 static int panel_lines;
 static RepTech panel_techs[TechOption_Count];
 
@@ -78,6 +85,17 @@ void training_punish_window_panel_show(void)
     if (panel_text == NULL) {
         int pool = training_drill_current()->option_pool;
 
+        int techs = 0;
+
+        for (i = 0; i < TechOption_Count; i++) {
+            if (pool & TECH_OPTION_BIT(i)) {
+                techs++;
+            }
+        }
+        training_panel_show(&backdrop, PANEL_X - PANEL_PAD_X,
+                            PANEL_Y - PANEL_PAD_Y, PANEL_WIDTH,
+                            PANEL_LINE_HEIGHT * (techs + 1) +
+                                2.0F * PANEL_PAD_Y + PANEL_PAD_BOTTOM);
         panel_text = training_text_create();
         training_text_add(panel_text, PANEL_X, PANEL_Y, PANEL_SCALE,
                           PANEL_SCALE, "Punish window");
@@ -98,18 +116,22 @@ void training_punish_window_panel_show(void)
         training_text_set(panel_text, 1 + i, line);
     }
     training_text_set_visible(panel_text, true);
+    training_panel_set_visible(&backdrop, true);
 }
 
 void training_punish_window_panel_hide(void)
 {
     if (panel_text != NULL) {
         training_text_set_visible(panel_text, false);
+        training_panel_set_visible(&backdrop, false);
     }
 }
 
 void training_punish_window_panel_reset(void)
 {
     panel_text = NULL;
+    backdrop.border = NULL;
+    backdrop.fill = NULL;
     panel_lines = 0;
 }
 

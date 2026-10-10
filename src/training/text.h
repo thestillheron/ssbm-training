@@ -63,6 +63,31 @@ void training_text_centre(HSD_Text* text);
 /* Shows or hides the whole text object. */
 void training_text_set_visible(HSD_Text* text, bool visible);
 
+/* A dark panel with a light border to put text on, so it reads against
+ * whatever is behind it. It is two text objects with no lines, each drawing
+ * its own background rectangle (the text library's bg_color), the border one
+ * made first so it is drawn under the fill. Make the panel before the text
+ * it sits behind, so it is drawn first. */
+typedef struct TrainingPanel {
+    HSD_Text* border;
+    HSD_Text* fill;
+} TrainingPanel;
+
+/* Makes the panel covering (x, y) to (x + w, y + h) in canvas units, border
+ * included, replacing any the panel already had. */
+void training_panel_show(TrainingPanel* panel, float x, float y, float w,
+                         float h);
+
+/* Moves and resizes a panel already made, keeping its draw order. */
+void training_panel_resize(TrainingPanel* panel, float x, float y, float w,
+                           float h);
+
+/* Shows or hides the panel; a panel never shown is left alone. */
+void training_panel_set_visible(TrainingPanel* panel, bool visible);
+
+/* Frees the panel's text objects and clears it. */
+void training_panel_free(TrainingPanel* panel);
+
 #endif
 
 #endif

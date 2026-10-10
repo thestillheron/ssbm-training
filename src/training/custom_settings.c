@@ -25,6 +25,11 @@
 #define MESSAGE_Y 285.0F
 #define MESSAGE_SCALE 0.75F
 #define MESSAGE_FRAMES 150
+/* The backdrop behind it: padding round the text, and its height. */
+#define MESSAGE_PAD_X 14.0F
+#define MESSAGE_PAD_Y 8.0F
+#define MESSAGE_HEIGHT 40.0F
+#define MESSAGE_CHAR_WIDTH 20.0F
 static const GXColor message_colour = { 255, 90, 90, 255 };
 
 /* Row text: "name: value". */
@@ -445,21 +450,21 @@ static const SettingsRow rows[] = {
     { "Tech away", "Opponent may tech away from you", value_away,
       toggle_away },
     { "Miss tech", "Opponent may miss the tech", value_miss, toggle_miss },
-    { "Drop heights", "Fixed height, a list of heights, or a range",
+    { "Drop heights", "Fixed height, a list, or a range",
       value_height_mode, cycle_height_mode },
-    { "Height 1", "A raises it; past the top a list drops it",
+    { "Height 1", "A raises it; a list drops past top",
       value_height_0, step_height_0, enabled_height_0 },
-    { "Height 2", "A raises it; past the top a list drops it",
+    { "Height 2", "A raises it; a list drops past top",
       value_height_1, step_height_1, enabled_height_1 },
-    { "Height 3", "A raises it; past the top a list drops it",
+    { "Height 3", "A raises it; a list drops past top",
       value_height_2, step_height_2, enabled_height_2 },
-    { "Height 4", "A raises it; past the top a list drops it",
+    { "Height 4", "A raises it; a list drops past top",
       value_height_3, step_height_3, enabled_height_3 },
     { "Length type", "Count reps, or run for a time", value_length_kind,
       cycle_length_kind },
     { "Length", "How many reps, or how many seconds", value_length,
       cycle_length },
-    { "Pass mark", "Successes needed to pass; None for no target",
+    { "Pass mark", "Successes to pass, or None",
       value_pass_mark, cycle_pass_mark },
     { "Vanish", "Opponent vanishes during the tech", value_vanish,
       toggle_vanish },
@@ -477,6 +482,7 @@ static TrainingMenu menu = { "Custom drill", items, ROW_COUNT };
 static bool menu_open;
 static int port;
 static HSD_Text* message_text;
+static TrainingPanel message_panel;
 static int message_frames;
 
 /// Writes each row's label from its name and current value, and its enabled
@@ -517,6 +523,12 @@ static bool refresh_labels(void)
 static void show_message(const char* message)
 {
     training_text_free(&message_text);
+    training_panel_free(&message_panel);
+    training_panel_show(&message_panel, MESSAGE_X - MESSAGE_PAD_X,
+                        MESSAGE_Y - MESSAGE_PAD_Y,
+                        strlen(message) * MESSAGE_SCALE * MESSAGE_CHAR_WIDTH +
+                            2.0F * MESSAGE_PAD_X,
+                        MESSAGE_HEIGHT);
     message_text = training_text_create();
     training_text_add(message_text, MESSAGE_X, MESSAGE_Y, MESSAGE_SCALE,
                       MESSAGE_SCALE, message);
@@ -540,9 +552,9 @@ static void open_menu(MnEventData* data)
 static void close_menu(MnEventData* data)
 {
     menu_open = false;
-    training_text_free(&menu.text);
+    training_menu_free(&menu);
     training_text_free(&message_text);
-    training_menu_reset(&menu);
+    training_panel_free(&message_panel);
     training_event_list_set_visible(data, true);
 }
 
@@ -582,6 +594,7 @@ bool training_custom_settings_input(HSD_GObj* gobj, u64* inputs)
     }
     if (message_text != NULL && --message_frames <= 0) {
         training_text_free(&message_text);
+        training_panel_free(&message_panel);
     }
     if (refresh_labels()) {
         training_menu_show(&menu);

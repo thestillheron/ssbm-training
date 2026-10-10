@@ -896,6 +896,12 @@ static void report_late(void)
 #define NOTICE_Y 130.0F
 #define NOTICE_LINE_HEIGHT 44.0F
 #define NOTICE_SCALE 0.9F
+/* The backdrop behind it: padding round the text and its width, which fits
+ * the longest problem. */
+#define NOTICE_PAD_X 16.0F
+#define NOTICE_PAD_Y 10.0F
+#define NOTICE_WIDTH 440.0F
+#define NOTICE_ROWS 3
 
 static void add_notice_line(HSD_Text* text, int row, const char* ascii)
 {
@@ -906,11 +912,13 @@ static void add_notice_line(HSD_Text* text, int row, const char* ascii)
 /* The on-screen notice of the moment (invalid layout), hidden when a drill
  * starts. */
 static HSD_Text* notice_text;
+static TrainingPanel notice_panel;
 
 static void hide_notice(void)
 {
     if (notice_text != NULL) {
         training_text_set_visible(notice_text, false);
+        training_panel_set_visible(&notice_panel, false);
         notice_text = NULL;
     }
 }
@@ -936,6 +944,10 @@ static void report_invalid_layout(LayoutStatus status)
         break;
     }
     LOG_INVALID_LAYOUT(drill, status);
+    training_panel_show(&notice_panel, NOTICE_X - NOTICE_PAD_X,
+                        NOTICE_Y - NOTICE_PAD_Y, NOTICE_WIDTH,
+                        NOTICE_LINE_HEIGHT * NOTICE_ROWS +
+                            2.0F * NOTICE_PAD_Y);
     text = training_text_create();
     notice_text = text;
     add_notice_line(text, 0, "Invalid layout");

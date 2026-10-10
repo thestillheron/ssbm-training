@@ -8,6 +8,7 @@
 #include <sysdolphin/baselib/sislib.h>
 
 #include <stdio.h>
+#include <string.h>
 
 /* Position (canvas units) and size of the score text: top left, clear
  * of the rep result above the damage HUD. Tune by
@@ -15,9 +16,19 @@
  * Line one is successes out of counted reps, line two the success rate. */
 #define SCORE_X 30.0F
 #define SCORE_Y 75.0F
-#define SCORE_LINE_HEIGHT 28.0F
-#define SCORE_SCALE_X 1.0F
-#define SCORE_SCALE_Y 0.8F
+#define SCORE_LINE_HEIGHT 20.0F
+#define SCORE_SCALE_X 0.7F
+#define SCORE_SCALE_Y 0.6F
+/* A character is about 20 canvas units wide at scale 1. */
+#define SCORE_CHAR_WIDTH (20.0F * SCORE_SCALE_X)
+/* The panel behind the score hugs the text, 5 pixels between the text's ink
+ * and the border's inner edge on every side (measured from a screenshot, so
+ * the numbers fold in the glyphs' own side room and the border's width). Its
+ * width follows the longer of the two lines (redraw). */
+#define SCORE_PANEL_LEFT 7.0F
+#define SCORE_PANEL_RIGHT 10.0F
+#define SCORE_PANEL_TOP 6.5F
+#define SCORE_PANEL_HEIGHT 50.5F
 
 static int successes;
 static int counted;
@@ -25,30 +36,42 @@ static int counted;
  * for the end-of-drill summary. */
 static TechScore techs[RepTech_Count];
 static HSD_Text* score_text;
+static TrainingPanel score_panel;
 static int line_count_idx;
 static int line_rate_idx;
 
-/* The drill summary: lines of text near the screen centre, then a table of
- * the options that came up (one row each, under a header), smaller, so its
- * four columns fit across. Column x positions fit the widest cells: "In
- * place", "10/10 100%", "Early", "Late" (about 15 canvas units a character
- * at the table's scale). The gap after the table keeps the larger last line
- * clear of it. Tune by eye with `run`. */
+/* The drill summary: the drill's name, then its score and pass mark and the
+ * verdict, then a table of the options that came up (one row each, under a
+ * header), smaller, so its four columns fit across. Column x positions fit the
+ * widest cells: "In place", "10/10 100%", "Early", "Late" (about 11 canvas
+ * units a character at the table's scale). Gaps set the blocks apart. Tune by
+ * eye with `run`. */
 #define SUMMARY_X 265.0F
-#define SUMMARY_Y 90.0F
-#define SUMMARY_LINE_HEIGHT 30.0F
-#define SUMMARY_SCALE_X 1.0F
-#define SUMMARY_SCALE_Y 0.9F
-#define SUMMARY_TABLE_LINE_HEIGHT 24.0F
-#define SUMMARY_TABLE_GAP 12.0F
-#define SUMMARY_TABLE_SCALE_X 0.75F
-#define SUMMARY_TABLE_SCALE_Y 0.75F
+#define SUMMARY_Y 100.0F
+#define SUMMARY_TITLE_SCALE 0.8F
+#define SUMMARY_TITLE_HEIGHT 26.0F
+#define SUMMARY_TITLE_GAP 18.0F
+#define SUMMARY_LINE_HEIGHT 28.0F
+#define SUMMARY_SCALE 0.65F
+#define SUMMARY_VERDICT_GAP 12.0F
+#define SUMMARY_TABLE_GAP 20.0F
+#define SUMMARY_TABLE_LINE_HEIGHT 26.0F
+#define SUMMARY_TABLE_SCALE 0.55F
 #define SUMMARY_COLUMNS 4
 
-static const float summary_column_x[SUMMARY_COLUMNS] = { SUMMARY_X, 372.0F,
-                                                          497.0F, 570.0F };
+static const float summary_column_x[SUMMARY_COLUMNS] = { SUMMARY_X, 365.0F,
+                                                          482.0F, 545.0F };
+
+/* The panel behind the summary: it spans the table's columns, and is as
+ * tall as the blocks the summary draws. */
+#define SUMMARY_PANEL_PAD_X 14.0F
+#define SUMMARY_PANEL_PAD_Y 10.0F
+/* The last line's glyphs hang below the height its row is given. */
+#define SUMMARY_PANEL_BOTTOM_EXTRA 12.0F
+#define SUMMARY_PANEL_W 355.0F
 
 static HSD_Text* summary_text;
+static TrainingPanel summary_panel;
 /* Canvas y of the next summary line. */
 static float summary_y;
 
@@ -64,21 +87,35 @@ static int success_percent(void)
 static void redraw(void)
 {
     char line[24];
+    int width;
 
     if (score_text == NULL) {
         return;
     }
     sprintf(line, "%d/%d", successes, counted);
     training_text_set(score_text, line_count_idx, line);
+    width = (int) strlen(line);
     sprintf(line, "%d%%", success_percent());
     training_text_set(score_text, line_rate_idx, line);
+    if ((int) strlen(line) > width) {
+        width = (int) strlen(line);
+    }
+    training_panel_resize(&score_panel, SCORE_X - SCORE_PANEL_LEFT,
+                          SCORE_Y + SCORE_PANEL_TOP,
+                          width * SCORE_CHAR_WIDTH + SCORE_PANEL_LEFT +
+                              SCORE_PANEL_RIGHT,
+                          SCORE_PANEL_HEIGHT);
 }
 
 /// Zeroes the score. Called when a drill event starts.
 void training_score_init(void)
 {
     summary_text = NULL;
+    summary_panel.border = NULL;
+    summary_panel.fill = NULL;
     score_text = NULL;
+    score_panel.border = NULL;
+    score_panel.fill = NULL;
     training_score_clear();
 }
 
@@ -121,6 +158,8 @@ bool training_score_passed(const Drill* drill)
 /// counts do.
 void training_score_show(void)
 {
+    training_panel_show(&score_panel, SCORE_X - SCORE_PANEL_LEFT,
+                        SCORE_Y + SCORE_PANEL_TOP, 0.0F, 0.0F);
     score_text = training_text_create();
     line_count_idx = training_text_add(score_text, SCORE_X, SCORE_Y,
                                        SCORE_SCALE_X, SCORE_SCALE_Y, "0/0");
@@ -162,8 +201,8 @@ TechScore training_score_tech(RepTech tech)
 
 static void add_summary_line(const char* ascii)
 {
-    training_text_add(summary_text, SUMMARY_X, summary_y, SUMMARY_SCALE_X,
-                      SUMMARY_SCALE_Y, ascii);
+    training_text_add(summary_text, SUMMARY_X, summary_y, SUMMARY_SCALE,
+                      SUMMARY_SCALE, ascii);
     summary_y += SUMMARY_LINE_HEIGHT;
 }
 
@@ -174,8 +213,7 @@ static void add_summary_row(const char* const cells[SUMMARY_COLUMNS])
 
     for (i = 0; i < SUMMARY_COLUMNS; i++) {
         training_text_add(summary_text, summary_column_x[i], summary_y,
-                          SUMMARY_TABLE_SCALE_X, SUMMARY_TABLE_SCALE_Y,
-                          cells[i]);
+                          SUMMARY_TABLE_SCALE, SUMMARY_TABLE_SCALE, cells[i]);
     }
     summary_y += SUMMARY_TABLE_LINE_HEIGHT;
 }
@@ -202,6 +240,7 @@ static void add_option_table(void)
     if (counted == 0) {
         return;
     }
+    summary_y += SUMMARY_TABLE_GAP;
     add_summary_row(header);
     for (i = 0; i < RepTech_Count; i++) {
         const TechScore* o = &techs[i];
@@ -219,7 +258,28 @@ static void add_option_table(void)
         cells[3] = late;
         add_summary_row(cells);
     }
-    summary_y += SUMMARY_TABLE_GAP;
+}
+
+/// The height of the summary's blocks, in canvas units.
+static float summary_height(const Drill* drill)
+{
+    float height = SUMMARY_TITLE_HEIGHT + SUMMARY_TITLE_GAP +
+                   SUMMARY_LINE_HEIGHT;
+    int rows = 1;
+    int i;
+
+    if (training_drill_has_pass_mark(drill)) {
+        height += 2.0F * SUMMARY_LINE_HEIGHT + SUMMARY_VERDICT_GAP;
+    }
+    if (counted != 0) {
+        for (i = 0; i < RepTech_Count; i++) {
+            if (techs[i].counted != 0) {
+                rows++;
+            }
+        }
+        height += SUMMARY_TABLE_GAP + rows * SUMMARY_TABLE_LINE_HEIGHT;
+    }
+    return height;
 }
 
 /// Draws the end-of-drill summary: the drill name, score, pass mark, pass or
@@ -230,9 +290,15 @@ void training_summary_show(const Drill* drill)
     char line[TRAINING_TEXT_MAX_CHARS + 1];
 
     training_summary_hide();
+    training_panel_show(&summary_panel, SUMMARY_X - SUMMARY_PANEL_PAD_X,
+                        SUMMARY_Y - SUMMARY_PANEL_PAD_Y, SUMMARY_PANEL_W,
+                        summary_height(drill) + 2.0F * SUMMARY_PANEL_PAD_Y +
+                            SUMMARY_PANEL_BOTTOM_EXTRA);
     summary_text = training_text_create();
     summary_y = SUMMARY_Y;
-    add_summary_line(drill->name);
+    training_text_add(summary_text, SUMMARY_X, summary_y, SUMMARY_TITLE_SCALE,
+                      SUMMARY_TITLE_SCALE, drill->name);
+    summary_y += SUMMARY_TITLE_HEIGHT + SUMMARY_TITLE_GAP;
     format_fraction(line, "Score", successes, counted);
     add_summary_line(line);
     if (training_drill_has_pass_mark(drill)) {
@@ -241,6 +307,7 @@ void training_summary_show(const Drill* drill)
                             ? counted
                             : drill->length);
         add_summary_line(line);
+        summary_y += SUMMARY_VERDICT_GAP;
         add_summary_line(training_score_passed(drill) ? "PASS" : "FAIL");
     }
     add_option_table();
@@ -251,6 +318,7 @@ void training_summary_hide(void)
 {
     if (summary_text != NULL) {
         training_text_set_visible(summary_text, false);
+        training_panel_set_visible(&summary_panel, false);
         summary_text = NULL;
     }
 }

@@ -7,6 +7,8 @@
 
 #include <sysdolphin/baselib/forward.h>
 
+#include "text.h"
+
 /* A text menu (menu.c): a title, a list of items in a 9-row window that
  * scrolls, and the highlighted item's description. Used by the drill pause
  * menu and the drill summary.
@@ -53,6 +55,8 @@ typedef struct TrainingMenu {
      * the owner, after the fields above. */
     float x;
     float y;
+    /* Set by the menu: the panel behind the text. */
+    TrainingPanel panel;
 } TrainingMenu;
 
 /* Shows the menu, building its text the first time (once the scene has
@@ -65,6 +69,10 @@ void training_menu_hide(TrainingMenu* menu);
 
 /* Handles one frame of `port`'s input (see above). Call only while shown. */
 TrainingMenuAction training_menu_update(TrainingMenu* menu, int port);
+
+/* Frees the menu's text and panel and resets it as training_menu_reset does,
+ * for a menu closed while its scene goes on. */
+void training_menu_free(TrainingMenu* menu);
 
 /* Forgets the menu's text and puts the cursor on the first item. Call at
  * each scene start: the previous scene's text is gone. */

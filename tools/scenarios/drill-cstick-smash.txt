@@ -1,0 +1,9 @@
+# The C-stick works in a drill (retail zeroes it in every 1-P mode, Event
+# Match included). Boots to the first drill (Event Match), then flicks the
+# C-stick right: the player should throw a forward smash (shot `cstick-smash`
+# shows the attack, not the standing pose). Needs window focus for the shot.
+include boot-to-event
+wait:20
+cstick-right:2
+wait:8
+shot cstick-smash

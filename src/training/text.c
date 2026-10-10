@@ -129,4 +129,68 @@ void training_text_set_visible(HSD_Text* text, bool visible)
     text->hidden = !visible;
 }
 
+/* Panel look: a near-opaque dark fill inside a light border. */
+#define PANEL_BORDER 3.0F
+/* The right edge a panel is kept inside, a little short of the canvas's
+ * 640. */
+#define PANEL_MAX_RIGHT 632.0F
+static const GXColor panel_fill_colour = { 0, 0, 0, 200 };
+static const GXColor panel_border_colour = { 200, 200, 200, 255 };
+
+static HSD_Text* panel_rect(float x, float y, float w, float h, GXColor colour)
+{
+    HSD_Text* text = training_text_create();
+
+    training_text_place(text, x, y, 0.0F, 1.0F);
+    text->box_size_x = w;
+    text->box_size_y = h;
+    text->bg_color = colour;
+    return text;
+}
+
+void training_panel_show(TrainingPanel* panel, float x, float y, float w,
+                         float h)
+{
+    training_panel_free(panel);
+    if (x + w > PANEL_MAX_RIGHT) {
+        w = PANEL_MAX_RIGHT - x;
+    }
+    panel->border = panel_rect(x, y, w, h, panel_border_colour);
+    panel->fill = panel_rect(x + PANEL_BORDER, y + PANEL_BORDER,
+                             w - 2.0F * PANEL_BORDER, h - 2.0F * PANEL_BORDER,
+                             panel_fill_colour);
+}
+
+void training_panel_resize(TrainingPanel* panel, float x, float y, float w,
+                           float h)
+{
+    if (panel->border == NULL) {
+        return;
+    }
+    if (x + w > PANEL_MAX_RIGHT) {
+        w = PANEL_MAX_RIGHT - x;
+    }
+    training_text_place(panel->border, x, y, 0.0F, 1.0F);
+    panel->border->box_size_x = w;
+    panel->border->box_size_y = h;
+    training_text_place(panel->fill, x + PANEL_BORDER, y + PANEL_BORDER, 0.0F,
+                        1.0F);
+    panel->fill->box_size_x = w - 2.0F * PANEL_BORDER;
+    panel->fill->box_size_y = h - 2.0F * PANEL_BORDER;
+}
+
+void training_panel_set_visible(TrainingPanel* panel, bool visible)
+{
+    if (panel->border != NULL) {
+        training_text_set_visible(panel->border, visible);
+        training_text_set_visible(panel->fill, visible);
+    }
+}
+
+void training_panel_free(TrainingPanel* panel)
+{
+    training_text_free(&panel->border);
+    training_text_free(&panel->fill);
+}
+
 #endif

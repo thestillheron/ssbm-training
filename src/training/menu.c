@@ -9,6 +9,8 @@
 
 #include <dolphin/pad.h>
 
+#include <string.h>
+
 #ifdef AUTHORING_BUILD
 #include <dolphin/os.h>
 #endif
@@ -26,6 +28,15 @@
 #define MENU_TITLE_SCALE 0.9F
 #define MENU_ROW_SCALE 0.75F
 #define MENU_DESCRIPTION_SCALE 0.65F
+
+/* The panel behind the menu: its padding around the text, and a character's
+ * width at scale 1, which sizes it to the longest line. The title and rows
+ * are measured at their own scales. */
+#define MENU_PANEL_PAD_X 14.0F
+#define MENU_PANEL_PAD_TOP 10.0F
+#define MENU_PANEL_PAD_BOTTOM 40.0F
+#define MENU_CHAR_WIDTH 20.0F
+#define MENU_PANEL_SLACK_CHARS 1
 
 /* Sounds of lbAudioAx_80024030, the game's menu sounds (back is
  * TRAINING_MENU_SOUND_BACK, menu.h). */
@@ -94,14 +105,46 @@ static void settle_cursor(TrainingMenu* menu)
     }
 }
 
+/// The width in canvas units of the widest of the menu's title, labels and
+/// descriptions.
+static float menu_text_width(const TrainingMenu* menu)
+{
+    float widest = (float) strlen(menu->title) * MENU_TITLE_SCALE;
+    int i;
+
+    for (i = 0; i < menu->count; i++) {
+        float label = (float) strlen(menu->items[i].label) * MENU_ROW_SCALE;
+
+        if (label > widest) {
+            widest = label;
+        }
+        if (menu->items[i].description != NULL) {
+            float description = (float) strlen(menu->items[i].description) *
+                                MENU_DESCRIPTION_SCALE;
+
+            if (description > widest) {
+                widest = description;
+            }
+        }
+    }
+    return (widest + MENU_PANEL_SLACK_CHARS) * MENU_CHAR_WIDTH;
+}
+
 static void build_text(TrainingMenu* menu)
 {
-    HSD_Text* text = training_text_create();
+    HSD_Text* text;
     float x = menu->x != 0.0F ? menu->x : MENU_X;
     float top = menu->y != 0.0F ? menu->y : MENU_TITLE_Y;
     float rows_y = top + (MENU_ROW_Y - MENU_TITLE_Y);
     int row;
 
+    training_panel_show(&menu->panel, x - MENU_PANEL_PAD_X,
+                        top - MENU_PANEL_PAD_TOP,
+                        menu_text_width(menu) + 2.0F * MENU_PANEL_PAD_X,
+                        rows_y - top + MENU_ROW_HEIGHT * rows_shown(menu) +
+                            MENU_DESCRIPTION_GAP + MENU_PANEL_PAD_BOTTOM +
+                            MENU_PANEL_PAD_TOP);
+    text = training_text_create();
     training_text_add(text, x, top, MENU_TITLE_SCALE,
                       MENU_TITLE_SCALE, menu->title);
     for (row = 0; row < rows_shown(menu); row++) {
@@ -146,18 +189,29 @@ void training_menu_show(TrainingMenu* menu)
     settle_cursor(menu);
     redraw(menu);
     training_text_set_visible(menu->text, true);
+    training_panel_set_visible(&menu->panel, true);
 }
 
 void training_menu_hide(TrainingMenu* menu)
 {
     if (menu->text != NULL) {
         training_text_set_visible(menu->text, false);
+        training_panel_set_visible(&menu->panel, false);
     }
+}
+
+void training_menu_free(TrainingMenu* menu)
+{
+    training_text_free(&menu->text);
+    training_panel_free(&menu->panel);
+    training_menu_reset(menu);
 }
 
 void training_menu_reset(TrainingMenu* menu)
 {
     menu->text = NULL;
+    menu->panel.border = NULL;
+    menu->panel.fill = NULL;
     menu->cursor = 0;
     menu->top = 0;
 }

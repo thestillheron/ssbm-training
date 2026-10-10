@@ -92,6 +92,10 @@
 #include <sysdolphin/baselib/mtx.h>
 #include <sysdolphin/baselib/random.h>
 
+#ifdef TRAINING_BUILD
+#include <training/event.h>
+#endif
+
 extern MotionState* ftData_CharacterStateTables[Ft_Kind_Max];
 
 /// ==== fighter.c variables ====
@@ -1826,7 +1830,12 @@ void Fighter_procInput(Fighter_GObj* gobj)
                            HSD_PadGameStatus[fp->pad_port].nml_stickX,
                            HSD_PadGameStatus[fp->pad_port].nml_stickY);
                 if (DbLevel < DbLKind_DebugRom &&
+#ifdef TRAINING_BUILD
+                    (gm_IsCurrently1PMode_inline() == 0 ||
+                     training_event_cstick_enabled()))
+#else
                     gm_IsCurrently1PMode_inline() == 0)
+#endif
                 {
                     SET_STICKS(fp->input.cstick[0].x, fp->input.cstick[0].y,
                                HSD_PadGameStatus[fp->pad_port].nml_subStickX,
