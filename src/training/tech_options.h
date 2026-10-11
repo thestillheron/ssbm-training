@@ -23,6 +23,13 @@ typedef enum TechOption {
  * auto-getup timer (over 270 frames, measured). */
 #define MISSED_TECH_DOWN_TIME 45
 
+/* A missed tech's punish window: the opponent cannot choose its getup until
+ * frame 26 (the landing frame is frame 1), so a hit or grab on frames 1..25
+ * is in time and one on frame 26 or later is late. Frame 26 closes the window
+ * as the first actionable frame does for a tech; the opponent keeps lying
+ * until MISSED_TECH_DOWN_TIME, so a late hit still connects. */
+#define MISSED_TECH_WINDOW 25
+
 /* The option chosen for the current rep. It is chosen before the drop, so
  * features that run later in the rep can read it. */
 TechOption training_tech_option(void);

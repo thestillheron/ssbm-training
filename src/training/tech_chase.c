@@ -660,41 +660,32 @@ static void open_window(Fighter* fp)
 #endif
 }
 
-/* A missed tech's window spans several motions (bounce, lying, getup), so
- * before the getup its last vulnerable frame cannot be read from the
- * animation. Its length (last vulnerable frame - window_open) is the same
- * every time for one opponent character, since the getup input comes at a
- * fixed time (MISSED_TECH_DOWN_TIME): it is learnt from every missed tech that
- * reaches its getup, success or failure, and kept for the character it was
- * learnt from (across drill events). NO_FRAME until then. */
-static int missed_vuln_len = NO_FRAME;
-static int missed_vuln_len_kind;
-
 /// True for the motions that run to the opponent's first actionable frame in
-/// one animation: the techs on the floor and the getup after a missed tech.
+/// one animation: the techs on the floor.
 static bool runs_to_actionable(int motion)
 {
     switch (motion) {
     case ftCo_MS_Passive:
     case ftCo_MS_PassiveStandF:
     case ftCo_MS_PassiveStandB:
-    case ftCo_MS_DownStandU:
-    case ftCo_MS_DownStandD:
         return true;
     default:
         return false;
     }
 }
 
-/// Predicts the window's last vulnerable frame from the animation the opponent
-/// is in: the frame before its animation ends at its current rate (the end is
-/// the actionable frame, which is not in the window). A hit replaces the
+/// Predicts the window's last vulnerable frame. A missed tech's is fixed (its
+/// window is MISSED_TECH_WINDOW frames); otherwise it is the frame before the
+/// animation the opponent is in ends at its current rate (the end is the
+/// actionable frame, which is not in the window). A hit replaces the
 /// animation, so the prediction of the frame before the hit is the one a
-/// success uses. A missed tech before its getup uses the learnt length
-/// (missed_vuln_len); other motions leave the prediction alone.
+/// success uses. Other motions leave the prediction alone.
 static void predict_vuln_to(Fighter* fp)
 {
-    if (runs_to_actionable(fp->motion_id)) {
+    if (rep.tech == RepTech_Missed) {
+        rep.frames.predicted_vuln_to =
+            rep.frames.window_open + MISSED_TECH_WINDOW - 1;
+    } else if (runs_to_actionable(fp->motion_id)) {
         float left = ftAnim_8006F484(fp->gobj) - ftAnim_8006F3DC(fp->gobj);
         int frames = 0;
 
@@ -704,17 +695,6 @@ static void predict_vuln_to(Fighter* fp)
         /* On a failure this equals the measured vuln_to (the outcome line's
          * pred_vuln_to). */
         rep.frames.predicted_vuln_to = rep.rep_frames + frames - 1;
-        if (rep.tech == RepTech_Missed) {
-            missed_vuln_len =
-                rep.frames.predicted_vuln_to - rep.frames.window_open;
-            missed_vuln_len_kind = fp->kind;
-        }
-    } else if (rep.tech == RepTech_Missed && missed_vuln_len != NO_FRAME &&
-               missed_vuln_len_kind == fp->kind &&
-               rep.frames.predicted_vuln_to == NO_FRAME)
-    {
-        rep.frames.predicted_vuln_to =
-            rep.frames.window_open + missed_vuln_len;
     }
 }
 
@@ -749,8 +729,12 @@ static void resolve_early_attack(void)
 /// timed out. Expects the frame to be counted already.
 static bool measure_window(Fighter* fp)
 {
-    if (fp->motion_id == ftCo_MS_Wait) {
-        /* The actionable frame closes the window and is not part of it. */
+    if (fp->motion_id == ftCo_MS_Wait ||
+        (rep.tech == RepTech_Missed &&
+         rep.rep_frames - rep.frames.window_open >= MISSED_TECH_WINDOW))
+    {
+        /* The actionable frame closes the window and is not part of it. For a
+         * missed tech it is the first frame the getup can be chosen. */
         rep.frames.actionable = rep.rep_frames;
         resolve_early_attack();
         REP_LOG("actionable");
@@ -977,12 +961,11 @@ static void end_vanish(Fighter* fp)
 
 /// The vanish step, once a frame of the punish window has been measured: when
 /// the drill vanishes and the opponent has been drawn for VANISH_VISIBLE_FRAMES,
-/// hide it until it is actionable (the window has closed). A missed tech is
-/// shown again on the frame its getup is chosen, so the getup is visible.
+/// hide it until the window has closed (it is actionable, or for a missed tech
+/// its getup can be chosen).
 static void update_vanish(Fighter* fp)
 {
     int since_landing;
-    bool getup_chosen;
     bool hide;
 
     if (!training_drill_current()->vanish ||
@@ -991,10 +974,8 @@ static void update_vanish(Fighter* fp)
         return;
     }
     since_landing = rep.rep_frames - rep.frames.window_open;
-    getup_chosen = rep.option == TechOption_Miss &&
-                   since_landing >= MISSED_TECH_DOWN_TIME;
     hide = rep.frames.actionable == NO_FRAME &&
-           since_landing >= VANISH_VISIBLE_FRAMES && !getup_chosen;
+           since_landing >= VANISH_VISIBLE_FRAMES;
     if (hide) {
         if (!rep.vanish_hidden) {
             rep.vanish_hidden = true;

@@ -169,7 +169,7 @@ Short for "previous."
 The @ref glossary_pause_menu "pause menu" item, in builds with @ref glossary_authoring_tools "authoring tools" only, that writes the current @ref glossary_drill "drill"'s @ref glossary_session_copy "session copy" layout to the @ref glossary_rep_log "rep log" as C initializer text (a `[rep] layout:` line) ready to paste into the @ref glossary_drill_table "drill table"; `dev.py reps --layout` lists those lines. The values are in tenths, as @ref glossary_edit_layout "Edit layout" keeps them, so the pasted layout is the one that was tried.
 
 @section glossary_punish_window punish window
-The frames from the opponent landing up to, but not including, its first actionable frame. A hit or grab that connects in the punish window makes the @ref glossary_rep "rep" a success; once it is actionable, the rep is a failure, so a hit on the actionable frame itself is late (by 0 frames).
+The frames from the opponent landing up to, but not including, its first actionable frame. A hit or grab that connects in the punish window makes the @ref glossary_rep "rep" a success; once it is actionable, the rep is a failure, so a hit on the actionable frame itself is late (by 0 frames). A @ref glossary_missed_tech "missed tech" cannot choose its getup until frame 26 (the landing frame is frame 1), so its window is frames 1 to 25 and a hit on frame 26 or later is late, though the opponent is still lying there.
 
 @section glossary_rad rad
 Short for "radians."
@@ -240,7 +240,7 @@ The game code plus this fork's training features, compiled without the byte-iden
 Short for "unknown."
 
 @section glossary_vanish vanish
-A @ref glossary_drill "drill" setting that hides the opponent, model and shadow, after the first 5 frames of its @ref glossary_tech_option "tech option" until its first actionable frame, whichever option it is, including a @ref glossary_missed_tech "missed tech". The player has to commit to a punish from the early read; the opponent reappearing is the cue that the punish was late. The tech sound and flash are kept. Avoid "invisible" or "hide".
+A @ref glossary_drill "drill" setting that hides the opponent, model and shadow, after the first 5 frames of its @ref glossary_tech_option "tech option" until its first actionable frame, whichever option it is; for a @ref glossary_missed_tech "missed tech" that is frame 26, when its getup can first be chosen. The player has to commit to a punish from the early read; the opponent reappearing is the cue that the punish was late. The tech sound and flash are kept. Avoid "invisible" or "hide".
 
 @section glossary_vec vec
 Short for "vector."
@@ -255,7 +255,7 @@ Short for "velocity."
 Short for "vertex."
 
 @section glossary_vulnerable_frames vulnerable frames
-The part of the @ref glossary_punish_window "punish window" in which the opponent can be hit or grabbed, i.e. after any tech intangibility has ended. The actionable frame is not one of them: it closes the window. A tech's vulnerable frames are short and come at the end; a @ref glossary_missed_tech "missed tech" is vulnerable almost throughout.
+The part of the @ref glossary_punish_window "punish window" in which the opponent can be hit or grabbed, i.e. after any tech intangibility has ended. The actionable frame is not one of them: it closes the window. A tech's vulnerable frames are short and come at the end; a @ref glossary_missed_tech "missed tech" is vulnerable almost throughout its 25-frame window.
 
 @section glossary_vic vic
 Short for "victim."
