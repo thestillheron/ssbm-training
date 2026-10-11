@@ -1,11 +1,27 @@
 # Acceptance scenario for drills-as-data ticket 03 (drop height lists and
-# ranges), through Event Match. Chooses drill 2 on the list ("Test: three
+# ranges), through Event Match. Chooses drill 10 on the list ("Test: three
 # heights", a list of 30, 60, 90), then gives no input for about 60 s: the
 # drill's 10 reps run, and all three heights appear in the `drop` lines. The
 # `drill_start` line shows `height_kind=list` and `heights=30,60,90`. `drill-heights-range`
-# is the same with drill 3 (range 30 to 90). No shots are taken, so no window
+# is the same with drill 11 (range 30 to 90). No shots are taken, so no window
 # focus is needed beyond launching.
 include boot-to-event-list
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
 stick-down:2
 wait:20
 a:2

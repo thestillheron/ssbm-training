@@ -1,0 +1,374 @@
+# Drill-start check (curriculum-v1 ticket 02): starts every drill in the
+# table once, in the curriculum and the test drills alike (not the Custom drill,
+# which is not in the table), and the rep log's `drill_start` lines are the
+# check. Authoring build only (the test drills).
+#   python dev.py run --scenario drill-start-all
+#   python dev.py reps --check-drill-starts
+# The second command fails on an unexpected `invalid_layout` line in any drill,
+# on an intended-invalid test drill (`Test: invalid layout`, `Test: no
+# heights`) that did not report its problem, and on a drill that never started.
+# A drill added to the table in src/training/drill.c needs a cycle here (the
+# check names it as never started until it has one).
+#
+# One cycle per drill: choose it, the character select, wait out the match's
+# Ready/GO, pause (Start), Back to event list (the pause menu's fourth item),
+# then down one row. The two one-rep drills at the end end by themselves, so
+# they leave through the summary menu's Event list instead.
+include boot-to-event-list
+
+# Drill 1.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 2.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 3.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 4.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 5.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 6.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 7.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 8.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 9.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 10.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 11.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 12.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 13.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 14.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 15.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 16.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 17.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 18.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 19.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 20.
+a:2
+include event-css
+wait:400
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 21 (one rep): its summary opens by itself; down two to Event list.
+a:2
+include event-css
+wait:700
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+# Drill 22 (one rep, last): the match is all that is needed.
+a:2
+include event-css
+wait:700

@@ -39,6 +39,22 @@ wait:14
 stick-down:2
 wait:14
 stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
 wait:120
 a:2
 include event-css

@@ -43,6 +43,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -981,10 +982,20 @@ def cmd_scenario(args):
 REP_LOG_SETTLE_S = 1.0  # Dolphin may write the last events just after a scenario's end
 
 
-def print_rep_lines(log, since, window, layout=False):
+def drill_table_names():
+    """The names of the drill table's entries in src/training/drill.c (the
+    name is the first string of an entry, followed by its description; the
+    Custom drill is not in the table)."""
+    text = (ROOT / "src" / "training" / "drill.c").read_text(encoding="utf-8")
+    return re.findall(r'^        "([^"]+)",\r?\n        "', text, re.M)
+
+
+def print_rep_lines(log, since, window, layout=False, check_drill_starts=False):
     """Print the `[rep]` lines in `log` after offset `since` (with `layout`,
     only the Print layout lines); if there are none, say so on stderr, naming
-    `window` (the span that was searched)."""
+    `window` (the span that was searched). With `check_drill_starts`, fail
+    afterwards on a problem in the drills the lines started (see
+    reps.check_drill_starts)."""
     from tools import reps
 
     lines = reps.read_reps(log, since)
@@ -995,6 +1006,12 @@ def print_rep_lines(log, since, window, layout=False):
     if not lines:
         what = reps.LAYOUT_PREFIX.strip() if layout else reps.PREFIX
         print(f"no {what} lines in {log} {window}", file=sys.stderr)
+    if check_drill_starts:
+        names = drill_table_names()
+        problems = reps.check_drill_starts(lines, names)
+        if problems:
+            raise DevError("drill start check failed:\n  " + "\n  ".join(problems))
+        say(f"drill start check: all {len(names)} drills started as expected")
 
 
 def print_rep_log(since):
@@ -1037,7 +1054,7 @@ def cmd_reps(args):
         else:
             reps.require_logging(dolphin_user_dir())
             log = reps.log_path(dolphin_user_dir())
-        print_rep_lines(log, since, window, layout=args.layout)
+        print_rep_lines(log, since, window, layout=args.layout, check_drill_starts=args.check_drill_starts)
     except reps.RepsError as e:
         raise DevError(str(e))
 
@@ -1161,6 +1178,12 @@ def main(argv=None):
     rp.add_argument("--log", metavar="PATH", help="read this log file instead of Dolphin's")
     rp.add_argument(
         "--layout", action="store_true", help="only the `[rep] layout:` lines Print layout wrote"
+    )
+    rp.add_argument(
+        "--check-drill-starts",
+        action="store_true",
+        help="fail on an unexpected invalid layout, or a drill that never started "
+        "(for the drill-start-all scenario)",
     )
     rp.add_argument(
         "--since", type=int, metavar="BYTES", help="start marker: a log offset (default: set by run)"

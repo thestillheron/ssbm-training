@@ -1,11 +1,27 @@
 # Check for drill-select ticket 02: the event list scrolls and stops over the
 # drill table only. Boots to the Event Match list (shot `event-list`), then
-# presses down 15 times, more than there are drills: the cursor stops on the
-# last drill and the list shows the last 9 drills, ending on it (shot
-# `list-end`, in an authoring build drills 6 to 14 with 14 `Test: one rep,
-# last` highlighted). In a player build (`--no-authoring`) the list has
-# one row and the cursor never leaves it. Needs window focus for the shots.
+# presses down 23 times, more than there are rows: the cursor stops on the
+# last row (the Custom drill) and the list shows the last 9 rows, ending on it
+# (shot `list-end`, in an authoring build rows 15 to 23 with 23 `Custom drill`
+# highlighted). In a player build (`--no-authoring`) the list has the eight
+# curriculum drills and the Custom drill, and the cursor stops on the last. Needs window focus for the shots.
 include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
 stick-down:2
 wait:14
 stick-down:2

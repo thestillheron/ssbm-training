@@ -43,9 +43,9 @@
 #define GROUND_PROBE_RANGE 40.0F
 
 /* Vanish: the opponent is drawn for this many frames of its tech, counted
- * from the landing frame as frame 1, then hidden until its first vulnerable
- * frame (see .scratch/tech-vanish/spec.md). */
-#define VANISH_VISIBLE_FRAMES 7
+ * from the landing frame as frame 1, then hidden until it is actionable (see
+ * .scratch/tech-vanish/spec.md). */
+#define VANISH_VISIBLE_FRAMES 5
 
 /* Frames to let the scene settle (fighters spawned) before the first rep. */
 #define SETTLE_FRAMES 60
@@ -976,19 +976,25 @@ static void end_vanish(Fighter* fp)
 }
 
 /// The vanish step, once a frame of the punish window has been measured: when
-/// the drill vanishes, the tech is not a missed tech and the opponent has been
-/// drawn for VANISH_VISIBLE_FRAMES, hide it until its first vulnerable frame.
+/// the drill vanishes and the opponent has been drawn for VANISH_VISIBLE_FRAMES,
+/// hide it until it is actionable (the window has closed). A missed tech is
+/// shown again on the frame its getup is chosen, so the getup is visible.
 static void update_vanish(Fighter* fp)
 {
+    int since_landing;
+    bool getup_chosen;
     bool hide;
 
-    if (!training_drill_current()->vanish || rep.option == TechOption_Miss ||
+    if (!training_drill_current()->vanish ||
         rep.frames.window_open == NO_FRAME)
     {
         return;
     }
-    hide = rep.frames.vuln_from == NO_FRAME &&
-           rep.rep_frames - rep.frames.window_open >= VANISH_VISIBLE_FRAMES;
+    since_landing = rep.rep_frames - rep.frames.window_open;
+    getup_chosen = rep.option == TechOption_Miss &&
+                   since_landing >= MISSED_TECH_DOWN_TIME;
+    hide = rep.frames.actionable == NO_FRAME &&
+           since_landing >= VANISH_VISIBLE_FRAMES && !getup_chosen;
     if (hide) {
         if (!rep.vanish_hidden) {
             rep.vanish_hidden = true;

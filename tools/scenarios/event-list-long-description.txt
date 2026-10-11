@@ -1,8 +1,24 @@
 # Review check for drill-select ticket 02 (the event list's description box):
-# the longest real drill description (drill 4, authoring build: "Opponent
+# the longest real drill description (drill 12, authoring build: "Opponent
 # lands on the top platform, player on the floor below.") must show in full,
 # with the pass mark under it. Shot `long-description`.
 include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
 stick-down:2
 wait:14
 stick-down:2

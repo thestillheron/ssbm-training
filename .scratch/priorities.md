@@ -14,7 +14,7 @@ The order of work for the tech-chasing curriculum. Each item is a feature with i
 | 8 | [rep-feedback](rep-feedback/spec.md) | done | 3, 4, 7 | Per-rep option, outcome, frames early/late; per-option summary. |
 | 9 | [drill-select](drill-select/spec.md) | done | 5, 7 | Each drill an Event Match event; pause menu (resume, restart, change characters, event list); summary menu; Training Mode back to vanilla (ADR-0005). |
 | 10 | [layout-editor](layout-editor/spec.md) | done | 2, 5, 9 | Edit layout in game with the fighters as markers; Print layout in authoring builds only. |
-| 11 | [curriculum-v1](curriculum-v1/spec.md) | ready-for-human | 5, 6, 10 | Ticket 1 changes vanish to last until actionable and cover missed tech. Then design and play-test the first curriculum along the agreed skeleton. |
+| 11 | [curriculum-v1](curriculum-v1/spec.md) | ready-for-human | 5, 6, 10 | Tickets 01-03 done (vanish until actionable, the one-option and pair drills). Left for the developer: 04 (heights drills), 05 (platform drills), 06 (play-test). |
 | 12 | [custom-drills](custom-drills/spec.md) | done | 9, 10 | Custom drill settings menu, any stage, layout editor for players; session only. |
 
 Item 7 is done; its findings ([unclepunch-ui-research/findings.md](unclepunch-ui-research/findings.md)) feed 8, 9 and the Later items.

@@ -1,4 +1,4 @@
-# Shots of the rep result (rep-feedback ticket 02). Boots to the first drill (Event Match), waits
+# Shots of the rep result (rep-feedback ticket 02). Boots to drill 9 (`Test: ten reps`), waits
 # through rep 1 with no input and shoots its result during the pause
 # (`none`: "No attack"). Then the player jabs: each cycle mashes jab for
 # 32 frames then waits, 186 frames in all, a little longer than a rep
@@ -18,7 +18,25 @@
 # the drill and repeats much the same. Timing is only rough, so which reps
 # get which result can change when the rep loop's timing does. Run it with
 # `python dev.py run --scenario rep-result-shots`. Needs window focus.
-include boot-to-event
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+include event-css-to-match
 wait:100
 shot none
 wait:60

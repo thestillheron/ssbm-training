@@ -1,5 +1,5 @@
 # Acceptance scenario for layout-editor ticket 03 (range heights). Chooses
-# drill 3 on the event list ("Test: height range", 30 to 90), lets a few
+# drill 11 on the event list ("Test: height range", 30 to 90), lets a few
 # reps run, then opens Edit layout (the last pause item). The range is
 # edited as two heights, min and max: d-pad down for 10 frames lowers the
 # min to 20 (shot `range-min`), d-pad right selects the max (shot
@@ -8,6 +8,22 @@
 # reads height_kind=range heights=20,110 and every `drop` height is within
 # 20..110.
 include boot-to-event-list
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
 stick-down:2
 wait:20
 stick-down:2

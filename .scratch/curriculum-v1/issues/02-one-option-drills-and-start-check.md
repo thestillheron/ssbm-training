@@ -6,14 +6,18 @@ Add a scenario that starts every drill once, in the curriculum and the test dril
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The event list's first four events are tech in place, tech in, tech away and missed tech, each with a description
-- [ ] Each of the four has a single-option pool, vanish off, 35 reps and pass mark 28, and is not an invalid layout
-- [ ] The former single curriculum drill is gone, and no scenario or doc still refers to the old drill positions
-- [ ] A scenario starts every drill once and fails on an unexpected error in any `drill_start` line, while accepting the intentionally invalid test drills
-- [ ] `dev.py check` passes, and the new scenario passes in a live run (ask the user before `dev.py run`, and `dev.py stop` afterwards)
+- [x] The event list's first four events are tech in place, tech in, tech away and missed tech, each with a description
+- [x] Each of the four has a single-option pool, vanish off, 35 reps and pass mark 28, and is not an invalid layout
+- [x] The former single curriculum drill is gone, and no scenario or doc still refers to the old drill positions
+- [x] A scenario starts every drill once and fails on an unexpected error in any `drill_start` line, while accepting the intentionally invalid test drills
+- [x] `dev.py check` passes, and the new scenario passes in a live run (ask the user before `dev.py run`, and `dev.py stop` afterwards)
 
 ## Comments
 
 Rep counts and pass marks come from the length maths in [the spec](../spec.md): ~200 frames per rep, 120 of them the fixed pause, so 2 minutes is about 35 reps and the pass mark is 80%.
+
+Done on `curriculum-v1`. `drill-start-all` ran live (all 18 table drills started; `Test: invalid layout` and `Test: no heights` reported their intended problems) and `python dev.py reps --check-drill-starts` passed. The check is a new `reps` flag (`tools/reps.py` `check_drill_starts`, unit tests in `tools/dev_tests/test_reps.py`); the Custom drill is not in the table and is covered by the `custom-*` scenarios.
+
+Three first-drill scenarios (`drill-end-no-input`, `rep-result-shots`, `rep-summary-timing`) assume 10 reps and pass mark 7, which the first drill no longer has (35 and 28), so they now choose a new authoring-only test drill, `Test: ten reps` (drill 5, the old first drill). That pushed every test drill and the Custom drill down four rows, so the scenarios that choose them by position have four more `stick-down`s and their comments and `docs/developer-workflow.md` give the new numbers. Ticket 03 shifted them by four again.

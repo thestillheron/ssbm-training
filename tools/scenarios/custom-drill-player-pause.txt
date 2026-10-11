@@ -1,14 +1,28 @@
 # Player-build check for custom-drills ticket 06: the Custom drill's pause
 # menu has Edit layout but no Print layout, and the editor shows no developer
 # text. Run it with `python dev.py run --no-authoring --scenario
-# custom-drill-player-pause`: in a player build the Custom drill is row 2, so
-# it moves down once, chooses it, goes through the character select and
+# custom-drill-player-pause`: in a player build the Custom drill is row 9, so
+# it moves down eight times, chooses it, goes through the character select and
 # Battlefield on the stage select, pauses (shot `player-pause`: Resume,
 # Restart drill, Change characters, Back to event list, Edit layout, and no
 # Print layout), opens Edit layout (down four) and steps the landing point up
 # onto the top platform (shot `player-editor`). There is no rep log in a
 # player build, so the shots are the check. Needs window focus.
 include boot-to-event-list
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
 stick-down:2
 wait:20
 a:2

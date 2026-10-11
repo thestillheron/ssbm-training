@@ -1,13 +1,31 @@
 # Acceptance scenario for drills-as-data ticket 05 (rep-count length, end of
-# drill and summary). Boots to the first drill (Event Match) and gives no input, so every rep is a
-# failure. The first drill has a length of 10 counted reps and a pass mark of
+# drill and summary). Boots to drill 9 (`Test: ten reps`, authoring build) and gives no input, so
+# every rep is a failure. It has a length of 10 counted reps and a pass mark of
 # 7: after the 10th rep the rep log must show `event=drill_end` with
 # `score=0/10 passed=false`, and no `start` line after it. The shot shows the
 # summary (score, pass mark, FAIL, per-option successes). Then A restarts the
 # drill: the shot after it shows the score back at 0/0 and a new rep starting
 # (`dev.py reps` shows a `start` with rep=1 after the `drill_end`). Needs
 # window focus for the shots.
-include boot-to-event
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+include event-css-to-match
 wait:600
 wait:600
 wait:600

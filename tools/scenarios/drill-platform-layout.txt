@@ -1,10 +1,26 @@
 # Acceptance scenario for drills-as-data ticket 02 (platform layouts),
-# through Event Match. Chooses drill 4 on the list ("Test: platform", which is
+# through Event Match. Chooses drill 12 on the list ("Test: platform", which is
 # on Battlefield: the drill brings its own stage) and gives no input for about
 # 30 s: every `layout` line reads the platform's height as `landing_y` and
 # the stage floor's as `start_y`, and the shots show the opponent standing on
 # the platform. Needs window focus for the shots.
 include boot-to-event-list
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
 stick-down:2
 wait:20
 stick-down:2

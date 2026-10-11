@@ -37,7 +37,7 @@ A drill setting, **vanish**. When it's on, for every [tech option](../../docs/gl
 
 ## Testing Decisions
 
-- **Rep log seam:** for every tech option, `vanish_from` = landing + 5 and `vanish_to` = `actionable` − 1. For vanish off, no vanish lines.
+- **Rep log seam:** for every tech option, `vanish_from` = landing + 5 and `vanish_to` = `actionable` − 1, except a missed tech, whose `vanish_to` is the frame before its getup is chosen (`window_open` + `MISSED_TECH_DOWN_TIME` − 1), so that the getup is visible. For vanish off, no vanish lines.
 - **Shots:** one taken mid-vanish shows no opponent and no shadow, and one at the actionable frame shows it. Shot timing is approximate, so the log is the exact check and shots are a visual check.
 
 ## Out of Scope

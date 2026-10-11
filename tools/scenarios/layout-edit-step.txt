@@ -1,5 +1,5 @@
 # Acceptance scenario for layout-editor ticket 04 (surface stepping). Chooses
-# drill 4 on the Event Match list ("Test: platform", Battlefield, landing on
+# drill 12 on the Event Match list ("Test: platform", Battlefield, landing on
 # the top platform at y 54), lets a few reps run, then:
 #  - pause, Edit layout (the last item): the opponent hangs over the top
 #    platform (shot `editor-platform`).
@@ -15,6 +15,22 @@
 # each followed by `layout` lines with the same landing_y. Needs window focus
 # for the shots.
 include boot-to-event-list
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
 stick-down:2
 wait:20
 stick-down:2

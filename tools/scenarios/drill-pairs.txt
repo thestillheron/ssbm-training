@@ -1,0 +1,82 @@
+# Check for curriculum-v1 ticket 03 (the four pair drills): plays each of the
+# four two-option drills (drills 5 to 8 on the event list) for about 12 reps and
+# leaves by the pause menu's Back to event list. `python dev.py run --scenario
+# drill-pairs` prints, for each `drill_start` (names "Miss + in place", "In +
+# miss", "Away + in place", "In + away"; vanish=1 length=reps/70 pass=56), only
+# its two options in the `drop` lines and a `vanish` line (`vanish_from` =
+# landing + 5) for every rep that reached its landing, missed tech included.
+include boot-to-event-list
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+
+# Drill 5.
+a:2
+include event-css
+wait:2900
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 6.
+a:2
+include event-css
+wait:2900
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 7.
+a:2
+include event-css
+wait:2900
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160
+stick-down:2
+wait:20
+
+# Drill 8.
+a:2
+include event-css
+wait:2900
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:160

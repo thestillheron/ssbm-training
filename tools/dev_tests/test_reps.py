@@ -207,5 +207,55 @@ class ScenarioRepLogTests(unittest.TestCase):
         self.assertIn("has not written its game log", err)
 
 
+DRILL_TABLE = (
+    "static const Drill drills[] = {\n"
+    '    {\n        "Tech in place",\n        "Opponent techs in place.",\n    },\n'
+    '    {\n        "Test: invalid layout",\n        "No floor.",\n    },\n'
+    "};\n"
+)
+START = '[rep] event=drill_start name="%s" stage=32\n'
+INVALID = '[rep] event=invalid_layout drill="%s" problem=%s\n'
+
+
+class CheckDrillStartsTests(unittest.TestCase):
+    """`reps --check-drill-starts`: the drill-start-all scenario's check."""
+
+    def check(self, lines):
+        root, user = make_piloting_sandbox()
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        (root / "src" / "training").mkdir(parents=True)
+        (root / "src" / "training" / "drill.c").write_text(DRILL_TABLE)
+        log = root / "dolphin.log"
+        log.write_text("".join("t OSREPORT (I): " + line for line in lines))
+        return dev(root, "reps", "--log", str(log), "--check-drill-starts")
+
+    def test_every_drill_started_and_the_intended_invalid_one_reported(self):
+        r = self.check(
+            [START % "Tech in place", START % "Test: invalid layout",
+             INVALID % ("Test: invalid layout", "no-floor-below-landing")]
+        )
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("all 2 drills started", r.stdout)
+
+    def test_an_invalid_layout_where_none_is_intended_fails(self):
+        r = self.check(
+            [START % "Tech in place", INVALID % ("Tech in place", "no-floor-below-start"),
+             START % "Test: invalid layout",
+             INVALID % ("Test: invalid layout", "no-floor-below-landing")]
+        )
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("Tech in place: invalid layout (no-floor-below-start)", r.stderr)
+
+    def test_an_intended_invalid_drill_that_is_valid_fails(self):
+        r = self.check([START % "Tech in place", START % "Test: invalid layout"])
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("Test: invalid layout: expected invalid layout", r.stderr)
+
+    def test_a_drill_that_never_started_fails(self):
+        r = self.check([START % "Tech in place"])
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("Test: invalid layout: never started", r.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

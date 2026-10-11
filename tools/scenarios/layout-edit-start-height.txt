@@ -1,5 +1,5 @@
 # Acceptance scenario for the player start height (start_dy) and fine height
-# edits. Chooses drill 4 on the Event Match list ("Test: platform",
+# edits. Chooses drill 12 on the Event Match list ("Test: platform",
 # Battlefield, landing on the top platform at y 54, start_dy 0: the player on
 # the floor beneath it), lets a few reps run, then:
 #  - pause, Edit layout (the fifth item; shot `edit-layout-highlighted`
@@ -19,6 +19,22 @@
 #   [rep] layout: 0.0F, 54.0F, DrillHeight_List, 1, { 41.5F }, 0.0F, 10.0F,
 # Needs window focus for the shots.
 include boot-to-event-list
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
+stick-down:2
+wait:20
 stick-down:2
 wait:20
 stick-down:2

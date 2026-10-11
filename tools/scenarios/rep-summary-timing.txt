@@ -1,5 +1,5 @@
 # Shots of the drill summary's per-option breakdown (rep-feedback ticket
-# 05). Boots to the first drill ( tech in place, 10 reps) and pilots each
+# 05). Boots to drill 9 (`Test: ten reps`, tech in place, 10 reps) and pilots each
 # rep to one timing class with a single jab: S on a vulnerable frame
 # (success), E into the intangibility (early), L in the pause after
 # actionable (late), N no input (none). Plan, one letter per rep:
@@ -10,7 +10,25 @@
 # match the reps' `timing` fields (a `late` line replaces its outcome
 # line's). Run it with `python dev.py run --scenario rep-summary-timing`.
 # Needs window focus for the shot.
-include boot-to-event
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+include event-css-to-match
 wait:26
 a:2
 wait:169

@@ -4,10 +4,12 @@
 
 **Blocked by:** 01 (vanish until actionable, all four options; the missed-tech pairs need a missed tech to vanish), 02 (the table the entries go into, and the drill-start scenario).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The event list has the four pair drills after the four one-option drills, in the order above, each with a description
-- [ ] Each has the right two-option pool, vanish on, 70 reps and pass mark 56
-- [ ] A live run of each shows only its two options in the rep log, and a `vanish_from`/`vanish_to` line for every rep, missed tech included
-- [ ] The drill-start scenario from ticket 02 covers them and passes
-- [ ] `dev.py check` passes (ask the user before `dev.py run`, and `dev.py stop` afterwards)
+- [x] The event list has the four pair drills after the four one-option drills, in the order above, each with a description
+- [x] Each has the right two-option pool, vanish on, 70 reps and pass mark 56
+- [x] A live run of each shows only its two options in the rep log, and a `vanish_from`/`vanish_to` line for every rep, missed tech included
+- [x] The drill-start scenario from ticket 02 covers them and passes
+- [x] `dev.py check` passes (ask the user before `dev.py run`, and `dev.py stop` afterwards)
+
+Done on `curriculum-v1`. The `drill-pairs` scenario (new) played each pair for about 12 reps: only the drill's two options in the `drop` lines (pools 9, 10, 5, 6), and a `vanish` line for every rep that reached its landing, missed tech included. `drill-start-all` ran with all 22 drills and passed `reps --check-drill-starts`. The four drills sit at rows 5 to 8, which pushed the test drills and the Custom drill down four rows again; the scenarios, their comments and the developer-workflow doc have the new numbers.

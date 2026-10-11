@@ -14,11 +14,14 @@ No Dolphin here, so it is testable on fixture files. Entry points:
                                                  printed by the game)
   layout_lines(lines)                 -> [str]  (only the Print layout lines,
                                                  `[rep] layout: ...`)
+  check_drill_starts(lines, names)    -> [str]  (problems with the drills a
+                                                 scenario started, see below)
 
 `read_reps` is the reusable reader: anything that has a marker (`run`'s
 launch, a scenario's start) passes it as `since`.
 """
 
+import re
 from pathlib import Path
 
 PREFIX = "[rep]"
@@ -96,3 +99,45 @@ def read_reps(log, since=0):
 def layout_lines(lines):
     """The Print layout lines among `lines` (as read_reps returns them)."""
     return [line for line in lines if line.startswith(LAYOUT_PREFIX)]
+
+
+# Test drills that are meant to be invalid layouts, and the problem each one
+# must report (drill.c's authoring-only test drills).
+INTENDED_INVALID = {
+    "Test: invalid layout": "no-floor-below-landing",
+    "Test: no heights": "bad-drop-heights",
+}
+
+_DRILL_START = re.compile(r'event=drill_start name="([^"]*)"')
+_INVALID_LAYOUT = re.compile(r'event=invalid_layout drill="([^"]*)" problem=(\S+)')
+
+
+def check_drill_starts(lines, names):
+    """The problems in the `drill_start` lines of a scenario that started every
+    drill in `names` (the drill table's): an invalid layout (or a stage no
+    drill fits) where none is intended, an intended-invalid test drill that did
+    not report its problem, and a drill that never started. Empty when all is
+    well."""
+    started = []
+    invalid = {}
+    problems = []
+    for line in lines:
+        m = _DRILL_START.search(line)
+        if m:
+            started.append(m.group(1))
+        m = _INVALID_LAYOUT.search(line)
+        if m:
+            invalid[m.group(1)] = m.group(2)
+        if "event=no_drill_for_stage" in line:
+            problems.append(f"no drill fits the stage: {line}")
+    for name in names:
+        if name not in started:
+            problems.append(f'{name}: never started')
+    for name in started:
+        want = INTENDED_INVALID.get(name)
+        got = invalid.get(name)
+        if want is None and got is not None:
+            problems.append(f"{name}: invalid layout ({got}), not expected")
+        elif want is not None and got != want:
+            problems.append(f"{name}: expected invalid layout ({want}), got {got or 'none'}")
+    return problems
