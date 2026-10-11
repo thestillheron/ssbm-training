@@ -64,6 +64,14 @@
 /* 02F360 */ void fn_8002F360(HSD_GObj*);
 /* 02F3AC */ void Camera_8002F3AC(void);
 /* 02F474 */ void Camera_SetModeToStandard(void);
+
+#ifdef TRAINING_BUILD
+/// The camera's current eye, interest and field of view.
+void Camera_TrainingGetView(Vec3* eye, Vec3* interest, float* fov);
+
+/// Puts the camera on this view at once, with no tween and no quake offset.
+void Camera_TrainingSetView(const Vec3* eye, const Vec3* interest, float fov);
+#endif
 /* 02F488 */ s32 Camera_SetBounds(Vec4*);
 
 /**

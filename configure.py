@@ -2087,6 +2087,11 @@ if args.training:
                 Object(Matching, "training/layout_editor.c", extra_cflags=training_cflags),
                 Object(Matching, "training/authoring.c", extra_cflags=training_cflags),
                 Object(Matching, "training/event.c", extra_cflags=training_cflags),
+                Object(
+                    Matching,
+                    "training/locked_camera.c",
+                    extra_cflags=training_cflags,
+                ),
                 Object(Matching, "training/menu.c", extra_cflags=training_cflags),
                 Object(Matching, "training/pause.c", extra_cflags=training_cflags),
                 Object(Matching, "training/punish_window.c", extra_cflags=training_cflags),

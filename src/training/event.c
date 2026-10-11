@@ -50,10 +50,15 @@ int training_event_drill_index(void)
     return -1;
 }
 
-bool training_event_cstick_enabled(void)
+bool training_event_drill_in_play(void)
 {
     return gm_GetCurrentGameMode() == GM_EVENT &&
            training_event_drill_index() >= 0;
+}
+
+bool training_event_cstick_enabled(void)
+{
+    return training_event_drill_in_play();
 }
 
 /* The characters picked on the drill events' character select, kept across

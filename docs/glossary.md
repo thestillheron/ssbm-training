@@ -120,6 +120,9 @@ Stands for "left/right." Synonymous with "facing direction."
 @section glossary_mag mag
 Short for "magnitude."
 
+@section glossary_locked_camera locked camera
+The fixed view a @ref glossary_drill "drill" with @ref glossary_vanish "vanish" on is played from, for the whole @ref glossary_drill_event "drill event": the framing the normal camera has with both fighters on the main floor at the stage's two ledges, one per tournament-legal stage. The camera never moves, so its movement can't give away the opponent's @ref glossary_tech_option "tech option". A stage without a stored view keeps the normal camera. Avoid "freeze cam" or "static camera".
+
 @section glossary_matching_build matching build
 The build of this repo whose `main.dol` is byte-identical to the original game, with no training features. Not to be confused with the @ref glossary_training_build "training build".
 
@@ -145,7 +148,7 @@ Stands for "motion variables." Used by #HSD_GObj::user_data structs (such as #Fi
 The number of successful @ref glossary_rep "reps" a @ref glossary_drill "drill" needs for the player to pass it, shown in the @ref glossary_drill_summary "drill summary".
 
 @section glossary_pause_menu pause menu
-The text menu our Start opens in a @ref glossary_drill_event "drill event", over a match frozen with the game's own pause flag, in place of the retail pause (which never runs there): Resume, Restart drill, Change characters, Back to event list and @ref glossary_edit_layout "Edit layout", then @ref glossary_print_layout "Print layout" in authoring builds, with the @ref glossary_punish_window "punish window" lengths beside it. B on the menu does nothing; only Start or Resume unpauses (or leaving Edit layout, with B or Start). Not Training Mode's own pause menu, which is vanilla. Avoid "pause screen".
+The text menu our Start opens in a @ref glossary_drill_event "drill event", over a match frozen with the game's own pause flag, in place of the retail pause (which never runs there): Resume, Restart drill, Change characters, Back to event list and @ref glossary_edit_layout "Edit layout", then @ref glossary_print_layout "Print layout" and Print camera (the view for the @ref glossary_locked_camera "locked camera") in authoring builds, with the @ref glossary_punish_window "punish window" lengths beside it. B on the menu does nothing; only Start or Resume unpauses (or leaving Edit layout, with B or Start). Not Training Mode's own pause menu, which is vanilla. Avoid "pause screen".
 
 @section glossary_phys phys
 Short for "physics."
@@ -240,7 +243,7 @@ The game code plus this fork's training features, compiled without the byte-iden
 Short for "unknown."
 
 @section glossary_vanish vanish
-A @ref glossary_drill "drill" setting that hides the opponent, model and shadow, after the first 5 frames of its @ref glossary_tech_option "tech option" until its first actionable frame, whichever option it is; for a @ref glossary_missed_tech "missed tech" that is frame 26, when its getup can first be chosen. The player has to commit to a punish from the early read; the opponent reappearing is the cue that the punish was late. The tech sound and flash are kept. Avoid "invisible" or "hide".
+A @ref glossary_drill "drill" setting that hides the opponent, model and shadow, after the first 5 frames of its @ref glossary_tech_option "tech option" until its first actionable frame, whichever option it is; for a @ref glossary_missed_tech "missed tech" that is frame 26, when its getup can first be chosen. The player has to commit to a punish from the early read; the opponent reappearing is the cue that the punish was late. The tech sound and flash are kept. It also puts the drill in the @ref glossary_locked_camera "locked camera", so the camera's movement can't stand in for the early read. Avoid "invisible" or "hide".
 
 @section glossary_vec vec
 Short for "vector."

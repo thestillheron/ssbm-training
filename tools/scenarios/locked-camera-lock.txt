@@ -1,0 +1,70 @@
+# Acceptance scenario for the locked camera. Drill 14 (`Test: vanish`, Final
+# Destination, vanish on, all four options) is chosen from the event list and
+# played for a while with the player standing beside the opponent's drop, away
+# from the ledges, where the normal camera would zoom in and follow the
+# fighters. Twice, a few reps apart, Start pauses and the menu's Print camera
+# (six downs) writes the camera: `python dev.py run --scenario
+# locked-camera-lock` prints two `[rep] camera:` lines that both equal the
+# Final Destination row of the view table in src/training/locked_camera.c
+# (`32, { 1.87F, 33.37F, 326.06F }, { 2.90F, 10.76F, 0.00F }, 30.00F,`), and
+# the shots show the stage framed the same way. The same run without vanish
+# (drill 1, say) prints a camera that follows the fighters. Needs window
+# focus for the shots.
+include boot-to-event-list
+wait:20
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+include event-css-to-match
+wait:400
+shot locked-a
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:60
+shot paused-a
+start:2
+wait:900
+shot locked-b
+start:2
+wait:30
+a:2
+wait:60
+start:2
+wait:60

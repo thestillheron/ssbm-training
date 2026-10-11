@@ -16,6 +16,7 @@ The order of work for the tech-chasing curriculum. Each item is a feature with i
 | 10 | [layout-editor](layout-editor/spec.md) | done | 2, 5, 9 | Edit layout in game with the fighters as markers; Print layout in authoring builds only. |
 | 11 | [curriculum-v1](curriculum-v1/spec.md) | ready-for-human | 5, 6, 10 | Tickets 01-03 done (vanish until actionable, the one-option and pair drills). Left for the developer: 04 (heights drills), 05 (platform drills), 06 (play-test). |
 | 12 | [custom-drills](custom-drills/spec.md) | done | 9, 10 | Custom drill settings menu, any stage, layout editor for players; session only. |
+| 13 | [locked-camera](locked-camera/spec.md) | done | 6, 12 | Camera held on one measured view per tournament-legal stage whenever a drill has vanish on (curriculum and Custom), so camera movement can't give the tech away. |
 
 Item 7 is done; its findings ([unclepunch-ui-research/findings.md](unclepunch-ui-research/findings.md)) feed 8, 9 and the Later items.
 

@@ -5,6 +5,7 @@
 #include "drill.h"
 #include "event.h"
 #include "layout_editor.h"
+#include "locked_camera.h"
 #include "menu.h"
 #include "punish_window.h"
 #include "rep_result.h"
@@ -97,6 +98,8 @@ static TrainingMenuItem items[] = {
     /* Authoring only: stays paused, so it can be chosen again. */
     { "Print layout", "Write the layout to the rep log", true,
       training_drill_print_layout },
+    { "Print camera", "Write the camera view to the rep log", true,
+      training_locked_camera_print },
 #endif
 };
 

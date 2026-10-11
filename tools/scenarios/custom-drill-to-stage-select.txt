@@ -1,0 +1,59 @@
+# A fragment: boot to the Custom drill's stage select, the crosshair not yet
+# moved. Press the Custom drill row of the Event Match list (23 downs, more
+# than there are rows, so the list clamps on the last row), Start from its
+# settings menu, then the player + CPU character select up to its Start.
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+wait:120
+shot custom-row
+a:2
+wait:30
+a:2
+wait:30
+include event-css
+wait:2

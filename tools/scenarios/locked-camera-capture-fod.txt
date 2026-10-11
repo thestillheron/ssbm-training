@@ -1,0 +1,16 @@
+# Measures the locked camera's view on Fountain of Dreams: the Custom drill's
+# stage select (the crosshair clamps to the bottom-left corner, twice so its
+# speed is the same every time, then moves to
+# Fountain of Dreams's icon) and then locked-camera-ledges.
+include custom-drill-to-stage-select
+stick-down+stick-left:60
+wait:6
+stick-down+stick-left:60
+wait:6
+stick-right:26
+wait:4
+stick-up:24
+wait:4
+shot hover-fod
+a:2
+include locked-camera-ledges

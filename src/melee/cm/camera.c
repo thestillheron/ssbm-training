@@ -45,6 +45,10 @@
 #include <sysdolphin/baselib/random.h>
 #include <sysdolphin/baselib/wobj.h>
 
+#ifdef TRAINING_BUILD
+#include <training/locked_camera.h>
+#endif
+
 /* 029AAC */ static void Camera_80029AAC(CameraBounds* bounds,
                                          CameraTransformState* transform,
                                          f32 speed);
@@ -3418,7 +3422,38 @@ void fn_8002F360(HSD_GObj* x)
     if (cm_803BCB18.callback[game_camera.mode]) {
         cm_803BCB18.callback[game_camera.mode](x);
     }
+#ifdef TRAINING_BUILD
+    training_locked_camera_update();
+#endif
 }
+
+#ifdef TRAINING_BUILD
+void Camera_TrainingGetView(Vec3* eye, Vec3* interest, float* fov)
+{
+    *eye = game_camera.transform.position;
+    *interest = game_camera.transform.interest;
+    *fov = game_camera.transform.fov;
+}
+
+void Camera_TrainingSetView(const Vec3* eye, const Vec3* interest, float fov)
+{
+    CameraTransformState* states[2];
+    int i;
+
+    states[0] = &game_camera.transform;
+    states[1] = &game_camera.transform_copy;
+    for (i = 0; i < 2; i++) {
+        states[i]->position = *eye;
+        states[i]->target_position = *eye;
+        states[i]->interest = *interest;
+        states[i]->target_interest = *interest;
+        states[i]->fov = fov;
+        states[i]->target_fov = fov;
+    }
+    game_camera.translation.x = 0.0f;
+    game_camera.translation.y = 0.0f;
+}
+#endif
 
 static inline HSD_GObj* getCameraGObj(void)
 {

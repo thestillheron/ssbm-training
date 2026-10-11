@@ -466,7 +466,7 @@ static const SettingsRow rows[] = {
       cycle_length },
     { "Pass mark", "Successes to pass, or None",
       value_pass_mark, cycle_pass_mark },
-    { "Vanish", "Opponent vanishes during the tech", value_vanish,
+    { "Vanish", "Opponent vanishes, camera stays put", value_vanish,
       toggle_vanish },
     { "Player reset", "Put you back at the start each rep", value_reset,
       toggle_reset },

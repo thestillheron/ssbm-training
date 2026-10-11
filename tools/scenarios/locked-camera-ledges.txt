@@ -1,0 +1,40 @@
+# A fragment for after a Custom drill's stage select has chosen (A pressed):
+# measures the locked camera's view on that stage (authoring build). The
+# drill has vanish off, so the camera is the normal one. In the layout editor
+# the stick clamps the landing point at the right ledge of the main floor, the
+# C-stick the player's start at the left ledge, and the d-pad lowers the drop
+# height to 0; B restarts the drill with both fighters on the floor at the
+# ledges. After a few reps the pause menu's Print camera writes
+# `[rep] camera: <stage>, { eye }, { interest }, <fov>,` to the rep log:
+# `python dev.py reps` lists it, ready to paste into the view table in
+# src/training/locked_camera.c.
+wait:300
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+stick-right+cstick-left:300
+wait:10
+dpad-down:60
+wait:30
+shot editor-ledges
+b:2
+wait:600
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:60
