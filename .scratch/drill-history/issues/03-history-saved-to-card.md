@@ -4,9 +4,9 @@
 
 **Blocked by:** 01 (History graph for this session); own-game-id 02 (Training build runs as GTCE01)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] A scenario records attempts, and a second run against the run copy the first left behind shows them on the graph.
-- [ ] After more than 100 attempts at one drill, the graph shows the latest 100, numbered from the running total.
-- [ ] Booting with no card, or declining the save, still records and graphs this session's attempts.
-- [ ] The vanilla GALE01 save on the same card is untouched.
+- [x] A scenario records attempts, and a second run against the run copy the first left behind shows them on the graph.
+- [x] After more than 100 attempts at one drill, the graph shows the latest 100, numbered from the running total.
+- [x] Booting with no card, or declining the save, still records and graphs this session's attempts.
+- [x] The vanilla GALE01 save on the same card is untouched.

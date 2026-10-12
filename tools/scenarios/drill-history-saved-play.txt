@@ -1,0 +1,64 @@
+# Drill history ticket 03, first run (history saved to the card): plays
+# `Test: ten reps` to its summary twice (as `drill-history-graph` attempts 1
+# and 2), then waits for Melee's background write. Run it, then
+# `drill-history-saved-reload` with --keep-card:
+#   python dev.py run --scenario drill-history-saved-play
+#   python dev.py run --scenario drill-history-saved-reload --keep-card
+# The run copy of the memory card the first leaves behind holds the history.
+# The rep log has `history_record ... attempts=1` and `attempts=2`, each
+# followed by `history_save`. Authoring build.
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+include event-css-to-match
+
+# Attempt 1: one jab at most per rep (plan of rep-summary-timing).
+wait:26
+a:2
+wait:169
+a:2
+wait:217
+a:2
+wait:322
+a:2
+wait:169
+a:2
+wait:217
+a:2
+wait:143
+a:2
+wait:209
+a:2
+wait:496
+shot summary-1
+
+# Attempt 2: Restart (the summary menu's first item), no input.
+a:2
+wait:600
+wait:600
+wait:650
+shot summary-2
+
+# Leave by the summary's Event list (its third item), then give Melee's
+# background write to the card time.
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:1800

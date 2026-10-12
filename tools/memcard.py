@@ -45,3 +45,52 @@ def card_game_ids(card):
         if entry[:4] != b"\xff\xff\xff\xff":
             ids.add(entry[:6].decode("ascii", "replace"))
     return ids
+
+
+# The two copies of the block allocation table are blocks 3 and 4: u16
+# checksum, inverse checksum, update counter, free blocks, last allocated,
+# then the next block of each block from block 5 on (0xFFFF ends a chain).
+CARD_FAT_FIRST_BLOCK = 5
+CARD_FAT_MAP = 0xA
+CARD_FAT_COUNTER = 4
+CARD_ENTRY_FIRST_BLOCK = 0x36
+CARD_ENTRY_BLOCK_COUNT = 0x38
+
+
+def _current_directory(data):
+    dirs = [data[n * CARD_BLOCK : (n + 1) * CARD_BLOCK] for n in (1, 2)]
+    return max(
+        dirs,
+        key=lambda d: int.from_bytes(d[CARD_DIR_COUNTER : CARD_DIR_COUNTER + 2], "big"),
+    )
+
+
+def _current_fat(data):
+    fats = [data[n * CARD_BLOCK : (n + 1) * CARD_BLOCK] for n in (3, 4)]
+    return max(
+        fats,
+        key=lambda f: int.from_bytes(f[CARD_FAT_COUNTER : CARD_FAT_COUNTER + 2], "big"),
+    )
+
+
+def card_save_data(card, game_id):
+    """The bytes of the first save for `game_id` on the raw memory card file
+    `card` (its file's blocks in chain order), or None when it has none."""
+    data = Path(card).read_bytes()
+    directory = _current_directory(data)
+    fat = _current_fat(data)
+    for n in range(CARD_DIR_ENTRIES):
+        entry = directory[n * CARD_DIR_ENTRY_SIZE : (n + 1) * CARD_DIR_ENTRY_SIZE]
+        if entry[:6].decode("ascii", "replace") != game_id:
+            continue
+        block = int.from_bytes(entry[CARD_ENTRY_FIRST_BLOCK : CARD_ENTRY_FIRST_BLOCK + 2], "big")
+        count = int.from_bytes(entry[CARD_ENTRY_BLOCK_COUNT : CARD_ENTRY_BLOCK_COUNT + 2], "big")
+        out = bytearray()
+        for _ in range(count):
+            if block < CARD_FAT_FIRST_BLOCK or (block + 1) * CARD_BLOCK > len(data):
+                break
+            out += data[block * CARD_BLOCK : (block + 1) * CARD_BLOCK]
+            at = CARD_FAT_MAP + (block - CARD_FAT_FIRST_BLOCK) * 2
+            block = int.from_bytes(fat[at : at + 2], "big")
+        return bytes(out)
+    return None

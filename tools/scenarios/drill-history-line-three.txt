@@ -1,0 +1,107 @@
+# Acceptance scenario for drill-history ticket 02 (the line through the
+# scores), four attempts whose scores rise and fall: `Test: ten reps` played
+# with no input (0, shot `summary-1`), with the plan of drill-history-graph
+# after a Restart (a few successes, `summary-2`), with no input (0,
+# `summary-3`) and with the plan again (`summary-4`), then X opens the graph
+# (shot `graph`: four dots joined by a line in attempt order, the line under
+# the dots and above the background; the rep log's `history_graph` scores
+# say what the line should do) and B closes it (shot `closed`: the list, no
+# trace of the graph). Plan timing is rough, so a plan attempt's score can
+# differ; any run whose scores rise and then fall is valid.
+# Authoring build; needs window focus for the shots.
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+include event-css-to-match
+
+# Attempt 1: no input.
+wait:600
+wait:600
+wait:650
+shot summary-1
+wait:100
+
+# Attempt 2: Restart (the summary menu's first item), the plan.
+a:2
+wait:26
+a:2
+wait:169
+a:2
+wait:217
+a:2
+wait:322
+a:2
+wait:169
+a:2
+wait:217
+a:2
+wait:143
+a:2
+wait:209
+a:2
+wait:496
+shot summary-2
+wait:100
+
+# Attempt 3: Restart, no input.
+a:2
+wait:600
+wait:600
+wait:650
+shot summary-3
+wait:100
+
+# Attempt 4: Restart, the plan again.
+a:2
+wait:26
+a:2
+wait:169
+a:2
+wait:217
+a:2
+wait:322
+a:2
+wait:169
+a:2
+wait:217
+a:2
+wait:143
+a:2
+wait:209
+a:2
+wait:496
+shot summary-4
+wait:100
+
+# Back to event list (the summary menu's fourth item), then the graph.
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:200
+x:2
+wait:100
+shot graph
+wait:100
+b:2
+wait:100
+shot closed
+wait:100

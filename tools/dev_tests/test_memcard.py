@@ -11,7 +11,7 @@ import shutil
 import unittest
 from pathlib import Path
 
-from tools.memcard import NotAMemoryCard, card_game_ids
+from tools.memcard import NotAMemoryCard, card_game_ids, card_save_data
 
 from .support import (
     CARD_BYTES,
@@ -207,6 +207,55 @@ class CardGameIdTests(unittest.TestCase):
         return path
 
 
+class CardSaveDataTests(unittest.TestCase):
+    """The bytes of a game's save on a raw card (its file's block chain), which
+    tells whether a run left another game's save alone."""
+
+    def setUp(self):
+        import tempfile
+
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+        self.card = Path(self.tmpdir.name) / "card.raw"
+
+    def make_card(self, files):
+        """A card with a file per (game id, block chain, data); a chain's
+        blocks may be anywhere from block 5 on."""
+        import struct
+
+        block = 0x2000
+        data = bytearray(b"\x00" * (12 * block))
+        directory = bytearray(b"\xff" * block)
+        fat = bytearray(block)
+        for n, (game_id, chain, content) in enumerate(files):
+            entry = bytearray(0x40)
+            entry[:6] = game_id.encode()
+            entry[0x36:0x38] = struct.pack(">H", chain[0])
+            entry[0x38:0x3A] = struct.pack(">H", len(chain))
+            directory[n * 0x40 : (n + 1) * 0x40] = entry
+            for i, b in enumerate(chain):
+                nxt = chain[i + 1] if i + 1 < len(chain) else 0xFFFF
+                fat[0xA + (b - 5) * 2 : 0xC + (b - 5) * 2] = struct.pack(">H", nxt)
+                chunk = content[i * block : (i + 1) * block]
+                data[b * block : b * block + len(chunk)] = chunk
+        directory[0x1FFA:0x1FFC] = (2).to_bytes(2, "big")
+        data[1 * block : 2 * block] = directory
+        older = bytearray(b"\xff" * block)  # the older, empty copy
+        older[0x1FFA:0x1FFC] = (1).to_bytes(2, "big")
+        data[2 * block : 3 * block] = older
+        fat[4:6] = (0).to_bytes(2, "big")
+        data[3 * block : 4 * block] = fat
+        self.card.write_bytes(bytes(data))
+        return self.card
+
+    def test_a_games_save_is_its_files_blocks_in_chain_order(self):
+        content = bytes(range(256)) * 64  # 0x4000 bytes: two blocks
+        card = self.make_card([("GALE01", [5], b"vanilla" * 100), ("GTCE01", [9, 6], content)])
+        self.assertEqual(card_save_data(card, "GTCE01"), content)
+        self.assertEqual(card_save_data(card, "GALE01")[:7], b"vanilla")
+        self.assertIsNone(card_save_data(card, "GXXE01"))
+
+
 class MovieLaunchCardTests(RunScenarioCase):
     """The launch itself, in the real checkout (it builds), with a fake
     Dolphin that never opens a game window and a fixture Dolphin user folder.
@@ -267,6 +316,34 @@ class MovieLaunchCardTests(RunScenarioCase):
         self.assertEqual(self.card_override(args).read_bytes(), CARD_BYTES)
         self.assertEqual(self.snapshot.read_bytes(), CARD_BYTES)
         self.assertEqual(sha1(self.card), real_card)
+
+    def test_keep_card_plays_against_the_run_copy_the_last_run_left(self):
+        # With nothing left behind it starts from the snapshot as usual.
+        (self.memcard_dir / "run.USA.raw").unlink(missing_ok=True)
+        _r, args = self.launch("--keep-card")
+        run_copy = self.card_override(args)
+        self.assertEqual(run_copy.read_bytes(), CARD_BYTES)
+
+        # Melee saved during that run; the next one carries on from it.
+        run_copy.write_bytes(b"saved during the run" * 100)
+        _r, args = self.launch("--keep-card")
+        self.assertEqual(self.card_override(args).read_bytes(), b"saved during the run" * 100)
+        self.assertEqual(self.snapshot.read_bytes(), CARD_BYTES)
+
+        # Without the flag the run copy is replaced, as before.
+        _r, args = self.launch()
+        self.assertEqual(self.card_override(args).read_bytes(), CARD_BYTES)
+
+    def test_no_card_boots_with_nothing_in_slot_a_and_leaves_the_run_copy_alone(self):
+        self.launch()
+        run_copy = self.memcard_dir / "run.USA.raw"
+        run_copy.write_bytes(b"left by the last run" * 100)
+
+        _r, args = self.launch("--no-card")
+
+        self.assertIn("Dolphin.Core.SlotA=255", args)
+        self.assertIsNone(self.card_override(args), f"args were {args}")
+        self.assertEqual(run_copy.read_bytes(), b"left by the last run" * 100)
 
     def test_live_runs_use_dolphins_own_card(self):
         _r, args = self.launch("--live")

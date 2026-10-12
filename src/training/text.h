@@ -3,6 +3,7 @@
 
 #ifdef TRAINING_BUILD
 
+#include <sysdolphin/baselib/gobjgxlink.h>
 #include <sysdolphin/baselib/sislib.h>
 
 /* Training on-screen text (text.c). Every line is written as plain ASCII and
@@ -16,6 +17,17 @@
  * the scene has settled: text made during the scene's own setup is not
  * drawn. */
 HSD_Text* training_text_create(void);
+
+/* Creates a canvas of its own and returns it, for training_text_create_on:
+ * several objects (rectangles and text) that share one canvas, drawn in the
+ * order they were made. */
+int training_text_canvas_create(void);
+
+/* Creates a filled rectangle at (x, y), `w` by `h` canvas units, on a canvas
+ * (training_text_canvas_create's, say). Draws over what was made before it on
+ * that canvas. Free it with training_text_free. */
+HSD_Text* training_text_rect_on(int canvas, float x, float y, float w, float h,
+                                GXColor colour);
 
 /* Creates an empty text object on one of the game's existing text canvases
  * (the retail menus' canvas 1, for example) instead of a canvas of its own.
@@ -43,6 +55,13 @@ void training_text_to_sis(char* sis, const char* ascii);
 /* Adds a line of ASCII text at (x, y), scaled, and returns its index. */
 int training_text_add(HSD_Text* text, float x, float y, float scale_x,
                       float scale_y, const char* ascii);
+
+/* Adds an object to a canvas made by training_text_canvas_create that calls
+ * `draw` (drawing in the canvas's units, y down, through GX calls) after the
+ * text objects made before it and before those made after. Free it with
+ * HSD_GObjFree. Costs no text heap, so it draws what a text object each
+ * could not: shapes. */
+HSD_GObj* training_text_canvas_add_draw(GObj_RenderFunc draw);
 
 /* Adds a line of ASCII text `y` below the text object's own position, at its
  * font size, and returns its index. */

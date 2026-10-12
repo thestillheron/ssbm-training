@@ -4,8 +4,8 @@
 
 **Blocked by:** 01 (History graph for this session)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] With three or more attempts whose scores rise and fall, the graph shows a connected line through every dot in attempt order (screenshot).
-- [ ] With one attempt there is a dot and no line.
-- [ ] The line is gone once the graph closes and draws nothing in a match.
+- [x] With three or more attempts whose scores rise and fall, the graph shows a connected line through every dot in attempt order (screenshot).
+- [x] With one attempt there is a dot and no line.
+- [x] The line is gone once the graph closes and draws nothing in a match.

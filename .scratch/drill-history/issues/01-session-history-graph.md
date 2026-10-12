@@ -6,10 +6,10 @@ The graph shows the drill name and total attempts, the y axis labelled at 0, the
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] A scenario plays a short drill to its summary twice, restarts a third attempt mid-drill, returns to the event list and presses X: the graph shows two dots at the summaries' scores and the pass-mark line (screenshot).
-- [ ] X on a drill with no attempts shows "No attempts yet"; X on Custom does nothing and Custom has no hint.
-- [ ] B and X both close the graph with the cursor still on that drill.
-- [ ] An attempt played after Edit layout changed the layout is not recorded.
-- [ ] Every drill in the drill table has a distinct stable ID, checked at build or boot.
+- [x] A scenario plays a short drill to its summary twice, restarts a third attempt mid-drill, returns to the event list and presses X: the graph shows two dots at the summaries' scores and the pass-mark line (screenshot).
+- [x] X on a drill with no attempts shows "No attempts yet"; X on Custom does nothing and Custom has no hint.
+- [x] B and X both close the graph with the cursor still on that drill.
+- [x] An attempt played after Edit layout changed the layout is not recorded.
+- [x] Every drill in the drill table has a distinct stable ID, checked at build or boot.

@@ -96,6 +96,15 @@ class ScenarioMovieTests(unittest.TestCase):
         self.assertEqual(h[0x71:0x81], bytes(16))  # no MD5 check
         self.assertGreaterEqual(m.u64(0xED), 1 << 62)  # tickCount never ends it early
 
+    def test_a_no_card_movie_records_no_memory_card_in_slot_a(self):
+        # `run --scenario NAME --no-card` boots with nothing in slot A; Dolphin
+        # rejects a movie whose header says a card was present.
+        from tools import movie
+
+        data = movie.build([], memcard=False)
+        self.assertEqual(data[0x97], 0x00)
+        self.assertEqual(movie.build([])[0x97], 0x01)
+
     def test_header_turns_on_fast_disc_speed(self):
         # boot-to-training only fits its time budget with fast disc loads.
         m, _, _ = self.movie({"s": "wait:10\n"})

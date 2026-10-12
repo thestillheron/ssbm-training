@@ -1,0 +1,184 @@
+# Acceptance scenario for drill-history ticket 01 (the history graph, dots).
+# Authoring build: it uses drill 9 (`Test: ten reps`, 10 reps, pass mark 7),
+# which keeps a history like the curriculum drills but is short.
+#  - attempt 1: the piloting plan of `rep-summary-timing` (3/10 where it was
+#    measured), to its summary (shot `summary-1`); the rep log has `drill_end`
+#    then `history_record ... attempts=1` with the summary's score.
+#  - attempt 2: Restart from the summary, no input (0/10), to its summary
+#    (`summary-2`): `history_record ... score=0 attempts=2`.
+#  - attempt 3: Restart, 500 frames in, pause, Back to event list: abandoned,
+#    nothing recorded.
+#  - the event list reopens on drill 9 (shot `list-after-quit`: the
+#    description ends "X: History"). X opens the graph (shot `graph`: the
+#    title "Test: ten reps   2 attempts", y labels 0, 7 and 10, x labels 1 and
+#    2, two dots at the summaries' scores, the pass mark line in orange). The
+#    rep log has `history_graph ... attempts=2 kept=2 top=10 pass=7
+#    scores=<attempt 1>,0`.
+#  - B closes it (`closed-by-b`: the list, cursor still on drill 9); X opens
+#    it and X closes it (`closed-by-x`).
+#  - up to drill 1 (no attempts) and X: shot `no-attempts` reads "No attempts
+#    yet"; B closes.
+#  - down to the Custom drill (row 23) (shot `custom-row`: no "X: History"
+#    hint), X does nothing (shot `custom-x`: the list, no graph, no
+#    `history_graph` line).
+# `python dev.py run --scenario drill-history-graph` prints the rep log lines.
+# Needs window focus for the shots.
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+include event-css-to-match
+
+# Attempt 1: one jab at most per rep, as in rep-summary-timing (plan
+# SELNSELSLN: 3/10 where its frames were measured; timing is only rough,
+# so the score can differ).
+wait:26
+a:2
+wait:169
+a:2
+wait:217
+a:2
+wait:322
+a:2
+wait:169
+a:2
+wait:217
+a:2
+wait:143
+a:2
+wait:209
+a:2
+wait:496
+shot summary-1
+
+# Attempt 2: Restart (the summary menu's first item), no input.
+a:2
+wait:600
+wait:600
+wait:650
+shot summary-2
+
+# Attempt 3: Restart, then leave mid-drill by the pause menu's Back to event
+# list (its fourth item).
+a:2
+wait:500
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:200
+shot list-after-quit
+wait:100
+
+# The graph. A shot lands up to about a second after its nominal frame, so
+# every state is held for 100 frames after the shot that checks it.
+x:2
+wait:100
+shot graph
+wait:100
+b:2
+wait:100
+shot closed-by-b
+wait:100
+x:2
+wait:60
+x:2
+wait:100
+shot closed-by-x
+wait:100
+
+# A drill with no attempts: up to drill 1.
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+x:2
+wait:100
+shot no-attempts
+wait:100
+b:2
+wait:60
+
+# The Custom drill: 22 downs from drill 1.
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+stick-down:2
+wait:6
+wait:100
+shot custom-row
+wait:100
+x:2
+wait:100
+shot custom-x
+wait:100

@@ -97,7 +97,7 @@ Short for "gravity."
 Japanese for "question [mark]."
 
 @section glossary_history history
-The scores of a @ref glossary_curriculum "curriculum" @ref glossary_drill "drill"'s recorded @ref glossary_attempt "attempts", in order, with the attempts numbered from the first. Only attempts at the drill as compiled are recorded: not the @ref glossary_custom_drill "custom drill", and not an attempt played with an edited @ref glossary_layout "layout". A drill keeps its history when it is retuned or moved in the curriculum. Avoid "stats" or "progress".
+The scores of a @ref glossary_curriculum "curriculum" @ref glossary_drill "drill"'s recorded @ref glossary_attempt "attempts", in order, with the attempts numbered from the first. Only attempts at the drill as compiled are recorded: not the @ref glossary_custom_drill "custom drill", and not an attempt played with an edited @ref glossary_layout "layout". A drill keeps its history when it is retuned or moved in the curriculum. A history keeps the latest 100 scores and a running total of attempts, and is saved in the training build's own save, so it outlasts the session when there is a card. Avoid "stats" or "progress".
 
 @section glossary_history_graph history graph
 The line graph of a @ref glossary_drill "drill"'s @ref glossary_history "history", opened with X on its event in the @ref glossary_event_list "event list": attempt number across, @ref glossary_score "score" up, with a horizontal line at the drill's current @ref glossary_pass_mark "pass mark" when it has one. Avoid "chart" or "results screen".

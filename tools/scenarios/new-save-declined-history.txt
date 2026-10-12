@@ -1,0 +1,68 @@
+# Drill history ticket 03, declined save: against a card with no GTCE01 save
+# (like new-save-character-select: put a card with only your vanilla Melee
+# save where `build/memcard/snapshot.USA.raw` is, run it, restore your
+# snapshot afterwards; `run` leaves the snapshot alone for `new-save-*`
+# scenarios). At "Create Game Data?" it chooses No (right, then `a`) and OK at
+# "Continue without saving or loading Game Data?", then plays `Test: ten reps`
+# to its summary once with no input (0/10, shot `summary`). The attempt is
+# still recorded in RAM: the rep log has `history_record ... attempts=1`, the
+# summary opens as usual, and on the event list X shows it (shot `graph`:
+# "Test: ten reps   1 attempt", one dot at 0). The card is left without a
+# GTCE01 save. Authoring build. Needs window focus for the shots.
+#
+# Timing measured: the prompt is up by frame 200; after the two `a` presses
+# the intro, title and main menu take a `start` each, and the third `start`
+# is pressed with the 1-P Mode menu open.
+wait:200
+stick-right:3
+wait:30
+a:3
+wait:100
+a:3
+wait:100
+start:2
+wait:100
+start:2
+wait:100
+start:2
+wait:100
+shot one-p-mode
+stick-down:2
+wait:4
+a:2
+wait:40
+shot event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+include event-css-to-match
+wait:600
+wait:600
+wait:700
+shot summary
+
+# Leave by the summary's Event list (its third item), then open the graph.
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:150
+x:2
+wait:100
+shot graph
+wait:100

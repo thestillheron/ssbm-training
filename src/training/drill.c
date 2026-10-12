@@ -43,6 +43,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         35,
         28,
+        DrillId_TechInPlace,
+        true,
     },
     {
         "Tech in",
@@ -62,6 +64,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         35,
         28,
+        DrillId_TechIn,
+        true,
     },
     {
         "Tech away",
@@ -81,6 +85,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         35,
         28,
+        DrillId_TechAway,
+        true,
     },
     {
         "Missed tech",
@@ -100,6 +106,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         35,
         28,
+        DrillId_MissedTech,
+        true,
     },
     /* Step 2: two options, vanish on, 70 reps. */
     {
@@ -121,6 +129,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         70,
         56,
+        DrillId_MissInPlace,
+        true,
     },
     {
         "In + miss",
@@ -141,6 +151,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         70,
         56,
+        DrillId_InMiss,
+        true,
     },
     {
         "Away + in place",
@@ -161,6 +173,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         70,
         56,
+        DrillId_AwayInPlace,
+        true,
     },
     {
         "In + away",
@@ -181,6 +195,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         70,
         56,
+        DrillId_InAway,
+        true,
     },
 #ifdef AUTHORING_BUILD
     /* Test drills, for the acceptance scenarios (chosen from the event
@@ -203,6 +219,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         10,
         7,
+        DrillId_TestTenReps,
+        true,
     },
     {
         "Test: three heights",
@@ -222,6 +240,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         10,
         7,
+        DrillId_TestThreeHeights,
+        false,
     },
     {
         "Test: height range",
@@ -241,6 +261,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         10,
         7,
+        DrillId_TestHeightRange,
+        false,
     },
     {
         "Test: platform",
@@ -260,6 +282,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         10,
         7,
+        DrillId_TestPlatform,
+        false,
     },
     {
         "Test: invalid layout",
@@ -279,6 +303,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         10,
         7,
+        DrillId_TestInvalidLayout,
+        false,
     },
     {
         "Test: vanish",
@@ -298,6 +324,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         10,
         7,
+        DrillId_TestVanish,
+        false,
     },
     {
         "Test: no reset",
@@ -317,6 +345,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         10,
         7,
+        DrillId_TestNoReset,
+        false,
     },
     {
         "Test: face away",
@@ -336,6 +366,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         10,
         7,
+        DrillId_TestFaceAway,
+        false,
     },
     {
         "Test: face left",
@@ -355,6 +387,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         10,
         7,
+        DrillId_TestFaceLeft,
+        false,
     },
     {
         "Test: face right",
@@ -374,6 +408,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         10,
         7,
+        DrillId_TestFaceRight,
+        false,
     },
     {
         "Test: time limit",
@@ -393,6 +429,8 @@ static const Drill drills[] = {
         DrillLength_Time,
         15,
         5,
+        DrillId_TestTimeLimit,
+        false,
     },
     {
         "Test: no heights",
@@ -412,6 +450,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         10,
         7,
+        DrillId_TestNoHeights,
+        false,
     },
     /* One-rep drills, for the summary menu's Next drill: from the first to
      * the second changes the stage, and the second is the last drill. */
@@ -433,6 +473,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         1,
         1,
+        DrillId_TestOneRep,
+        false,
     },
     {
         "Test: one rep, last",
@@ -452,6 +494,8 @@ static const Drill drills[] = {
         DrillLength_Reps,
         1,
         1,
+        DrillId_TestOneRepLast,
+        false,
     },
 #endif
 };
@@ -484,7 +528,42 @@ static Drill custom = {
     DrillLength_Reps,
     CUSTOM_REPS,
     0, /* no pass mark */
+    DrillId_Custom,
+    false, /* no history */
 };
+
+/* Every drill ID must be distinct: a repeated value is a duplicate case
+ * label, so the build fails. Add a case for each new ID. */
+static void check_drill_ids_distinct(DrillId id)
+{
+    switch (id) {
+    case DrillId_None:
+    case DrillId_Custom:
+    case DrillId_TechInPlace:
+    case DrillId_TechIn:
+    case DrillId_TechAway:
+    case DrillId_MissedTech:
+    case DrillId_MissInPlace:
+    case DrillId_InMiss:
+    case DrillId_AwayInPlace:
+    case DrillId_InAway:
+    case DrillId_TestTenReps:
+    case DrillId_TestThreeHeights:
+    case DrillId_TestHeightRange:
+    case DrillId_TestPlatform:
+    case DrillId_TestInvalidLayout:
+    case DrillId_TestVanish:
+    case DrillId_TestNoReset:
+    case DrillId_TestFaceAway:
+    case DrillId_TestFaceLeft:
+    case DrillId_TestFaceRight:
+    case DrillId_TestTimeLimit:
+    case DrillId_TestNoHeights:
+    case DrillId_TestOneRep:
+    case DrillId_TestOneRepLast:
+        break;
+    }
+}
 /* The stage the custom layout was last fitted to; -1 before the first. */
 static int custom_fitted_stage = -1;
 
@@ -641,6 +720,16 @@ bool training_drill_same_layout(const Drill* a, const Drill* b)
         }
     }
     return true;
+}
+
+bool training_drill_layout_edited(void)
+{
+    const Drill* session_drill = training_drill_session();
+
+    if (training_drill_is_custom(current_index)) {
+        return true;
+    }
+    return !training_drill_same_layout(session_drill, &drills[current_index]);
 }
 
 /// `value` in whole tenths, rounded to the nearest.

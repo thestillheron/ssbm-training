@@ -1,0 +1,43 @@
+# Drill history ticket 03, third run: boots against the card the run of
+# `drill-history-saved-reload` left behind (python dev.py run --scenario
+# drill-history-saved-capped --keep-card) and opens the graph of `Test: ten
+# reps`: shot `graph` shows the latest 100 of 122 attempts as saved (title
+# "Test: ten reps   122 attempts", x labels 23 and 122), and the rep log has
+# `history_load entries=1` and `history_graph ... attempts=122 kept=100`.
+# Authoring build. Needs window focus for the shot.
+# Not boot-to-event-list: against a card that already holds a save the game
+# played, the title needs one `start` fewer than boot-to-main-menu has (its
+# third would choose 1-P Mode), so the boot is spelled out: the main menu is
+# up by frame 194 as in the prefix.
+wait:72
+start:2
+wait:38
+start:2
+wait:80
+a:2
+wait:14
+stick-down:2
+wait:4
+a:2
+wait:40
+shot event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:100
+x:2
+wait:100
+shot graph
+wait:100

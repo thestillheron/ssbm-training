@@ -1,0 +1,67 @@
+# Drill history ticket 03, second run: boots against the card the run of
+# `drill-history-saved-play` left behind (python dev.py run --scenario
+# drill-history-saved-reload --keep-card), goes to `Test: ten reps` and opens
+# its graph: shot `graph` shows the two attempts the first run recorded (title
+# "Test: ten reps   2 attempts", x labels 1 and 2), and the rep log's
+# `history_load entries=1` and `history_graph ... attempts=2 kept=2` have the
+# same scores as the first run's `history_record` lines.
+#
+# Then Y (authoring builds only) adds 30 made-up attempts at the drill, four
+# times: 122 attempts in all. The graph (shot `graph-capped`) shows the latest
+# 100: title "Test: ten reps   122 attempts", x labels 23 and 122, and the rep
+# log has `history_graph ... attempts=122 kept=100`. It waits for Melee's
+# write; a third run, `drill-history-saved-capped --keep-card`, then shows the
+# same graph from the card.
+# Authoring build. Needs window focus for the shots.
+# Not boot-to-event-list: against a card that already holds a save the game
+# played, the title needs one `start` fewer than boot-to-main-menu has (its
+# third would choose 1-P Mode), so the boot is spelled out: the main menu is
+# up by frame 194 as in the prefix.
+wait:72
+start:2
+wait:38
+start:2
+wait:80
+a:2
+wait:14
+stick-down:2
+wait:4
+a:2
+wait:40
+shot event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:100
+x:2
+wait:100
+shot graph
+wait:100
+b:2
+wait:60
+y:2
+wait:30
+y:2
+wait:30
+y:2
+wait:30
+y:2
+wait:60
+x:2
+wait:100
+shot graph-capped
+wait:100
+b:2
+wait:600

@@ -2,6 +2,8 @@
 
 #include "text.h"
 
+#include <sysdolphin/baselib/gobj.h>
+#include <sysdolphin/baselib/gobjgxlink.h>
 #include <sysdolphin/baselib/sislib.h>
 #include <sysdolphin/baselib/sislib_font.h>
 
@@ -24,6 +26,34 @@ HSD_Text* training_text_create(void)
     HSD_Text* text = HSD_SisLib_803A6754(0, canvas);
 
     text->default_kerning = 1;
+    return text;
+}
+
+int training_text_canvas_create(void)
+{
+    return HSD_SisLib_803A611C(0, NULL, TEXT_CANVAS_ARG2, TEXT_CANVAS_ARG3,
+                               TEXT_CANVAS_ARG4, TEXT_CANVAS_ARG5,
+                               TEXT_CANVAS_ARG6, TEXT_CANVAS_ID);
+}
+
+HSD_GObj* training_text_canvas_add_draw(GObj_RenderFunc draw)
+{
+    HSD_GObj* gobj = GObj_Create(TEXT_CANVAS_ARG2, TEXT_CANVAS_ARG3,
+                                 TEXT_CANVAS_ARG4);
+
+    GObj_SetupGXLink(gobj, draw, TEXT_CANVAS_ARG5, TEXT_CANVAS_ARG6);
+    return gobj;
+}
+
+HSD_Text* training_text_rect_on(int canvas, float x, float y, float w, float h,
+                                GXColor colour)
+{
+    HSD_Text* text = training_text_create_on(canvas);
+
+    training_text_place(text, x, y, 0.0F, 1.0F);
+    text->box_size_x = w;
+    text->box_size_y = h;
+    text->bg_color = colour;
     return text;
 }
 
@@ -94,6 +124,7 @@ int training_text_add(HSD_Text* text, float x, float y, float scale_x,
     HSD_SisLib_803A7548(text, line, scale_x, scale_y);
     return line;
 }
+
 
 int training_text_add_line(HSD_Text* text, float y, const char* ascii)
 {

@@ -141,6 +141,11 @@ static void show_description(MnEventData* data, const Drill* drill)
     } else {
         sprintf(line, "Pass mark: %d/%d", drill->pass_mark, drill->length);
     }
+    if (drill->history) {
+        /* The hint shares the pass mark's line: the box has no room for a
+         * fourth. */
+        strcpy(line + strlen(line), "  X: History");
+    }
     training_text_add_line(text, n * DESC_LINE_STEP, line);
 }
 

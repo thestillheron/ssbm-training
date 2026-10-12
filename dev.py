@@ -15,7 +15,9 @@ Commands:
                      and boot it in Dolphin (--scenario NAME: with that
                      scenario played as a frame-exact movie from power-on,
                      against a copy of the memory card snapshot, taking its
-                     shots; add --live for keystroke playback).
+                     shots; add --live for keystroke playback, or
+                     --keep-card to play on from the card the last run left,
+                     or --no-card to boot with no card in slot A).
   pad SEQUENCE       Piloting: send GameCube controls to the running training
                      build as keystrokes (--dry-run prints the plan only).
   shot [LABEL]       Screenshot the running training build with Dolphin's
@@ -546,22 +548,36 @@ class MoviePlayback:
     """`run --scenario NAME`: the scenario as a frame-exact movie from
     power-on, against a fresh copy of the memory card snapshot."""
 
-    def __init__(self, name):
+    def __init__(self, name, keep_card=False, no_card=False):
         self.items = expand_scenario(name)
         self.path = MOVIES_DIR / f"{name}.dtm"
+        self.keep_card = keep_card
+        self.no_card = no_card
 
     def check(self, dolphin):
         check_movie_playback(dolphin)
-        ensure_card_snapshot()
+        if not self.no_card:
+            ensure_card_snapshot()
 
     def prepare(self):
         """Write the movie and the card's run copy (after the old Dolphin is
         stopped: it may hold them open); returns the extra launch args."""
-        frames = write_movie(self.items, self.path)
+        frames = write_movie(self.items, self.path, memcard=not self.no_card)
         say(f"Movie: {self.path} ({frames} frames)")
+        if self.no_card:
+            # Nothing in slot A (Dolphin's "None"), so the game boots as if
+            # the player had no memory card.
+            return [
+                "-m", str(self.path),
+                "-C", "Dolphin.Movie.PauseMovie=False",
+                "-C", "Dolphin.Core.SlotA=255",
+            ]
         # Melee saves to the card while the movie plays, so every run gets
         # a fresh copy of the snapshot and the real card is never touched.
-        shutil.copyfile(CARD_SNAPSHOT, CARD_RUN_COPY)
+        # --keep-card plays on from the copy the last run left (what its game
+        # saved), so a second run can check what the first one stored.
+        if not (self.keep_card and CARD_RUN_COPY.is_file()):
+            shutil.copyfile(CARD_SNAPSHOT, CARD_RUN_COPY)
         # Command-line playback is always read-only (Dolphin's default; no ini
         # key changes it). PauseMovie off: when the movie ends, emulation runs
         # on and the keyboard-bound controller takes over port 1. Slot A is
@@ -599,7 +615,12 @@ def cmd_run(args):
     if args.scenario:
         # Scenario errors fail here, before anything is built or launched.
         require_piloting_platform()
-        playback = (LivePlayback if args.live else MoviePlayback)(args.scenario)
+        if args.live:
+            playback = LivePlayback(args.scenario)
+        else:
+            playback = MoviePlayback(
+                args.scenario, keep_card=args.keep_card, no_card=args.no_card
+            )
     dolphin = find_dolphin()
     if dolphin is None:
         raise DevError(
@@ -609,7 +630,11 @@ def cmd_run(args):
         )
     if playback:
         playback.check(dolphin)
-    if isinstance(playback, MoviePlayback) and not args.scenario.startswith(NEW_SAVE_PREFIX):
+    if (
+        isinstance(playback, MoviePlayback)
+        and not playback.no_card
+        and not args.scenario.startswith(NEW_SAVE_PREFIX)
+    ):
         ensure_training_save(dolphin, args)
     launch_training(args, dolphin, playback)
 
@@ -1017,14 +1042,14 @@ def play_movie(items, movie_path):
     say(f"Movie finished ({frames} frames); the keyboard-bound controller has port 1.")
 
 
-def write_movie(items, path):
+def write_movie(items, path, memcard=True):
     """Write expanded scenario `items` as a movie to `path`; returns its
-    length in emulated frames."""
+    length in emulated frames. `memcard`: whether it records a card in slot A."""
     from tools import movie
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(movie.build(items))
+    path.write_bytes(movie.build(items, memcard))
     return movie.frame_count(items)
 
 
@@ -1197,6 +1222,24 @@ def main(argv=None):
             "with --scenario: play it as keystrokes after launch instead of as a "
             "movie. For short scenarios only: the committed boot prefixes are "
             "timed for movies (fast disc loads, 2-frame presses) and fail live"
+        ),
+    )
+    r.add_argument(
+        "--keep-card",
+        action="store_true",
+        help=(
+            "with --scenario (movie): play against the memory card copy the "
+            "last run left instead of a fresh copy of the snapshot, to check "
+            "what that run saved"
+        ),
+    )
+    r.add_argument(
+        "--no-card",
+        action="store_true",
+        help=(
+            "with --scenario (movie): boot with no memory card in slot A, to "
+            "check what the game does without one (the snapshot and run copy "
+            "are left alone)"
         ),
     )
     r.add_argument(

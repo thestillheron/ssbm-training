@@ -5,7 +5,7 @@
 
 #include <stdbool.h>
 
-#include "tech_options.h"
+#include <training/tech_options.h>
 
 /* A drill is a data record: the rep loop runs whichever drill is current and
  * reads its layout and settings from here (see the glossary: drill, layout).
@@ -40,6 +40,42 @@ typedef enum DrillLengthKind {
     DrillLength_Time, /* length in seconds */
 } DrillLengthKind;
 
+/* A drill's stable ID. History is keyed by it, not by the drill's place in the
+ * table, so reordering, inserting or retuning drills keeps their history. A
+ * value is never reused or changed once released; a removed drill's value is
+ * retired with it (its history is orphaned). Every table drill has a distinct
+ * ID (drill.c checks this when it is compiled; tools/dev_tests/
+ * test_drill_ids.py checks that each record names one). The Custom drill's is
+ * not a key: it keeps no history. */
+typedef enum DrillId {
+    DrillId_None = 0,
+    DrillId_Custom = 99,
+    /* The curriculum. */
+    DrillId_TechInPlace = 1,
+    DrillId_TechIn = 2,
+    DrillId_TechAway = 3,
+    DrillId_MissedTech = 4,
+    DrillId_MissInPlace = 5,
+    DrillId_InMiss = 6,
+    DrillId_AwayInPlace = 7,
+    DrillId_InAway = 8,
+    /* Authoring-only test drills. */
+    DrillId_TestTenReps = 101,
+    DrillId_TestThreeHeights = 102,
+    DrillId_TestHeightRange = 103,
+    DrillId_TestPlatform = 104,
+    DrillId_TestInvalidLayout = 105,
+    DrillId_TestVanish = 106,
+    DrillId_TestNoReset = 107,
+    DrillId_TestFaceAway = 108,
+    DrillId_TestFaceLeft = 109,
+    DrillId_TestFaceRight = 110,
+    DrillId_TestTimeLimit = 111,
+    DrillId_TestNoHeights = 112,
+    DrillId_TestOneRep = 113,
+    DrillId_TestOneRepLast = 114,
+} DrillId;
+
 typedef struct Drill {
     const char* name;
     const char* description;
@@ -63,6 +99,11 @@ typedef struct Drill {
     DrillLengthKind length_kind;
     int length;
     int pass_mark;
+    DrillId id;
+    /* True when the drill keeps a history of its attempts' scores (history.h):
+     * the curriculum, and the short "Test: ten reps" so scenarios can play it
+     * to its summary. The Custom drill and the other test drills keep none. */
+    bool history;
 } Drill;
 
 /// The drill the rep loop runs: the session copy of the table entry chosen
@@ -82,6 +123,11 @@ void training_drill_revert_layout(void);
 /// True when `a` and `b` have the same layout (landing point, drop heights,
 /// player start); their other fields are not compared.
 bool training_drill_same_layout(const Drill* a, const Drill* b);
+
+/// True when the current drill's layout is not its table entry's: the layout
+/// editor changed the session copy. Always true for the Custom drill, which
+/// has no table entry.
+bool training_drill_layout_edited(void);
 
 /* Edited layout values are kept in tenths of a game unit, the precision
  * Print layout writes, so a printed layout pasted into the table is exactly

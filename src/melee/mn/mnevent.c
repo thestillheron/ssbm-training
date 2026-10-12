@@ -27,6 +27,7 @@
 #ifdef TRAINING_BUILD
 #include <training/custom_settings.h>
 #include <training/event_list.h>
+#include <training/history.h>
 #endif
 
 StaticModelDesc MenMainConEv;
@@ -450,6 +451,7 @@ void mnEvent_8024D864(HSD_GObj* gobj)
 
 #ifdef TRAINING_BUILD
         if (training_custom_settings_input(mnEvent_804D6C60, &inputs)) { return; }
+        if (training_history_input(mnEvent_804D6C60, &inputs)) { return; }
 #endif
 
         if (inputs & MenuInput_Back) {

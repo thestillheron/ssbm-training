@@ -18,7 +18,7 @@ The order of work for the tech-chasing curriculum. Each item is a feature with i
 | 12 | [custom-drills](custom-drills/spec.md) | done | 9, 10 | Custom drill settings menu, any stage, layout editor for players; session only. |
 | 13 | [locked-camera](locked-camera/spec.md) | done | 6, 12 | Camera held on one measured view per tournament-legal stage whenever a drill has vanish on (curriculum and Custom), so camera movement can't give the tech away. |
 | 14 | [own-game-id](own-game-id/spec.md) | done | — | Training build runs as `GTCE01` (ADR-0006) so its saves never touch the player's Melee save; new save unlocks every character and stage; snapshot card gets a save. |
-| 15 | [drill-history](drill-history/spec.md) | ready-for-agent | 14 (ticket 03 only) | Record each curriculum drill attempt's score to the save; X in the event list opens a line graph of score by attempt with the pass mark. |
+| 15 | [drill-history](drill-history/spec.md) | done | 14 (ticket 03 only) | Record each curriculum drill attempt's score to the save; X in the event list opens a line graph of score by attempt with the pass mark. |
 
 Item 7 is done; its findings ([unclepunch-ui-research/findings.md](unclepunch-ui-research/findings.md)) feed 8, 9 and the Later items.
 

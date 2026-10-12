@@ -25,6 +25,7 @@
 
 #include "drill.h"
 #include "event.h"
+#include "history.h"
 #include "layout.h"
 #include "menu.h"
 #include "punish_window.h"
@@ -1349,6 +1350,7 @@ static void think(HSD_GObj* gobj)
                  * summary. */
                 training_rep_result_hide();
                 log_drill_end(training_drill_current());
+                training_history_record();
                 training_summary_show(training_drill_current());
                 show_summary_menu();
                 set_state(RepState_Summary);

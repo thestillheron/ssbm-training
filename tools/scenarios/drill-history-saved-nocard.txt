@@ -1,0 +1,64 @@
+# Drill history ticket 03, no memory card: boots with nothing in slot A
+# (python dev.py run --scenario drill-history-saved-nocard --no-card), answers
+# "Continue without saving or loading Game Data?" with OK, and plays
+# `Test: ten reps` to its summary once with no input (0/10, shot `summary`).
+# Nothing can be saved, but the attempt is still recorded: the rep log has
+# `history_record ... attempts=1` and the summary opens as usual, and on the
+# event list X shows the attempt (shot `graph`: "Test: ten reps   1 attempt",
+# one dot at 0). Authoring build. Needs window focus for the shots.
+#
+# Timing measured with no card: the notice that there is no card is up by
+# frame 100 and `a` answers "Continue without saving" (the intro, title and
+# main menu then take a `start` each, 120 frames apart, the fourth `start`
+# opens the 1-P Mode menu).
+wait:100
+a:2
+wait:60
+start:2
+wait:118
+start:2
+wait:118
+start:2
+wait:118
+start:2
+wait:100
+shot one-p-mode
+stick-down:2
+wait:4
+a:2
+wait:40
+shot event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+include event-css-to-match
+wait:600
+wait:600
+wait:700
+shot summary
+
+# Leave by the summary's Event list (its third item), then open the graph.
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:150
+x:2
+wait:100
+shot graph
+wait:100

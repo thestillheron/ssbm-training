@@ -79,7 +79,7 @@ def pad_state(controls):
     return bytes(e)
 
 
-def header(entries):
+def header(entries, memcard=True):
     h = bytearray(HEADER_SIZE)
     h[0x00:0x04] = b"DTM\x1a"
     h[0x04:0x0A] = GAME_ID
@@ -111,7 +111,7 @@ def header(entries):
     h[0x94] = 0  # bEFBEmulateFormatChanges
     h[0x95] = 0  # bImmediateXFB
     h[0x96] = 1  # bSkipXFBCopyToRam
-    h[0x97] = 0x01  # memcards: slot A present
+    h[0x97] = 0x01 if memcard else 0  # memcards: slot A present
     h[0x98] = 0  # bClearSave: use the existing card
     h[0x9C] = 1  # bPAL60
     h[0x9F] = 1  # bFollowBranch
@@ -130,10 +130,11 @@ def frame_count(items):
     return sum(i.frames for i in items if isinstance(i, pad.Step))
 
 
-def build(items):
-    """[Step | Shot] (includes expanded) -> DTM bytes."""
+def build(items, memcard=True):
+    """[Step | Shot] (includes expanded) -> DTM bytes. `memcard` is whether the
+    header says a card is in slot A (false for a no-card run)."""
     body = bytearray()
     for item in items:
         if isinstance(item, pad.Step):
             body += pad_state(item.controls) * (item.frames * ENTRIES_PER_FRAME)
-    return header(len(body) // len(NEUTRAL)) + bytes(body)
+    return header(len(body) // len(NEUTRAL), memcard) + bytes(body)

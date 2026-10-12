@@ -1,0 +1,61 @@
+# Acceptance scenario for drill-history ticket 01: an attempt played with an
+# edited layout is not recorded. Boots to drill 9 (`Test: ten reps`, which
+# keeps a history), lets a rep or two run, then pause, Edit layout (the fifth
+# item), stick right for 30 frames, B: the drill restarts from rep 1 with
+# landing_x=30. It plays to its summary with no input (shot `summary`:
+# 0/10) and leaves by the summary's Event list. The rep log has `drill_end`
+# but no `history_record` line. On the reopened list X shows "No attempts
+# yet" (shot `no-attempts`).
+# `python dev.py run --scenario drill-history-edited-layout` prints the rep
+# log lines. Needs window focus for the shots.
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+include event-css-to-match
+wait:300
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+stick-right:30
+wait:10
+b:2
+wait:600
+wait:600
+wait:700
+shot summary
+
+# Event list (the summary menu's third item).
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:150
+x:2
+wait:30
+shot no-attempts
