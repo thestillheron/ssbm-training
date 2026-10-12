@@ -23,7 +23,7 @@
 include boot-to-main-menu
 shot main-menu
 
-# 145: 1-P Mode. The submenu reads input from 6 frames after the `a`; up
+# 194: 1-P Mode. The submenu reads input from 6 frames after the `a`; up
 # wraps from Regular Match to Training, which takes `a` from the frame after
 # the up is released (no load).
 a:2

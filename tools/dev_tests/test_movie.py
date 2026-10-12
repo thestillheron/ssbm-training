@@ -16,6 +16,8 @@ import shutil
 import struct
 import unittest
 
+from tools.memcard import TRAINING_GAME_ID
+
 from .support import REPO_ROOT, dev, make_piloting_sandbox
 
 ENTRIES_PER_FRAME = 2
@@ -80,11 +82,11 @@ class ScenarioMovieTests(unittest.TestCase):
         self.assertIn(str(path), out)
         self.assertIn("15 frames", out)
 
-    def test_header_is_power_on_gale01_port1_with_real_memcard(self):
+    def test_header_is_power_on_gtce01_port1_with_real_memcard(self):
         m, _, _ = self.movie({"s": "wait:10\na:5\n"})
         h = m.header
         self.assertEqual(h[0:4], b"DTM\x1a")
-        self.assertEqual(h[4:10], b"GALE01")
+        self.assertEqual(h[4:10], TRAINING_GAME_ID.encode())
         self.assertEqual(h[0x0A], 0)  # not Wii
         self.assertEqual(h[0x0B], 0x01)  # GC port 1 only
         self.assertEqual(h[0x0C], 0)  # power-on, not from a savestate

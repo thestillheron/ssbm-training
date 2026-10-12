@@ -9,7 +9,7 @@
 include boot-to-main-menu
 shot main-menu
 
-# 145: main menu (cursor on 1-P Mode) -> VS. Mode -> its submenu (cursor on
+# 194: main menu (cursor on 1-P Mode) -> VS. Mode -> its submenu (cursor on
 # Melee) -> character select.
 stick-down:2
 wait:7

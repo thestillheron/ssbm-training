@@ -13,7 +13,7 @@
 include boot-to-main-menu
 shot main-menu
 
-# 145: 1-P Mode. The submenu reads input from 6 frames after the `a`; down
+# 194: 1-P Mode. The submenu reads input from 6 frames after the `a`; down
 # moves from Regular Match to Event Match, which takes `a` from the frame
 # after the down is released (no load).
 a:2

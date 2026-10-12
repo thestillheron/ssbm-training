@@ -11,6 +11,8 @@ import shutil
 import unittest
 from pathlib import Path
 
+from tools.memcard import NotAMemoryCard, card_game_ids
+
 from .support import (
     CARD_BYTES,
     CONFIG,
@@ -156,6 +158,53 @@ class SnapshotTests(unittest.TestCase):
 
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertEqual(self.snapshot(root).read_bytes(), CARD_BYTES)
+
+
+class CardGameIdTests(unittest.TestCase):
+    """Which games have a save on a raw memory card (ADR-0006: the snapshot
+    needs one for GTCE01)."""
+
+    def card(self, ids, counters=(1, 0)):
+        """A card image whose directory block 1 lists `ids` (saves) and
+        block 2 is an older copy with none, counter per `counters`."""
+        block = 0x2000
+        data = bytearray(b"\xff" * (3 * block))
+        for n, counter in zip((1, 2), counters):
+            d = bytearray(b"\xff" * block)
+            if n == 1:
+                for i, gid in enumerate(ids):
+                    d[i * 0x40 : i * 0x40 + 6] = gid.encode()
+            d[0x1FFA:0x1FFC] = counter.to_bytes(2, "big")
+            data[n * block : (n + 1) * block] = d
+        path = Path(self.tmp) / "card.raw"
+        path.write_bytes(bytes(data))
+        return path
+
+    def setUp(self):
+        import tempfile
+
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+        self.tmp = self.tmpdir.name
+
+    def test_lists_the_game_ids_of_the_saves_on_the_card(self):
+        card = self.card(["GALE01", "GTCE01"])
+        self.assertEqual(card_game_ids(card), {"GALE01", "GTCE01"})
+
+    def test_reads_the_directory_copy_with_the_higher_update_counter(self):
+        card = self.card(["GALE01"], counters=(1, 2))  # block 2 (empty) is current
+        self.assertEqual(card_game_ids(card), set())
+
+    def test_a_file_that_is_not_a_memory_card_is_reported_as_such(self):
+        with self.assertRaises(NotAMemoryCard):
+            card_game_ids(self.card_from(CARD_BYTES))
+        with self.assertRaises(NotAMemoryCard):
+            card_game_ids(self.card_from(b""))
+
+    def card_from(self, data):
+        path = Path(self.tmp) / "other.raw"
+        path.write_bytes(data)
+        return path
 
 
 class MovieLaunchCardTests(RunScenarioCase):

@@ -2070,6 +2070,7 @@ if args.training:
             "training (Training Mod)",
             [
                 Object(Matching, "training/title_marker.c", extra_cflags=training_cflags),
+                Object(Matching, "training/new_save.c", extra_cflags=training_cflags),
                 Object(
                     Matching,
                     "training/tech_chase.c",

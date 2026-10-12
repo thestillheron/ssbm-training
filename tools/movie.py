@@ -11,9 +11,9 @@ Melee polls the pad twice per emulated frame, so each scenario frame is
 written as ENTRIES_PER_FRAME identical entries: a hold of N frames and
 `wait:N` both last exactly N emulated frames. Shots write nothing.
 
-The header is a power-on movie (no savestate) for GALE01 with one standard
+The header is a power-on movie (no savestate) for GTCE01 with one standard
 controller on port 1 that keeps the memory card in slot A as-is (no clear
-save): scenarios rely on its everything-unlocked save.
+save): scenarios rely on its GTCE01 save with everything unlocked.
 
 Known single-machine assumption: the header's other fields (video backend,
 CPU core and the other emulation settings, Dolphin revision, RTC start,
@@ -27,9 +27,10 @@ own reference movie and retuned scenarios.
 import struct
 
 from . import pad
+from .memcard import TRAINING_GAME_ID
 
 ENTRIES_PER_FRAME = 2  # Melee polls the pad twice per emulated frame
-GAME_ID = b"GALE01"
+GAME_ID = TRAINING_GAME_ID.encode("ascii")
 HEADER_SIZE = 256
 NEUTRAL_AXIS = 128
 FULL = 255

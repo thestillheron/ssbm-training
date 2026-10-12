@@ -47,15 +47,9 @@
 #define TEXT_VALUES_Y 177.0F
 #define TEXT_VALUES_STEP 22.0F
 
-/* The backdrop behind it: padding round the text and its width, which fits
- * the longest help line. */
-#define BACKDROP_PAD_X 14.0F
-#define BACKDROP_PAD_Y 10.0F
-#define BACKDROP_PAD_BOTTOM 10.0F
-#define BACKDROP_WIDTH 485.0F
-
+/* No backdrop panel behind the text: it would hide the stage where the
+ * characters are being placed. */
 static HSD_Text* text;
-static TrainingPanel backdrop;
 /* The values lines: their text indices and what they show now (so a line is
  * only rewritten when it changes). */
 enum { Value_Landing, Value_Heights, Value_Start, VALUE_LINES };
@@ -77,11 +71,6 @@ static void show_text(bool visible)
         if (!visible) {
             return;
         }
-        training_panel_show(
-            &backdrop, TEXT_X - BACKDROP_PAD_X, TEXT_TITLE_Y - BACKDROP_PAD_Y,
-            BACKDROP_WIDTH,
-            TEXT_VALUES_Y + VALUE_LINES * TEXT_VALUES_STEP - TEXT_TITLE_Y +
-                2.0F * BACKDROP_PAD_Y + BACKDROP_PAD_BOTTOM);
         text = training_text_create();
         training_text_add(text, TEXT_X, TEXT_TITLE_Y, TEXT_TITLE_SCALE,
                           TEXT_TITLE_SCALE, "Edit layout");
@@ -98,7 +87,6 @@ static void show_text(bool visible)
         }
     }
     training_text_set_visible(text, visible);
-    training_panel_set_visible(&backdrop, visible);
 }
 
 static void set_value(int which, const char* ascii)
@@ -149,8 +137,6 @@ static void show_values(void)
 void training_layout_editor_init(void)
 {
     text = NULL;
-    backdrop.border = NULL;
-    backdrop.fill = NULL;
     selected_height = 0;
 }
 

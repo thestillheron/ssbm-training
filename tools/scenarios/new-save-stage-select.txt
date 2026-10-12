@@ -1,0 +1,71 @@
+# Acceptance scenario for own-game-id ticket 01: after a new save is created
+# on a blank card, every stage (Final Destination and Dream Land included) is
+# selectable on the Custom drill's stage select. Run against a blank card (see
+# boot-new-save-to-main-menu); shot `stage-select` is the check. Same route as
+# custom-drill-to-stage-select, from the new-save main menu.
+
+include boot-new-save-to-main-menu
+
+# 1-P Mode, then Event Match (as boot-to-event-list).
+a:2
+wait:14
+stick-down:2
+wait:4
+a:2
+wait:40
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+wait:120
+shot custom-row
+a:2
+wait:30
+a:2
+wait:30
+include event-css
+wait:2
+wait:60
+shot stage-select

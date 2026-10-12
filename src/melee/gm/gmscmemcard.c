@@ -9,6 +9,9 @@
 #include <melee/lb/lblanguage.h>
 #include <melee/mn/inlines.h>
 #include <sysdolphin/baselib/controller.h>
+#ifdef TRAINING_BUILD
+#include <training/new_save.h>
+#endif
 
 typedef struct {
     bool unk0;
@@ -355,6 +358,9 @@ void gm_Scene_MemCard_OnFrame(void)
         break;
     case 6:
         if (!gm_801AF0D4()) {
+#ifdef TRAINING_BUILD
+            training_new_save_unlock_all();
+#endif
             if (!lb_8001C8BC()) {
                 gm_801AEE6C(0, 0xC, get_lang_val(0xC));
                 enter_data.decision = 7;

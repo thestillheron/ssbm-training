@@ -2,6 +2,8 @@ import shutil
 import unittest
 from pathlib import Path
 
+from tools.memcard import TRAINING_GAME_ID
+
 from .support import (
     REPO_ROOT,
     FakeDolphinCase,
@@ -85,6 +87,10 @@ class RunTests(FakeDolphinCase):
         self.assertTrue(any(Path(a) == game_dol for a in launched), f"args were {launched}")
         # The rest of the disc is mirrored into the game folder.
         self.assertTrue((game / "sys" / "boot.bin").is_file())
+        # The training build is its own game (ADR-0006): GTCE01 in the disc
+        # header, while the extracted original still says GALE01.
+        self.assertEqual((game / "sys" / "boot.bin").read_bytes()[:6], TRAINING_GAME_ID.encode())
+        self.assertEqual((ORIG / "sys" / "boot.bin").read_bytes()[:6], b"GALE01")
         self.assertEqual(
             len([p for p in (game / "files").rglob("*") if p.name != ".gitkeep"]),
             len([p for p in (ORIG / "files").rglob("*") if p.name != ".gitkeep"]),

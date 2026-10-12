@@ -12,6 +12,9 @@ Short for "ambient."
 @section glossary_atk atk
 Short for "attack."
 
+@section glossary_attempt attempt
+One play of a @ref glossary_drill "drill" from rep 1 until it ends with the @ref glossary_drill_summary "drill summary". An attempt left early (restarted, abandoned for the event list or character select) is not an attempt. Each attempt has a @ref glossary_score "score". Not a @ref glossary_rep "rep", which is one cycle within an attempt.
+
 @section glossary_authoring_tools authoring tools
 Features for designing @ref glossary_curriculum "curriculum" drills, such as printing a drill's layout, compiled into the @ref glossary_training_build "training build" only on request. Players never see them. Avoid "developer build" or "debug build".
 
@@ -81,6 +84,9 @@ The Event Match select screen, which in the @ref glossary_training_build "traini
 @section glossary_ft ft
 Short for "fighter."
 
+@section glossary_game_id game ID
+The six characters (game code plus maker code) that name a game on a GameCube disc and key its saves on a memory card. Vanilla Melee is `GALE01`; the @ref glossary_training_build "training build" runs as `GTCE01` so its saves never touch the player's vanilla one ([ADR-0006](adr/0006-training-build-has-its-own-game-id.md)). `tools/memcard.py` defines it (`TRAINING_GAME_ID`). Not to be confused with a character or stage ID.
+
 @section glossary_gr gr
 Short for "ground."
 
@@ -90,6 +96,11 @@ Short for "gravity."
 @section glossary_hatena hatena
 Japanese for "question [mark]."
 
+@section glossary_history history
+The scores of a @ref glossary_curriculum "curriculum" @ref glossary_drill "drill"'s recorded @ref glossary_attempt "attempts", in order, with the attempts numbered from the first. Only attempts at the drill as compiled are recorded: not the @ref glossary_custom_drill "custom drill", and not an attempt played with an edited @ref glossary_layout "layout". A drill keeps its history when it is retuned or moved in the curriculum. Avoid "stats" or "progress".
+
+@section glossary_history_graph history graph
+The line graph of a @ref glossary_drill "drill"'s @ref glossary_history "history", opened with X on its event in the @ref glossary_event_list "event list": attempt number across, @ref glossary_score "score" up, with a horizontal line at the drill's current @ref glossary_pass_mark "pass mark" when it has one. Avoid "chart" or "results screen".
 @section glossary_id id
 Short for "identifier." Not an acronym.
 
@@ -127,7 +138,7 @@ The fixed view a @ref glossary_drill "drill" with @ref glossary_vanish "vanish" 
 The build of this repo whose `main.dol` is byte-identical to the original game, with no training features. Not to be confused with the @ref glossary_training_build "training build".
 
 @section glossary_memory_card_snapshot memory card snapshot
-A copy of the developer's slot A memory card (the save with every character and stage unlocked) that every @ref glossary_movie "movie" run plays against, kept in gitignored `build/memcard/` and never committed. `dev.py` takes it the first time a movie run needs it; `dev.py snapshot-card` refreshes it. Each run plays against a fresh @ref glossary_run_copy "run copy" of it, so the real card is never written and every run starts from the same card. Avoid "fixed card" or "card backup".
+A copy of the developer's slot A memory card that every @ref glossary_movie "movie" run plays against, kept in gitignored `build/memcard/` and never committed. `dev.py` takes it the first time a movie run needs it; `dev.py snapshot-card` refreshes it. It holds a save under the training build's own game ID, `GTCE01` ([ADR-0006](adr/0006-training-build-has-its-own-game-id.md)) with every character and stage unlocked: when the card has none, `dev.py` plays the create-save prompt in the training build to make one, leaving any vanilla `GALE01` save on the card alone. Each run plays against a fresh @ref glossary_run_copy "run copy" of it, so the real card is never written and every run starts from the same card. Avoid "fixed card" or "card backup".
 
 @section glossary_min min
 Short for "minimum."
@@ -197,6 +208,9 @@ A committed, named input script that takes the training build from boot to a kno
 
 @section glossary_session_copy session copy
 The working copy of the current @ref glossary_drill "drill" that the rep loop runs and @ref glossary_edit_layout "Edit layout" edits (`training_drill_session` in `src/training/drill.c`). It is copied from the @ref glossary_drill_table "drill table" when a different drill is selected, so edits last through restarts and re-entering the same drill but are never saved and never change the table. Avoid "working drill" or "edited drill".
+
+@section glossary_score score
+The number of successful @ref glossary_rep "reps" in an @ref glossary_attempt "attempt", as the @ref glossary_drill_summary "drill summary" shows it. The attempt passes when the score reaches the @ref glossary_pass_mark "pass mark".
 
 @section glossary_sfx sfx
 Short for "sound effect(s)."

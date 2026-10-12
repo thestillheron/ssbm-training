@@ -511,9 +511,12 @@ def remove_tree(path):
 def assemble_game(dol):
     """Mirror the extracted disc into GAME_DIR using links, with `dol` as main.dol.
 
-    Nothing under orig/ is ever written: main.dol in the game folder is a fresh
-    copy (never a link to the original), and everything else is read-only linked.
+    Nothing under orig/ is ever written: main.dol and boot.bin (whose game ID
+    becomes TRAINING_GAME_ID) in the game folder are fresh copies (never links
+    to the originals), and everything else is read-only linked.
     """
+    from tools.memcard import TRAINING_GAME_ID
+
     remove_tree(GAME_DIR)
     copied = 0
     for src in sorted(p for p in ORIG.rglob("*") if p.is_file()):
@@ -524,6 +527,11 @@ def assemble_game(dol):
         dest.parent.mkdir(parents=True, exist_ok=True)
         if rel == Path("sys/main.dol"):
             shutil.copyfile(dol, dest)
+        elif rel == Path("sys/boot.bin"):
+            # Never a link: the original's header keeps saying GALE01.
+            header = bytearray(src.read_bytes())
+            header[: len(TRAINING_GAME_ID)] = TRAINING_GAME_ID.encode("ascii")
+            dest.write_bytes(header)
         elif not link_or_copy(src, dest):
             copied += 1
     if copied:
@@ -601,6 +609,14 @@ def cmd_run(args):
         )
     if playback:
         playback.check(dolphin)
+    if isinstance(playback, MoviePlayback) and not args.scenario.startswith(NEW_SAVE_PREFIX):
+        ensure_training_save(dolphin, args)
+    launch_training(args, dolphin, playback)
+
+
+def launch_training(args, dolphin, playback=None, log_reps=True):
+    """Build the training build, launch it in `dolphin` (with `playback`, if
+    any, followed to its end)."""
     dol = build(
         "training",
         authoring=args.authoring,
@@ -633,7 +649,7 @@ def cmd_run(args):
     if playback:
         say(f"Waiting for the game window (up to {WINDOW_TIMEOUT:g}s) ...")
         playback.follow()
-        if args.authoring:
+        if args.authoring and log_reps:
             print_rep_log(load_state().get("rep_log_mark", 0))
 
 
@@ -737,8 +753,64 @@ def ensure_card_snapshot():
         snapshot_card()
 
 
+def snapshot_lacks_training_save():
+    """Whether the snapshot is a memory card with no save for the training
+    build. A file that is not a memory card (unknown) is left alone."""
+    from tools.memcard import TRAINING_GAME_ID, NotAMemoryCard, card_game_ids
+
+    try:
+        return TRAINING_GAME_ID not in card_game_ids(CARD_SNAPSHOT)
+    except NotAMemoryCard:
+        return False
+
+
+# Plays Melee's create-save prompt to the main menu against the snapshot.
+SAVE_SCENARIO = "boot-new-save-to-main-menu"
+# Scenarios that check what a new save holds start at that prompt themselves, so
+# they run against the snapshot as it is (a card with no GTCE01 save).
+NEW_SAVE_PREFIX = "new-save-"
+
+
+def ensure_training_save(dolphin, args):
+    """Give the snapshot a TRAINING_GAME_ID save with everything unlocked when
+    it has none (a card from before the game ID changed, or a new one): play
+    SAVE_SCENARIO against it in the training build, so Melee itself creates the
+    save, and keep the card that run saved. Other saves on the card (the
+    player's vanilla Melee save) are carried along untouched."""
+    from tools.memcard import TRAINING_GAME_ID, NotAMemoryCard, card_game_ids
+
+    if not snapshot_lacks_training_save():
+        return
+    say(
+        f"The memory card snapshot has no {TRAINING_GAME_ID} save: creating one "
+        f"by playing {SAVE_SCENARIO} (answering Melee's create-save prompt) ..."
+    )
+    playback = MoviePlayback(SAVE_SCENARIO)
+    try:
+        launch_training(args, dolphin, playback, log_reps=False)
+    finally:
+        stop_tracked_dolphin(load_state())
+    try:
+        saved = TRAINING_GAME_ID in card_game_ids(CARD_RUN_COPY)
+    except NotAMemoryCard:
+        saved = False
+    if not saved:
+        raise DevError(
+            f"{SAVE_SCENARIO} did not leave a {TRAINING_GAME_ID} save on the card "
+            f"({CARD_RUN_COPY}); the snapshot is unchanged"
+        )
+    shutil.copyfile(CARD_RUN_COPY, CARD_SNAPSHOT)
+    say(f"Memory card snapshot now holds a {TRAINING_GAME_ID} save: {CARD_SNAPSHOT}")
+
+
 def cmd_snapshot_card(args):
     snapshot_card()
+    dolphin = find_dolphin()
+    if snapshot_lacks_training_save():
+        if dolphin is None:
+            raise DevError("could not find Dolphin to create the training build's save")
+        run_args = argparse.Namespace(authoring=False, tech_pool=None)
+        ensure_training_save(dolphin, run_args)
 
 
 def cmd_stop(args):

@@ -1,6 +1,6 @@
 # Drills are Event Match events
 
-Supersedes [ADR-0003](0003-tech-chase-drills-start-inside-training-mode.md).
+Supersedes [ADR-0003](0003-tech-chase-drills-start-inside-training-mode.md). Amended by [ADR-0006](0006-training-build-has-its-own-game-id.md): the training build no longer shares the player's save.
 
 In the training build, each [drill](../glossary.md#glossary_drill) is an event in the 1P menu's Event Match, as UnclePunch's training pack does it. Picking one goes through Training Mode's player + CPU character select to a match on the drill's own stage, where our own pause menu and drill summary take over. Event Match gives us a main-menu entry, an event list with descriptions, character select and "back to the list" routing without any menu art, and choosing a drill fixes its stage, so there is no "wrong stage" to handle. The hooks are one-line `TRAINING_BUILD` calls in the Event Match mode and the event select screen. Training Mode goes back to vanilla. Our events never write Event Match's own scores or cleared bits, because the training build shares the player's real save.
 

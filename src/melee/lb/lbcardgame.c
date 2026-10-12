@@ -16,6 +16,9 @@
 #include <sysdolphin/baselib/gobjobject.h>
 #include <sysdolphin/baselib/gobjproc.h>
 #include <sysdolphin/baselib/jobj.h>
+#ifdef TRAINING_BUILD
+#include <training/new_save.h>
+#endif
 
 typedef enum {
     stateStatus_0,
@@ -100,6 +103,9 @@ static char* lb_8001C658(void)
     } else {
         title = "Super Smash Bros. Melee         Game Data";
     }
+#ifdef TRAINING_BUILD
+    title = training_new_save_title();
+#endif
     sprintf(_p(comment), "%s %4d/%02d/%02d", title, time.year, time.mon + 1,
             time.mday);
     return _p(comment);
