@@ -1,11 +1,11 @@
 # Windowed history graph: `Test: ten reps` is seeded with 120 attempts (Y four
 # times in the event list, 30 each; 100 are kept), then X opens the graph.
 #  - `graph-latest`: the latest 30 (x labels 91 and 120).
-#  - Left: `graph-older` shows 76-105. Left three more times: `graph-oldest`
-#    shows 31-60 (the end of the window is now 60). Left again, down to the
-#    oldest kept (21-50), is reachable with more presses; this does 4.
-#  - Right six times: `graph-newest` shows 91-120 again; right past the end
-#    stops there.
+#  - The window scrolls smoothly while left or right is held (full tilt:
+#    0.34 attempts a frame). Left held 44 frames: `graph-older` shows about
+#    76-105. Left 132 more: `graph-oldest` shows 21-50 (the oldest kept);
+#    left again stops there.
+#  - Right held 400 frames: `graph-newest` shows 91-120 again; it stops there.
 #  - The rep log has one `history_graph` line (on open), not one per repaint.
 # Authoring build; needs window focus for the shots.
 # Not boot-to-event-list: against a save that already exists (all unlocks
@@ -50,35 +50,20 @@ x:2
 wait:100
 shot graph-latest
 wait:100
-dpad-left:2
-wait:60
+dpad-left:44
+wait:30
 shot graph-older
 wait:60
-dpad-left:2
+dpad-left:132
 wait:30
-dpad-left:2
-wait:30
-dpad-left:2
-wait:60
 shot graph-oldest
 wait:60
-dpad-left:2
-wait:60
+dpad-left:60
+wait:30
 shot graph-oldest-again
 wait:60
-stick-right:2
+stick-right:400
 wait:30
-stick-right:2
-wait:30
-stick-right:2
-wait:30
-stick-right:2
-wait:30
-stick-right:2
-wait:30
-stick-right:2
-wait:30
-wait:60
 shot graph-newest
 wait:60
 b:2

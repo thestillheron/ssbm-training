@@ -7,6 +7,8 @@
 #include <melee/mn/inlines.h>
 #include <melee/mn/mnmain.h>
 #include <dolphin/gx.h>
+#include <dolphin/pad.h>
+#include <sysdolphin/baselib/controller.h>
 #include <sysdolphin/baselib/gobjplink.h>
 #include <sysdolphin/baselib/hsd_3915.h>
 #include <sysdolphin/baselib/sislib.h>
@@ -322,10 +324,13 @@ static void seed_attempts(const Drill* drill)
 #define DOT_RADIUS 5.0F
 #define LINE_THICKNESS 2.5F
 #define CIRCLE_SEGMENTS 12
-/* The graph shows at most this many attempts at a time, and left or right
- * moves the window by this many. */
+/* The graph shows at most this many attempts at a time. Left or right scrolls
+ * it smoothly, in attempts a frame: SCROLL_SLOW at a tilt just past the dead
+ * zone, SCROLL_FAST at full tilt (the d-pad is full tilt). */
 #define GRAPH_WINDOW 30
-#define GRAPH_STEP 15
+#define SCROLL_SLOW 0.2F
+#define SCROLL_FAST 0.34F
+#define SCROLL_DEAD_ZONE 0.2F
 /* Dots stay this far inside the plot's left and right edges. */
 #define DOT_MARGIN 14.0F
 #define TITLE_X 60.0F
@@ -364,10 +369,16 @@ static int graph_object_count;
 static bool graph_open;
 
 static int graph_canvas;
-/* The drill the graph shows, and the window: the attempts from
- * graph_end - GRAPH_WINDOW (or 0) up to, not including, graph_end. */
+/* The drill the graph shows, and the window: the attempts from graph_first
+ * (a fraction while it scrolls) for GRAPH_WINDOW attempts. */
 static const Drill* graph_drill;
-static int graph_end;
+static float graph_first;
+/* The x axis' two end labels, rewritten when the attempt number under an end
+ * changes (the number shown at each, to know when). */
+static HSD_Text* x_label_first;
+static HSD_Text* x_label_last;
+static int x_label_first_number;
+static int x_label_last_number;
 
 static void track_text(HSD_Text* text)
 {
@@ -442,15 +453,19 @@ static void add_y_label(int value, int top, GXColor colour)
               colour);
 }
 
-static float dot_x(int index, int count)
+/// The x of the attempt `index` (a position in the kept scores, counted from
+/// the oldest) when `count` are kept and the window starts at `first`. With
+/// fewer than a window kept they fill the plot.
+static float plot_x(int index, int count, float first)
 {
     float left = PLOT_LEFT + AXIS_THICKNESS + DOT_MARGIN;
     float right = PLOT_RIGHT - DOT_MARGIN;
+    int slots = count < GRAPH_WINDOW ? count : GRAPH_WINDOW;
 
-    if (count <= 1) {
+    if (slots <= 1) {
         return (left + right) * 0.5F;
     }
-    return left + (right - left) * (float) index / (float) (count - 1);
+    return left + (right - left) * ((float) index - first) / (float) (slots - 1);
 }
 
 /* The scores' line and dots are drawn by a canvas object of their own
@@ -525,29 +540,65 @@ static void draw_dot(PlotPoint c)
     }
 }
 
-/// Draws the line joining the points in attempt order, then a dot on each.
+/// The point of the line from `from` to `to` at x = `x`.
+static PlotPoint clip_at(PlotPoint from, PlotPoint to, float x)
+{
+    PlotPoint p;
+
+    p.x = x;
+    p.y = from.y + (to.y - from.y) * (x - from.x) / (to.x - from.x);
+    return p;
+}
+
+/// Draws the line joining the points in attempt order, then a dot on each, all
+/// within the plot's dot span: a point past either end of it (the window is
+/// between attempts while it scrolls) is cut off there.
 static void draw_plot(HSD_GObj* gobj, int code)
 {
+    float left = PLOT_LEFT + AXIS_THICKNESS + DOT_MARGIN;
+    float right = PLOT_RIGHT - DOT_MARGIN;
     int i;
 
     hsd_80391A04(1.0F, 1.0F, 1);
     for (i = 1; i < plot_count; i++) {
-        draw_segment(plot_points[i - 1], plot_points[i]);
+        PlotPoint a = plot_points[i - 1];
+        PlotPoint b = plot_points[i];
+
+        if ((a.x < left && b.x < left) || (a.x > right && b.x > right)) {
+            continue;
+        }
+        if (a.x < left) {
+            a = clip_at(a, b, left);
+        } else if (a.x > right) {
+            a = clip_at(a, b, right);
+        }
+        if (b.x < left) {
+            b = clip_at(plot_points[i - 1], b, left);
+        } else if (b.x > right) {
+            b = clip_at(plot_points[i - 1], b, right);
+        }
+        draw_segment(a, b);
     }
     for (i = 0; i < plot_count; i++) {
-        draw_dot(plot_points[i]);
+        if (plot_points[i].x >= left - 0.01F &&
+            plot_points[i].x <= right + 0.01F)
+        {
+            draw_dot(plot_points[i]);
+        }
     }
 }
 
-/// An x-axis label for attempt number `number`, centred under the dot at
-/// `x`.
-static void add_x_label(int number, float x)
+/// An x-axis label for attempt number `number`, centred under `x`.
+static HSD_Text* make_x_label(int number, float x)
 {
     char label[12];
+    HSD_Text* text = training_text_create_on(graph_canvas);
 
     sprintf(label, "%d", number);
-    add_label(x - text_width(label, LABEL_SCALE) * 0.5F, X_LABEL_Y,
-              LABEL_SCALE, label, axis_colour);
+    training_text_add(text, x - text_width(label, LABEL_SCALE) * 0.5F,
+                      X_LABEL_Y, LABEL_SCALE, LABEL_SCALE, label);
+    training_text_set_colour(text, 0, axis_colour);
+    return text;
 }
 
 #ifdef AUTHORING_BUILD
@@ -582,13 +633,80 @@ static void clear_graph(void)
         training_text_free(&graph_objects[i]);
     }
     graph_object_count = 0;
+    training_text_free(&x_label_first);
+    training_text_free(&x_label_last);
     if (plot_gobj != NULL) {
         HSD_GObjFree(plot_gobj);
         plot_gobj = NULL;
     }
 }
 
-/// Draws the graph of the window ending at graph_end on graph_canvas.
+/// Puts the plot's points where the window (graph_first) has them.
+static void place_points(void)
+{
+    const Drill* drill = graph_drill;
+    int count = training_history_count(drill->id);
+    int top = y_top(drill, count);
+    int first = (int) graph_first;
+    int last = first + GRAPH_WINDOW;
+    int i;
+
+    if (last > count - 1) {
+        last = count - 1;
+    }
+    plot_count = 0;
+    for (i = first; i <= last; i++) {
+        plot_points[plot_count].x = plot_x(i, count, graph_first);
+        plot_points[plot_count].y =
+            y_of(training_history_score(drill->id, i), top);
+        plot_count++;
+    }
+}
+
+/// The attempt numbers at the x axis' two ends (real numbers: the oldest
+/// scores drop off after HISTORY_KEEP), the window rounded to a whole attempt.
+static void x_label_numbers(int* first_number, int* last_number)
+{
+    const Drill* drill = graph_drill;
+    int total = training_history_total(drill->id);
+    int count = training_history_count(drill->id);
+    int slots = count < GRAPH_WINDOW ? count : GRAPH_WINDOW;
+    int first = (int) (graph_first + 0.5F);
+
+    *first_number = total - count + first + 1;
+    *last_number = *first_number + slots - 1;
+}
+
+/// Rewrites the x axis' end labels when their numbers have changed.
+static void update_x_labels(void)
+{
+    int count = training_history_count(graph_drill->id);
+    float left = plot_x(0, count, 0.0F);
+    float right = plot_x(GRAPH_WINDOW - 1, count, 0.0F);
+    int first_number;
+    int last_number;
+
+    x_label_numbers(&first_number, &last_number);
+    if (x_label_first == NULL || first_number != x_label_first_number) {
+        training_text_free(&x_label_first);
+        x_label_first = make_x_label(first_number, left);
+        x_label_first_number = first_number;
+    }
+    if (last_number == first_number) {
+        training_text_free(&x_label_last);
+        return;
+    }
+    if (count < GRAPH_WINDOW) {
+        right = plot_x(count - 1, count, 0.0F);
+    }
+    if (x_label_last == NULL || last_number != x_label_last_number) {
+        training_text_free(&x_label_last);
+        x_label_last = make_x_label(last_number, right);
+        x_label_last_number = last_number;
+    }
+}
+
+/// Draws the graph of the window starting at graph_first on graph_canvas.
 static void build_graph(void)
 {
     const Drill* drill = graph_drill;
@@ -596,9 +714,6 @@ static void build_graph(void)
     int total = training_history_total(drill->id);
     int count = training_history_count(drill->id);
     int top = y_top(drill, count);
-    int first = graph_end > GRAPH_WINDOW ? graph_end - GRAPH_WINDOW : 0;
-    int shown = graph_end - first;
-    int i;
 
     add_rect(0.0F, 0.0F, SCREEN_W, SCREEN_H, background_colour);
 
@@ -638,23 +753,20 @@ static void build_graph(void)
         add_y_label(top, top, axis_colour);
     }
 
-    /* The line and the dots. */
-    plot_count = shown;
-    for (i = 0; i < shown; i++) {
-        plot_points[i].x = dot_x(i, shown);
-        plot_points[i].y =
-            y_of(training_history_score(drill->id, first + i), top);
-    }
+    /* The line and the dots, and the x axis' end labels. */
+    place_points();
     plot_gobj = training_text_canvas_add_draw(draw_plot);
-
-    /* The x axis' first and last attempt numbers (real numbers: the oldest
-     * scores drop off after HISTORY_KEEP). */
-    add_x_label(total - count + first + 1, dot_x(0, shown));
-    if (shown > 1) {
-        add_x_label(total - count + graph_end, dot_x(shown - 1, shown));
-    }
+    update_x_labels();
     add_label((SCREEN_W - text_width("Attempt", LABEL_SCALE)) * 0.5F,
               AXIS_TITLE_Y, LABEL_SCALE, "Attempt", axis_colour);
+}
+
+/// Where the window starts to show the latest attempts.
+static float graph_last_first(void)
+{
+    int count = training_history_count(graph_drill->id);
+
+    return count > GRAPH_WINDOW ? (float) (count - GRAPH_WINDOW) : 0.0F;
 }
 
 /// Opens the graph on the latest attempts.
@@ -664,7 +776,9 @@ static void open_graph(MnEventData* data, const Drill* drill)
     graph_object_count = 0;
     plot_gobj = NULL;
     graph_drill = drill;
-    graph_end = training_history_count(drill->id);
+    graph_first = graph_last_first();
+    x_label_first = NULL;
+    x_label_last = NULL;
     training_event_list_set_visible(data, false);
     graph_canvas = training_text_canvas_create();
     LOG_GRAPH(drill, training_history_total(drill->id),
@@ -673,24 +787,61 @@ static void open_graph(MnEventData* data, const Drill* drill)
     build_graph();
 }
 
-/// Moves the window by `step` attempts (negative: older) and repaints; does
-/// nothing at either end.
-static void move_window(int step)
+/// The scroll direction held (-1 older, 1 newer, 0 none) times its speed in
+/// attempts a frame: the d-pad is full tilt, the stick scales between
+/// SCROLL_SLOW and SCROLL_FAST from just past its dead zone to full tilt. Any
+/// port counts; the strongest wins.
+static float scroll_velocity(void)
 {
-    int count = training_history_count(graph_drill->id);
-    int least = count < GRAPH_WINDOW ? count : GRAPH_WINDOW;
-    int end = graph_end + step;
+    float best = 0.0F;
+    int port;
 
-    if (end < least) {
-        end = least;
+    for (port = 0; port < 4; port++) {
+        const HSD_PadStatus* pad = &HSD_PadCopyStatus[port];
+        float x = pad->nml_stickX;
+        float tilt = x < 0.0F ? -x : x;
+        float speed;
+
+        if (pad->button & PAD_BUTTON_LEFT) {
+            x = -1.0F;
+            tilt = 1.0F;
+        } else if (pad->button & PAD_BUTTON_RIGHT) {
+            x = 1.0F;
+            tilt = 1.0F;
+        }
+        if (tilt <= SCROLL_DEAD_ZONE) {
+            continue;
+        }
+        if (tilt > 1.0F) {
+            tilt = 1.0F;
+        }
+        speed = SCROLL_SLOW + (SCROLL_FAST - SCROLL_SLOW) *
+                                  (tilt - SCROLL_DEAD_ZONE) /
+                                  (1.0F - SCROLL_DEAD_ZONE);
+        if (speed > (best < 0.0F ? -best : best)) {
+            best = x < 0.0F ? -speed : speed;
+        }
     }
-    if (end > count) {
-        end = count;
+    return best;
+}
+
+/// Scrolls the window by one frame of the held direction, and moves the dots
+/// and labels to match; does nothing at either end.
+static void scroll_window(void)
+{
+    float last = graph_last_first();
+    float first = graph_first + scroll_velocity();
+
+    if (first < 0.0F) {
+        first = 0.0F;
     }
-    if (end != graph_end) {
-        graph_end = end;
-        clear_graph();
-        build_graph();
+    if (first > last) {
+        first = last;
+    }
+    if (first != graph_first) {
+        graph_first = first;
+        place_points();
+        update_x_labels();
     }
 }
 
@@ -721,10 +872,8 @@ bool training_history_input(HSD_GObj* gobj, u64* inputs)
         if (*inputs & (MenuInput_Back | MenuInput_XButton)) {
             sfxBack();
             close_graph(data);
-        } else if (*inputs & MenuInput_Left) {
-            move_window(-GRAPH_STEP);
-        } else if (*inputs & MenuInput_Right) {
-            move_window(GRAPH_STEP);
+        } else {
+            scroll_window();
         }
         return true;
     }
