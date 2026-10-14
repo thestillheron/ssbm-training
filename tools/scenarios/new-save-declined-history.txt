@@ -12,7 +12,7 @@
 #
 # Timing measured: the prompt is up by frame 200; after the two `a` presses
 # the intro, title and main menu take a `start` each, and the third `start`
-# is pressed with the 1-P Mode menu open.
+# chooses RTC 101 on the main menu.
 wait:200
 stick-right:3
 wait:30
@@ -26,10 +26,6 @@ start:2
 wait:100
 start:2
 wait:100
-shot one-p-mode
-stick-down:2
-wait:4
-a:2
 wait:40
 shot event-list
 stick-down:2
@@ -55,7 +51,7 @@ wait:600
 wait:700
 shot summary
 
-# Leave by the summary's Event list (its third item), then open the graph.
+# Leave by the summary's RTC 101 (its third item), then open the graph.
 stick-down:2
 wait:14
 stick-down:2

@@ -6,7 +6,7 @@
 # leaves with B: the drill restarts. Then it checks the edit is kept:
 #  - Restart drill from the pause menu (the cursor is still on Edit layout, so
 #    up three; shot `restarted`).
-#  - Back to event list (the cursor is on Restart drill, so down two), Custom drill again, the same fighters and Battlefield
+#  - Settings (the cursor is on Restart drill, so down two) opens the settings menu; Start, the same fighters and Battlefield
 #    (shot `reentered`): the edited layout is still the custom drill's.
 # `python dev.py run --scenario custom-drill-edit-layout` prints a first
 # `drill_start name="Custom drill" stage=31` with `landing_y=0`, then three
@@ -55,7 +55,7 @@ stick-down:2
 wait:14
 a:2
 wait:120
-shot event-list
+shot settings-again
 
 wait:40
 a:2

@@ -9,56 +9,7 @@
 # `python dev.py run --scenario custom-drop-heights` prints `drill_start`
 # with height_kind=range heights=40,90 and 10 reps whose `drop` lines show
 # heights from 40 to 90, then `drill_end`. Needs window focus for the shots.
-include boot-to-event-list
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-wait:120
-a:2
-wait:30
+include boot-to-custom-drill
 wait:70
 shot settings-menu
 wait:70

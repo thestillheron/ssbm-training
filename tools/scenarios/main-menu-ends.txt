@@ -1,0 +1,48 @@
+# Acceptance scenario for main-menu ticket 01: only the four items can be
+# chosen, and Options and Data are retail. From the main menu (cursor on RTC
+# 101) up wraps to Data (shot `up-from-rtc-101`), and down from Data wraps to
+# RTC 101 (`down-from-data`): Trophies, between Custom Drill and Options in
+# retail, is never reached. Then down twice to Options, A (shot `options`:
+# retail's Options submenu), B (`back-on-options`: the main menu with the
+# cursor on Options), down to Data, A (`data`), B (`back-on-data`).
+# `python dev.py run --scenario main-menu-ends` prints
+# `event=menu menu=main choice=options` then `choice=data`. Needs window
+# focus for the shots.
+#
+# The main menu takes a move from the frame after the last one is released
+# (no load); submenus read input about 6 frames after the `a` that opens
+# them.
+include boot-to-main-menu
+shot main-menu
+stick-up:2
+wait:30
+shot up-from-rtc-101
+wait:20
+stick-down:2
+wait:30
+shot down-from-data
+wait:20
+stick-down:2
+wait:7
+stick-down:2
+wait:30
+shot hover-options
+wait:10
+a:2
+wait:60
+shot options
+wait:20
+b:2
+wait:60
+shot back-on-options
+wait:20
+stick-down:2
+wait:7
+a:2
+wait:60
+shot data
+wait:20
+b:2
+wait:60
+shot back-on-data
+wait:30

@@ -52,6 +52,10 @@
 #include <sysdolphin/baselib/memory.h>
 #include <sysdolphin/baselib/mobj.h>
 
+#ifdef TRAINING_BUILD
+#include <training/main_menu.h>
+#endif
+
 /* 22C068 */ static void mn_8022C068(HSD_LObj*, int, int);
 
 static HSD_GObj* mn_804D6BA8;
@@ -710,6 +714,9 @@ void mn_80229894(s32 arg0, u16 arg1, s32 arg2)
 /// @brief checks if a menu selection is locked
 bool mn_80229938(MenuKind menu_kind, s32 selection)
 {
+#ifdef TRAINING_BUILD
+    if (menu_kind == MENU_KIND_MAIN) { return training_main_menu_selectable(selection); }
+#endif
     if (menu_kind == MENU_KIND_REG && selection == SEL_REG_ALLSTAR) {
         if (gmMainLib_8015EDD4()) {
             return true;
@@ -2665,6 +2672,9 @@ void mn_8022DB10(HSD_GObj* gp)
     buttons = mn_80229624(4);
     mf->buttons = buttons;
     if (buttons & MenuInput_Confirm) {
+#ifdef TRAINING_BUILD
+        if (training_main_menu_confirm(gp)) { return; }
+#endif
         mn_804D6BC8.cooldown = 5;
         mf->entering_menu = 1;
         sfxForward();

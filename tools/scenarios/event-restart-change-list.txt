@@ -1,9 +1,10 @@
 # Acceptance scenario for drill-select ticket 04 (Restart drill, Change
-# characters, Back to event list, and L+R+A+Start). Boots to the Event Match
+# characters, Back to RTC 101, and L+R+A+Start). Boots to the Event Match
 # list, chooses drill 2, plays a few reps, then:
 #  - pause, Restart drill (the second item): a fresh `drill_start` for drill 2
 #    and the next rep is rep 1 with score 0 (shot `restarted`).
-#  - pause, Back to event list (fourth item): the list reopens on drill 2
+#  - pause, Back to RTC 101 (fourth item, two down from the last pause's
+#    Restart drill, where the cursor stays): the list reopens on drill 2
 #    (shot `list-after-quit`).
 #  - move up to drill 1 and choose it, through the character select to the
 #    match (`drill_start` for drill 1), pause, Change characters (third item):
@@ -31,11 +32,10 @@ wait:60
 shot restarted
 wait:400
 
-# Pause, down three to Back to event list, choose it.
+# Pause, down two to Back to RTC 101 (the menu keeps its cursor on Restart
+# drill from the last pause), choose it.
 start:2
 wait:30
-stick-down:2
-wait:14
 stick-down:2
 wait:14
 stick-down:2

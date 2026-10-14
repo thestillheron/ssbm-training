@@ -2099,6 +2099,7 @@ if args.training:
                 Object(Matching, "training/event_list.c", extra_cflags=training_cflags),
                 Object(Matching, "training/custom_settings.c", extra_cflags=training_cflags),
                 Object(Matching, "training/history.c", extra_cflags=training_cflags),
+                Object(Matching, "training/main_menu.c", extra_cflags=training_cflags),
             ],
             category="game",
         )

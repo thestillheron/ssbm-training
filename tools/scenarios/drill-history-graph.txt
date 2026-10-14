@@ -6,7 +6,7 @@
 #    then `history_record ... attempts=1` with the summary's score.
 #  - attempt 2: Restart from the summary, no input (0/10), to its summary
 #    (`summary-2`): `history_record ... score=0 attempts=2`.
-#  - attempt 3: Restart, 500 frames in, pause, Back to event list: abandoned,
+#  - attempt 3: Restart, 500 frames in, pause, Back to RTC 101: abandoned,
 #    nothing recorded.
 #  - the event list reopens on drill 9 (shot `list-after-quit`: the
 #    description ends "X: History"). X opens the graph (shot `graph`: the
@@ -18,9 +18,6 @@
 #    it and X closes it (`closed-by-x`).
 #  - up to drill 1 (no attempts) and X: shot `no-attempts` reads "No attempts
 #    yet"; B closes.
-#  - down to the Custom drill (row 23) (shot `custom-row`: no "X: History"
-#    hint), X does nothing (shot `custom-x`: the list, no graph, no
-#    `history_graph` line).
 # `python dev.py run --scenario drill-history-graph` prints the rep log lines.
 # Needs window focus for the shots.
 include boot-to-event-list
@@ -129,56 +126,3 @@ shot no-attempts
 wait:100
 b:2
 wait:60
-
-# The Custom drill: 22 downs from drill 1.
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-stick-down:2
-wait:6
-wait:100
-shot custom-row
-wait:100
-x:2
-wait:100
-shot custom-x
-wait:100

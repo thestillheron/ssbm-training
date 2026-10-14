@@ -9,56 +9,7 @@
 # facing away from the player, and the player not moved between reps.
 # Needs window focus for the shots. In a player build the Custom drill is
 # row 9.
-include boot-to-event-list
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-wait:120
-a:2
-wait:30
+include boot-to-custom-drill
 wait:70
 shot settings-menu
 wait:70

@@ -44,7 +44,7 @@ wait:496
 shot summary-1
 wait:100
 
-# Leave by the summary menu's Back to event list (its fourth item), then the
+# Leave by the summary menu's Back to RTC 101 (its fourth item), then the
 # graph.
 stick-down:2
 wait:14

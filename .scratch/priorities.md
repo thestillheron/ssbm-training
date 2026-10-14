@@ -19,6 +19,7 @@ The order of work for the tech-chasing curriculum. Each item is a feature with i
 | 13 | [locked-camera](locked-camera/spec.md) | done | 6, 12 | Camera held on one measured view per tournament-legal stage whenever a drill has vanish on (curriculum and Custom), so camera movement can't give the tech away. |
 | 14 | [own-game-id](own-game-id/spec.md) | done | — | Training build runs as `GTCE01` (ADR-0006) so its saves never touch the player's Melee save; new save unlocks every character and stage; snapshot card gets a save. |
 | 15 | [drill-history](drill-history/spec.md) | done | 14 (ticket 03 only) | Record each curriculum drill attempt's score to the save; X in the event list opens a line graph of score by attempt with the pass mark. |
+| 16 | [main-menu](main-menu/spec.md) | done | 12, 15 | Main menu is RTC 101, Custom Drill, Options, Data (ADR-0007); designed labels, headings and preview panels patched into the menu archives; vanilla modes unreachable. Ticket 04's look sign-off is still the developer's. |
 
 Item 7 is done; its findings ([unclepunch-ui-research/findings.md](unclepunch-ui-research/findings.md)) feed 8, 9 and the Later items.
 
@@ -26,7 +27,6 @@ Item 7 is done; its findings ([unclepunch-ui-research/findings.md](unclepunch-ui
 
 Not ordered and not specced yet. Each gets a spec when triaged.
 
-- **Game mode of its own** (needs-triage): mostly covered by drill-select taking over Event Match (ADR-0005). What remains is a main-menu entry and label of our own, if ever wanted.
 - **Memory card saves** (needs-triage): persist custom drills (curriculum progress is drill-history, item 15).
 - **Patch-based release** (needs-triage): a way for players to apply the training build to their own disc image, with authoring tools off.
 - **Missed-tech getup options** (needs-triage): getup attack, getup rolls, and staying down after a missed tech, as a "Part 2" curriculum.

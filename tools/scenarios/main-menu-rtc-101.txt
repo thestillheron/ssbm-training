@@ -1,0 +1,15 @@
+# Acceptance scenario for main-menu ticket 01 (four-item main menu, RTC 101
+# route). Boots to the main menu (shot `main-menu`: RTC 101, Custom Drill,
+# Options and Data, with no gap, the cursor on the first; their labels are
+# still retail's 1-P Mode, VS. Mode, Options and Data until tickets 03 and
+# 04), chooses RTC 101 (shot `event-list`), then B on the list goes back to
+# the main menu with the cursor on RTC 101 (shot `back-on-rtc-101`), not to
+# the 1-P Mode submenu.
+# `python dev.py run --scenario main-menu-rtc-101` prints
+# `event=menu menu=main choice=rtc_101`. Needs window focus for the shots.
+include boot-to-event-list
+wait:20
+b:2
+wait:60
+shot back-on-rtc-101
+wait:30

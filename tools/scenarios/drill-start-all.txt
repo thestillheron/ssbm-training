@@ -11,7 +11,7 @@
 # check names it as never started until it has one).
 #
 # One cycle per drill: choose it, the character select, wait out the match's
-# Ready/GO, pause (Start), Back to event list (the pause menu's fourth item),
+# Ready/GO, pause (Start), Back to RTC 101 (the pause menu's fourth item),
 # then down one row. The two one-rep drills at the end end by themselves, so
 # they leave through the summary menu's Event list instead.
 include boot-to-event-list

@@ -1064,7 +1064,7 @@ static bool drill_length_reached(void)
     return training_score_counted() >= drill->length;
 }
 
-/* The summary's menu (Restart, Next drill, Event list), shown beside the
+/* The summary's menu (Restart, Next drill, RTC 101), shown beside the
  * summary text while the rep loop is in RepState_Summary. A on an item sets
  * `summary_choice`; the summary state acts on it. */
 typedef enum SummaryChoice {
@@ -1101,22 +1101,43 @@ enum {
 static TrainingMenuItem summary_items[] = {
     { "Restart", "Play it again", true, choose_summary_restart },
     { "Next drill", "Next in list", true, choose_summary_next_drill },
-    { "Event list", "Pick a drill", true, choose_summary_event_list },
+    { "RTC 101", "Pick a drill", true, choose_summary_event_list },
 };
 
 /* Left of the summary text (score.c). */
 #define SUMMARY_MENU_X 30.0F
 #define SUMMARY_MENU_Y 160.0F
 
-static TrainingMenu summary_menu = { "Drill over", summary_items,
-                                     ARRAY_SIZE(summary_items), 0, 0, NULL,
-                                     SUMMARY_MENU_X, SUMMARY_MENU_Y };
+static TrainingMenu summary_menu = {
+    "Drill over",
+    summary_items,
+    ARRAY_SIZE(summary_items),
+    0,    /* cursor */
+    0,    /* top */
+    NULL, /* text */
+    SUMMARY_MENU_X,
+    SUMMARY_MENU_Y,
+};
+
+/* The Custom drill's summary menu: no Next drill (there is no drill after
+ * it); Settings returns to its settings menu. */
+static TrainingMenuItem custom_summary_items[] = {
+    { "Restart", "Play it again", true, choose_summary_restart },
+    { "Settings", "Change the drill", true, choose_summary_event_list },
+};
 
 /// Shows the summary's menu, with Next drill greyed out on the last drill.
 static void show_summary_menu(void)
 {
-    summary_items[SUMMARY_ITEM_NEXT_DRILL].enabled =
-        training_drill_has_next();
+    if (training_drill_is_custom(training_drill_current_index())) {
+        summary_menu.items = custom_summary_items;
+        summary_menu.count = ARRAY_SIZE(custom_summary_items);
+    } else {
+        summary_menu.items = summary_items;
+        summary_menu.count = ARRAY_SIZE(summary_items);
+        summary_items[SUMMARY_ITEM_NEXT_DRILL].enabled =
+            training_drill_has_next();
+    }
     summary_choice = SummaryChoice_None;
     /* The text from the last time stays; only the cursor starts over. */
     summary_menu.cursor = 0;

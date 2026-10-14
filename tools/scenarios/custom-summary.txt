@@ -1,0 +1,37 @@
+# Acceptance scenario for main-menu ticket 02: a custom drill's summary menu
+# is Restart and Settings, with no Next drill. Chooses Custom Drill, turns
+# off Tech in place, starts and gives no input for the default 10 reps (shot
+# `summary`: Restart and Settings only; shot `summary-settings`: Settings
+# highlighted). A on Settings opens the settings menu (shot `settings-kept`)
+# with Tech in place still off. `python dev.py run --scenario custom-summary`
+# prints `menu menu="Drill over" item="Settings"`. Needs window focus for the
+# shots.
+include boot-to-custom-drill
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-up:2
+wait:14
+a:2
+wait:30
+include event-css
+wait:2
+stick-down+stick-left:50
+wait:4
+stick-right:22
+wait:4
+stick-up:8
+wait:4
+a:2
+wait:2100
+shot summary
+wait:30
+stick-down:2
+wait:14
+shot summary-settings
+wait:20
+a:2
+wait:200
+shot settings-kept
+wait:60

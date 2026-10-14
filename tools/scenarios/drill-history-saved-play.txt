@@ -54,7 +54,7 @@ wait:600
 wait:650
 shot summary-2
 
-# Leave by the summary's Event list (its third item), then give Melee's
+# Leave by the summary's RTC 101 (its third item), then give Melee's
 # background write to the card time.
 stick-down:2
 wait:14

@@ -36,6 +36,12 @@ bool training_event_list_at_end(const MnEventData* data);
 /// settings menu is drawn over the list).
 void training_event_list_set_visible(MnEventData* data, bool visible);
 
+/// Hides everything of the screen that belongs to the list, rows, cursor,
+/// scroll arrows and description box, leaving the menu background: the
+/// Custom Drill screen (custom_settings.c) is this scene with the list gone.
+/// It stays hidden until the scene is freed.
+void training_event_list_hide(HSD_GObj* gobj);
+
 #endif
 
 #endif

@@ -37,10 +37,10 @@ Short for "camera stick," the yellow analog stick on the right side of the GameC
 Short for "current" or "cursor."
 
 @section glossary_curriculum curriculum
-The fixed, ordered set of @ref glossary_drill "drills" designed to teach tech chasing step by step, from one landing timing and one @ref glossary_tech_option "tech option" up to mixed timing and a random choice of options. Avoid "lesson plan" or "course".
+A fixed, ordered set of @ref glossary_drill "drills" designed to teach one part of @ref glossary_reaction_tech_chase "reaction tech chasing" step by step. Each has a name players see: the basic one, @ref glossary_rtc_101 "RTC 101", goes from one landing timing and one @ref glossary_tech_option "tech option" up to mixed timing and a random choice of options. Avoid "lesson plan" or "course".
 
 @section glossary_custom_drill custom drill
-A @ref glossary_drill "drill" whose settings the player chooses, as opposed to one from the @ref glossary_curriculum "curriculum". It is the last event on the Event Match list, runs on whichever stage the player picks on its stage select, and its settings last for the session.
+A @ref glossary_drill "drill" whose settings the player chooses, as opposed to one from the @ref glossary_curriculum "curriculum". It is chosen from the main menu's Custom Drill item, which opens its settings menu, runs on whichever stage the player picks on its stage select, and its settings last for the session.
 
 @section glossary_deg deg
 Short for "degrees."
@@ -61,7 +61,7 @@ One configured tech-chasing activity, played as a series of @ref glossary_rep "r
 An Event Match event whose match is a @ref glossary_drill "drill" (ADR-0005): chosen from the @ref glossary_event_list "event list", it opens on the character select, then a match on the drill's own stage where the rep loop runs. It never writes Event Match's scores or cleared bits. Its Start opens the @ref glossary_pause_menu "pause menu", and its end shows the @ref glossary_drill_summary "drill summary". Avoid "drill match" or "drill mode".
 
 @section glossary_drill_summary drill summary
-The screen shown when a @ref glossary_drill "drill" ends: its name, the score, the @ref glossary_pass_mark "pass mark", pass or fail, and for each @ref glossary_tech_option "tech option" the opponent did (not the one the drill aimed for) its success rate and how many of its reps were early or late (their @ref glossary_timing "timing"). The summary has a menu: Restart (the same drill from rep 1), Next drill (the next entry in the @ref glossary_drill_table "drill table", keeping both fighters and reloading the match scene, so the stage may change; greyed out on the last drill) and Event list (back to the Event Match list on this drill).
+The screen shown when a @ref glossary_drill "drill" ends: its name, the score, the @ref glossary_pass_mark "pass mark", pass or fail, and for each @ref glossary_tech_option "tech option" the opponent did (not the one the drill aimed for) its success rate and how many of its reps were early or late (their @ref glossary_timing "timing"). The summary has a menu: Restart (the same drill from rep 1), Next drill (the next entry in the @ref glossary_drill_table "drill table", keeping both fighters and reloading the match scene, so the stage may change; greyed out on the last drill) and RTC 101 (back to the @ref glossary_event_list "event list" on this drill). A @ref glossary_custom_drill "custom drill"'s summary has no Next drill, and Settings (back to its settings menu) in place of RTC 101.
 
 @section glossary_drill_table drill table
 The const table of @ref glossary_drill "drills" in `src/training/drill.c`: the @ref glossary_curriculum "curriculum", plus test drills in authoring builds. The rep loop runs one entry, the current drill.
@@ -79,7 +79,7 @@ Stands for "environmental collision box."
 The @ref glossary_pause_menu "pause menu" item that opens the layout editor over the frozen match, in every @ref glossary_training_build "training build". It edits the current @ref glossary_drill "drill"'s @ref glossary_session_copy "session copy" of its @ref glossary_layout "layout", with the fighters as markers: the opponent hangs at the selected drop height over the landing point, the player stands at its start. The stick moves the landing point (a flick up or down steps between surfaces), the C-stick the player's start (x along the floor, y choosing the surface), the d-pad selects, raises, lowers, adds (X) and removes (Y) drop heights, holding Z or a trigger makes moves fine, and A reverts to the compiled layout. Values are kept in tenths of a unit and shown as text. B or Start leaves: if the layout changed, the drill restarts from rep 1 with it; otherwise it carries on. Avoid "layout mode" or "level editor".
 
 @section glossary_event_list event list
-The Event Match select screen, which in the @ref glossary_training_build "training build" lists the @ref glossary_drill "drills" in @ref glossary_curriculum "curriculum" order, one event per drill, instead of the vanilla events (ADR-0005). Avoid "drill menu" or "ESS" outside code.
+The Event Match select screen, which in the @ref glossary_training_build "training build" lists the @ref glossary_drill "drills" of @ref glossary_rtc_101 "RTC 101" in order, one event per drill, instead of the vanilla events (ADR-0005). Players reach it from the main menu's RTC 101 item and see it as "RTC 101". Avoid "drill menu" or "ESS" outside code.
 
 @section glossary_ft ft
 Short for "fighter."
@@ -159,7 +159,7 @@ Stands for "motion variables." Used by #HSD_GObj::user_data structs (such as #Fi
 The number of successful @ref glossary_rep "reps" a @ref glossary_drill "drill" needs for the player to pass it, shown in the @ref glossary_drill_summary "drill summary".
 
 @section glossary_pause_menu pause menu
-The text menu our Start opens in a @ref glossary_drill_event "drill event", over a match frozen with the game's own pause flag, in place of the retail pause (which never runs there): Resume, Restart drill, Change characters, Back to event list and @ref glossary_edit_layout "Edit layout", then @ref glossary_print_layout "Print layout" and Print camera (the view for the @ref glossary_locked_camera "locked camera") in authoring builds, with the @ref glossary_punish_window "punish window" lengths beside it. B on the menu does nothing; only Start or Resume unpauses (or leaving Edit layout, with B or Start). Not Training Mode's own pause menu, which is vanilla. Avoid "pause screen".
+The text menu our Start opens in a @ref glossary_drill_event "drill event", over a match frozen with the game's own pause flag, in place of the retail pause (which never runs there): Resume, Restart drill, Change characters, Back to RTC 101 (Settings, back to its settings menu, in a @ref glossary_custom_drill "custom drill") and @ref glossary_edit_layout "Edit layout", then @ref glossary_print_layout "Print layout" and Print camera (the view for the @ref glossary_locked_camera "locked camera") in authoring builds, with the @ref glossary_punish_window "punish window" lengths beside it. B on the menu does nothing; only Start or Resume unpauses (or leaving Edit layout, with B or Start). Not Training Mode's own pause menu, which is vanilla. Avoid "pause screen".
 
 @section glossary_phys phys
 Short for "physics."
@@ -188,6 +188,9 @@ The frames from the opponent landing up to, but not including, its first actiona
 @section glossary_rad rad
 Short for "radians."
 
+@section glossary_reaction_tech_chase reaction tech chase
+Tech chasing by reacting to what the opponent does on landing (its @ref glossary_tech_option "tech option", and later its getup) and punishing it, rather than guessing or conditioning. It is the skill the @ref glossary_training_build "training build" trains, through its @ref glossary_curriculum "curricula" and the @ref glossary_custom_drill "custom drill". Shortened to "RTC" in what players see. Avoid "tech chase training".
+
 @section glossary_rep rep
 One cycle of a @ref glossary_drill "drill": the opponent drops in tumble, lands, carries out its @ref glossary_tech_option "tech option", and the rep ends as a success (the player hit or grabbed it in the @ref glossary_punish_window "punish window") or a failure (it became actionable unpunished). A rep is void, and doesn't count, if the player hits the opponent before it lands. Each rep ends with a @ref glossary_rep_result "rep result". Avoid "round", "attempt" or "instance".
 
@@ -199,6 +202,9 @@ What the player is shown during the pause after a @ref glossary_rep "rep": what 
 
 @section glossary_rot rot
 Short for "rotation."
+
+@section glossary_rtc_101 RTC 101
+The basic @ref glossary_curriculum "curriculum", and the name players see for it on the main menu and in its @ref glossary_event_list "event list". RTC stands for @ref glossary_reaction_tech_chase "reaction tech chase".
 
 @section glossary_run_copy run copy
 The throwaway copy of the @ref glossary_memory_card_snapshot "memory card snapshot" (`build/memcard/run.USA.raw`) that `dev.py` makes before each @ref glossary_movie "movie" launch and puts in slot A for that launch only. Melee saves to it during the run; the next run replaces it.

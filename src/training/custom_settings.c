@@ -477,7 +477,21 @@ static const SettingsRow rows[] = {
 
 static char labels[ROW_COUNT][LABEL_CHARS];
 static TrainingMenuItem items[ROW_COUNT];
-static TrainingMenu menu = { "Custom drill", items, ROW_COUNT };
+/* The menu's left edge: far enough left that its panel covers the empty
+ * cells of the event list's table, which the menu background still draws
+ * at the list's left. */
+#define MENU_X 108.0F
+
+static TrainingMenu menu = {
+    "Custom drill",
+    items,
+    ROW_COUNT,
+    0,    /* cursor */
+    0,    /* top */
+    NULL, /* text */
+    MENU_X,
+    0.0F, /* y: the default */
+};
 
 static bool menu_open;
 static int port;
@@ -536,7 +550,7 @@ static void show_message(const char* message)
     message_frames = MESSAGE_FRAMES;
 }
 
-static void open_menu(MnEventData* data)
+static void open_menu(HSD_GObj* gobj)
 {
     menu_open = true;
     port = mn_802295AC();
@@ -545,17 +559,24 @@ static void open_menu(MnEventData* data)
     height_mode = mode_of(training_drill_custom());
     training_menu_reset(&menu);
     refresh_labels();
-    training_event_list_set_visible(data, false);
+    training_event_list_hide(gobj);
     training_menu_show(&menu);
 }
 
-static void close_menu(MnEventData* data)
+static void close_menu(void)
 {
     menu_open = false;
     training_menu_free(&menu);
     training_text_free(&message_text);
     training_panel_free(&message_panel);
-    training_event_list_set_visible(data, true);
+}
+
+/// True while the event scene is the Custom Drill screen: it was opened on
+/// the Custom drill's index, past the list's last row (from the main menu, or
+/// back from a custom drill or its character select).
+static bool on_custom_screen(const MnEventData* data)
+{
+    return training_drill_is_custom(data->first_event + data->page);
 }
 
 bool training_custom_settings_input(HSD_GObj* gobj, u64* inputs)
@@ -569,10 +590,8 @@ bool training_custom_settings_input(HSD_GObj* gobj, u64* inputs)
     data = gobj->user_data;
 
     if (!menu_open) {
-        if ((*inputs & MenuInput_Confirm) &&
-            training_drill_is_custom(data->first_event + data->page))
-        {
-            open_menu(data);
+        if (on_custom_screen(data)) {
+            open_menu(gobj);
             return true;
         }
         return false;
@@ -580,12 +599,17 @@ bool training_custom_settings_input(HSD_GObj* gobj, u64* inputs)
 
     action = training_menu_update(&menu, port);
     if (start_chosen) {
-        close_menu(data);
+        /* The scene stays on the Custom drill's index, so the confirm
+         * chooses the Custom drill. */
+        close_menu();
         *inputs = MenuInput_Confirm;
         return false;
     }
     if (action == TrainingMenuAction_Back) {
-        close_menu(data);
+        /* The menu has played its back sound. */
+        close_menu();
+        mn_804A04F0.entering_menu = 0;
+        mn_80229894(MENU_KIND_MAIN, SEL_MAIN_VS, 3);
         return true;
     }
     if (pending_message != NULL) {

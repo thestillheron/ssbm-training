@@ -1,15 +1,12 @@
 # Acceptance scenario for own-game-id ticket 01: after a new save is created
-# on a blank card, the VS-mode character select shows every character
+# on a blank card, the Custom drill's character select shows every character
 # (Marth, Falco, Mewtwo and Mr. Game & Watch among them) and no "?" slots.
 # Run against a blank card (see boot-new-save-to-main-menu); shot
 # `character-select` is the check.
 
 include boot-new-save-to-main-menu
 
-stick-down:2
-wait:7
-a:2
-wait:14
+include main-menu-to-custom-drill
 a:2
 wait:60
 shot character-select

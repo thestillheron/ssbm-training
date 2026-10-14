@@ -3,7 +3,7 @@
 # keeps a history), lets a rep or two run, then pause, Edit layout (the fifth
 # item), stick right for 30 frames, B: the drill restarts from rep 1 with
 # landing_x=30. It plays to its summary with no input (shot `summary`:
-# 0/10) and leaves by the summary's Event list. The rep log has `drill_end`
+# 0/10) and leaves by the summary's RTC 101. The rep log has `drill_end`
 # but no `history_record` line. On the reopened list X shows "No attempts
 # yet" (shot `no-attempts`).
 # `python dev.py run --scenario drill-history-edited-layout` prints the rep

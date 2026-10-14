@@ -1,20 +1,13 @@
 # Boot to character select: from a freshly launched training build to the
-# VS-mode character select screen. Reusable prefix: `include` it from others.
+# Custom drill's player + CPU character select (VS. Mode is gone, ADR-0007).
+# Reusable prefix: `include` it from others.
 #
 # Timing is frame-exact (movie frames from power-on; see
-# docs/developer-workflow.md and boot-to-main-menu). Presses are 2 frames. The
-# VS. Mode submenu reads input about 6 frames after the `a` that opens it, so
-# the next `a` comes 16 frames after, as a margin for load changes.
+# docs/developer-workflow.md). Presses are 2 frames.
 
-include boot-to-main-menu
-shot main-menu
+include boot-to-custom-drill
 
-# 194: main menu (cursor on 1-P Mode) -> VS. Mode -> its submenu (cursor on
-# Melee) -> character select.
-stick-down:2
-wait:7
-a:2
-wait:14
+# The settings menu, cursor on Start: Start goes on to the character select.
 a:2
 wait:60
 shot character-select

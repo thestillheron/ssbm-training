@@ -1,0 +1,9 @@
+# Boot to the Custom drill's settings menu: from a freshly launched training
+# build, the main menu (shot `main-menu`), then Custom Drill, ending with the
+# settings menu open and its cursor on Start (shot `custom-settings`).
+# Reusable prefix: `include` it, then edit settings, or `a:2`, `wait:30` and
+# `include event-css` to go on to the character select and the stage select.
+
+include boot-to-main-menu
+shot main-menu
+include main-menu-to-custom-drill

@@ -88,7 +88,7 @@ wait:496
 shot summary-4
 wait:100
 
-# Back to event list (the summary menu's fourth item), then the graph.
+# Back to RTC 101 (the summary menu's fourth item), then the graph.
 stick-down:2
 wait:14
 stick-down:2

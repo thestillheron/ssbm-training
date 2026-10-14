@@ -100,7 +100,7 @@ def header(entries, memcard=True):
     h[0x8D] = 1  # bDSPHLE
     # bFastDiscSpeed: the one setting not as recorded. With emulated disc
     # speed every load (boot, main menu, character select, stage) takes
-    # seconds, and boot-to-training could not reach Training within its 20 s
+    # seconds, and the old boot-to-training could not reach Training in its 20 s
     # budget. Fast disc only shortens loads; runs stay frame-exact.
     h[0x8E] = 1
     h[0x8F] = 1  # CPUCore: JIT64

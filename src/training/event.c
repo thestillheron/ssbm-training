@@ -44,7 +44,8 @@ int training_event_drill_index(void)
      * it is a drill's index in the table. */
     int index = event_data()->unk_535;
 
-    if (index < training_drill_event_count()) {
+    /* The Custom drill's index is past the list's last row. */
+    if (index <= training_drill_custom_index()) {
         return index;
     }
     return -1;

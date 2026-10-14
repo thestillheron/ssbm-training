@@ -105,6 +105,48 @@ class RunTests(FakeDolphinCase):
         self.assertEqual(original_fingerprint(), before)
 
     @requires_disc
+    def test_run_writes_the_patched_menu_archives_as_regular_files(self):
+        from tools.archive_patcher import read_sis_lines
+
+        r = dev(REPO_ROOT, "setup", str(find_disc()))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        before = original_fingerprint()
+        exe, _ = make_fake_dolphin(self.tmp.name)
+        self.configure_dolphin(exe)
+
+        r = dev(REPO_ROOT, "run")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+        game_files = REPO_ROOT / "build" / "training" / "game" / "files"
+        for name in ("SdMenu.usd", "SdMenu.dat"):
+            patched = game_files / name
+            self.assertTrue(patched.is_file() and not patched.is_symlink(), name)
+            self.assertEqual(patched.stat().st_nlink, 1, f"{name} is a link to another file")
+            self.assertEqual(patched.stat().st_size, (ORIG / "files" / name).stat().st_size)
+            self.assertEqual(
+                read_sis_lines(patched, 0x81),
+                ["Learn to tech chase on reaction,", "one step at a time."],
+            )
+            self.assertEqual(
+                read_sis_lines(patched, 0x82),
+                ["Set up a drill of your own:", "options, stage, layout, vanish."],
+            )
+        # Options and Data keep their retail description.
+        self.assertEqual(
+            read_sis_lines(game_files / "SdMenu.usd", 0x84), read_sis_lines(ORIG / "files" / "SdMenu.usd", 0x84)
+        )
+        # MnMaAll's art is patched too: a regular file of the same size, with
+        # other bytes.
+        art = game_files / "MnMaAll.usd"
+        self.assertTrue(art.is_file() and not art.is_symlink() and art.stat().st_nlink == 1)
+        self.assertEqual(art.stat().st_size, (ORIG / "files" / "MnMaAll.usd").stat().st_size)
+        self.assertNotEqual(sha1(art), sha1(ORIG / "files" / "MnMaAll.usd"))
+        # An archive with no replacements is the original's bytes.
+        self.assertEqual(sha1(game_files / "MnSlChr.usd"), sha1(ORIG / "files" / "MnSlChr.usd"))
+        # The extracted original files were never written to.
+        self.assertEqual(original_fingerprint(), before)
+
+    @requires_disc
     def test_run_clears_the_shots_folder(self):
         r = dev(REPO_ROOT, "setup", str(find_disc()))
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)

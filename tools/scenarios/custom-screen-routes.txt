@@ -1,0 +1,44 @@
+# Acceptance scenario for main-menu ticket 02 (Custom Drill as a screen of
+# its own): the routes in and out. Chooses Custom Drill (shot
+# `custom-settings` from boot-to-custom-drill: the settings menu on the menu
+# background, no drill rows behind it), then:
+#  - B on the settings menu: the main menu with the cursor on Custom Drill
+#    (shot `back-on-custom-drill`);
+#  - A again: the settings menu (shot `settings-again`);
+#  - Start: the character select (shot `character-select`), then B on it:
+#    back to the settings menu (shot `back-in-settings`);
+#  - Start, the character select, the stage select (Final Destination) and
+#    the match: `drill_start` carries the custom settings.
+# `python dev.py run --scenario custom-screen-routes` prints `menu menu=main
+# choice=custom_drill` twice, `menu` lines for Start (three times), then
+# `drill_start name="Custom drill" stage=32`. Shots land late, so the scenario
+# holds still after each. Needs window focus for the shots.
+include boot-to-custom-drill
+b:2
+wait:80
+shot back-on-custom-drill
+wait:20
+a:2
+wait:100
+shot settings-again
+wait:20
+a:2
+wait:80
+shot character-select
+wait:60
+b:40
+wait:240
+shot back-in-settings
+wait:20
+a:2
+wait:30
+include event-css
+wait:2
+stick-down+stick-left:50
+wait:4
+stick-right:22
+wait:4
+stick-up:8
+wait:4
+a:2
+wait:300

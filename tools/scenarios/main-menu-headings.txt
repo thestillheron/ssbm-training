@@ -1,0 +1,47 @@
+# Acceptance scenario for main-menu ticket 05: the heading strip. The RTC 101
+# list reads "RTC 101" with nothing beneath it (shot `heading-rtc-101`), the
+# Custom Drill screen "Custom Drill" with nothing beneath it (`heading-custom-
+# drill`), the RTC 101 list again after the Custom Drill screen still "RTC 101"
+# (`heading-rtc-101-again`: the Custom Drill heading is a swap made at run
+# time, and it must be undone), and Options and Data keep their retail
+# headings (`heading-options`, `heading-data`). Needs window focus for the
+# shots.
+include boot-to-main-menu
+a:2
+wait:60
+shot heading-rtc-101
+wait:30
+b:2
+wait:60
+stick-down:2
+wait:7
+a:2
+wait:60
+shot heading-custom-drill
+wait:30
+b:2
+wait:60
+stick-up:2
+wait:7
+a:2
+wait:60
+shot heading-rtc-101-again
+wait:30
+b:2
+wait:60
+stick-down:2
+wait:7
+stick-down:2
+wait:7
+a:2
+wait:60
+shot heading-options
+wait:30
+b:2
+wait:60
+stick-down:2
+wait:7
+a:2
+wait:60
+shot heading-data
+wait:30

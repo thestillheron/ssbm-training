@@ -457,6 +457,9 @@ void mnEvent_8024D864(HSD_GObj* gobj)
         if (inputs & MenuInput_Back) {
             sfxBack();
             mn_804A04F0.entering_menu = 0;
+#ifdef TRAINING_BUILD
+            { mn_80229894(MENU_KIND_MAIN, SEL_MAIN_1P, 3); return; }
+#endif
             mn_80229894(1, 1, 3);
             return;
         }

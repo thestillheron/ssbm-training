@@ -8,18 +8,19 @@
 # a load (and so the screen) a little later:
 #  - `start` from frame 62 skips the logo.
 #  - The game runs as GTCE01 against a save that Melee made itself (ADR-0006),
-#    and with it the title screen takes two more `start` presses, about 40
-#    frames apart (against the player's vanilla save one was enough). Two
-#    presses were not enough at any spacing tried (115, 135 and 160 frames
-#    in); the third reached the main menu at 148 to 156.
-#  - The main menu reads input from 30 frames after the last `start`.
+#    and with it the title screen takes one more `start`, about 40 frames
+#    later, which goes on to the main menu. (This prefix used to press a
+#    third `start` here, which chose 1-P Mode: retail's top item, and in the
+#    four-item main menu RTC 101.)
+#  - The main menu reads input from 30 frames after the last `start`; the
+#    prefix waits well past that, and past the save the main menu makes on
+#    entry ("SAVING"): a choice made during it was missing from the rep log
+#    when tried.
 # A 2-frame press is enough: movie input can't be dropped.
 
 wait:72
 start:2
 wait:38
 start:2
-wait:38
-start:2
-wait:40
-# Frame 194: main menu, cursor on 1-P Mode, ready for input.
+wait:80
+# Frame 194: main menu, cursor on RTC 101, ready for input.

@@ -6,63 +6,8 @@
 
 include boot-new-save-to-main-menu
 
-# 1-P Mode, then Event Match (as boot-to-event-list).
-a:2
-wait:14
-stick-down:2
-wait:4
-a:2
-wait:40
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-wait:120
-shot custom-row
-a:2
-wait:30
+# Custom Drill, then Start on its settings menu (as boot-to-custom-drill).
+include main-menu-to-custom-drill
 a:2
 wait:30
 include event-css

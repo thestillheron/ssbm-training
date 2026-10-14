@@ -2,56 +2,7 @@
 # custom-settings-length, but the pass mark is set to 3 (None cycles 1, 2, 3):
 # `drill_start` has length=reps/5 pass=3, and the shot summary shows
 # "Pass mark 03/05" and PASS or FAIL. Needs window focus for the shots.
-include boot-to-event-list
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-wait:120
-a:2
-wait:30
+include boot-to-custom-drill
 wait:70
 shot settings-menu
 wait:70

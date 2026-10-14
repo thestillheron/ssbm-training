@@ -1,64 +1,15 @@
 # Acceptance scenario for custom-drills ticket 01 (Custom drill event with
-# defaults). Boots to the Event Match list and presses down 23 times: the
-# cursor stops on the last row, Custom drill (shot custom-row: its description
-# and "No pass mark"). It chooses it, goes through the character select and
+# defaults). Chooses Custom Drill on the main menu, goes through the character select and
 # the stage select (Final Destination), then gives no input for the drill's
 # 10 reps. `python dev.py run --scenario custom-drill-defaults` prints a
 # `menu` line for the Custom drill, then `drill_start name="Custom drill"
 # stage=32` with one height (40), landing_x=0 landing_y=0, start_dx=0
 # start_dy=0, pool=15 (all four options), vanish=0 reset=1 facing=0
 # length=reps/10 pass=0, then 10 reps and `drill_end`. Needs window focus for
-# the shots. In a player build the Custom drill is row 9.
-include boot-to-event-list
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-wait:120
-shot custom-row
+# the shots.
+include boot-to-custom-drill
 a:2
+wait:30
 include event-css
 wait:2
 

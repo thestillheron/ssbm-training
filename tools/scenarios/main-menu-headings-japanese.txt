@@ -1,0 +1,52 @@
+# Acceptance scenario for main-menu ticket 05, in Japanese: after switching
+# Options' language to Japanese the headings on our screens are the same
+# English ones (shots `heading-ja-custom-drill`, `heading-ja-rtc-101`), and
+# Options keeps its retail (Japanese) heading (`heading-ja-options`). Needs
+# window focus for the shots. The language is saved to the run's own copy of
+# the memory card, not your snapshot.
+include boot-to-main-menu
+stick-down:2
+wait:7
+stick-down:2
+wait:7
+a:2
+wait:60
+stick-down:2
+wait:7
+stick-down:2
+wait:7
+stick-down:2
+wait:20
+a:2
+wait:90
+stick-left:2
+wait:20
+a:2
+wait:90
+a:2
+wait:90
+b:2
+wait:90
+b:2
+wait:120
+# On Options in the Japanese main menu.
+a:2
+wait:60
+shot heading-ja-options
+wait:30
+b:2
+wait:60
+stick-up:2
+wait:7
+a:2
+wait:60
+shot heading-ja-custom-drill
+wait:30
+b:2
+wait:60
+stick-up:2
+wait:7
+a:2
+wait:60
+shot heading-ja-rtc-101
+wait:30

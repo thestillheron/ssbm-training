@@ -1,0 +1,48 @@
+# Acceptance scenario for main-menu ticket 04: after switching Options'
+# language to Japanese, the main menu shows the same art, shots
+# `art-ja-rtc-101`, `art-ja-custom-drill`, `art-ja-options` and `art-ja-data`.
+# Needs window focus for the shots. The language is saved to the run's own copy
+# of the memory card, not your snapshot.
+include boot-to-main-menu
+stick-down:2
+wait:7
+stick-down:2
+wait:7
+a:2
+wait:60
+stick-down:2
+wait:7
+stick-down:2
+wait:7
+stick-down:2
+wait:20
+a:2
+wait:90
+stick-left:2
+wait:20
+a:2
+wait:90
+a:2
+wait:90
+b:2
+wait:90
+b:2
+wait:120
+shot art-ja-options
+wait:20
+stick-down:2
+wait:60
+shot art-ja-data
+wait:20
+stick-up:2
+wait:7
+stick-up:2
+wait:7
+stick-up:2
+wait:60
+shot art-ja-rtc-101
+wait:20
+stick-down:2
+wait:60
+shot art-ja-custom-drill
+wait:30

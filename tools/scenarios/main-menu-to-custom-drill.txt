@@ -1,0 +1,17 @@
+# Fragment, not a scenario of its own: from the main menu with the cursor on
+# RTC 101 (ready for input) to the Custom drill's settings menu, cursor on
+# Start (shot `custom-settings`). Custom Drill is the main menu's second item
+# (ADR-0007). For now it opens the event list on the Custom drill row and its
+# settings menu at once; the list builds 20 frames after the `a`, and the
+# menu opens on the frame it does. Shots can land late, so it holds still
+# after its shot.
+#
+# Timing is frame-exact (movies; see docs/developer-workflow.md). The main
+# menu takes the `a` from the frame after the down is released (no load).
+
+stick-down:2
+wait:7
+a:2
+wait:60
+shot custom-settings
+wait:60

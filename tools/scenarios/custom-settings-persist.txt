@@ -1,60 +1,11 @@
 # Acceptance scenario for custom-drills ticket 02: settings last for the
 # session. Chooses the Custom drill, turns off Tech in place, starts, then
-# from the pause menu goes Back to event list and chooses the Custom drill
-# again: the settings menu shows Tech in place still off (shot
+# from the pause menu goes to Settings (the Custom drill's back item): the
+# settings menu opens by itself and shows Tech in place still off (shot
 # settings-kept). Restarting the drill from the pause menu also keeps it:
 # the second `drill_start` has pool=14, as the first. Needs window focus for
 # the shots.
-include boot-to-event-list
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-wait:120
-a:2
-wait:30
+include boot-to-custom-drill
 stick-down:2
 wait:14
 a:2
@@ -89,8 +40,6 @@ wait:14
 stick-down:2
 wait:14
 a:2
-wait:240
-a:2
-wait:100
+wait:340
 shot settings-kept
 wait:70

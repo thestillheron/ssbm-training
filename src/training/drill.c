@@ -588,7 +588,7 @@ bool training_drill_has_next(void)
 
 int training_drill_event_count(void)
 {
-    return DRILL_COUNT + 1;
+    return DRILL_COUNT;
 }
 
 int training_drill_custom_index(void)

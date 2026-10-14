@@ -1,0 +1,22 @@
+# Acceptance scenario for main-menu ticket 04 (labels and preview panels). The
+# main menu with the cursor on each of the four items, shots `art-rtc-101`,
+# `art-custom-drill`, `art-options` and `art-data`: our labels tinted orange
+# when not hovered, black with the highlight when hovered, and the preview
+# panel on the right (ours for the first two, retail's for Options and Data).
+# Needs window focus for the shots.
+include boot-to-main-menu
+wait:60
+shot art-rtc-101
+wait:30
+stick-down:2
+wait:60
+shot art-custom-drill
+wait:30
+stick-down:2
+wait:60
+shot art-options
+wait:30
+stick-down:2
+wait:60
+shot art-data
+wait:30

@@ -49,6 +49,7 @@ import re
 import shutil
 import stat
 import subprocess
+import tempfile
 import sys
 import time
 from pathlib import Path
@@ -510,13 +511,35 @@ def remove_tree(path):
         )
 
 
+def verify_archive_patches():
+    """Apply every ARCHIVE_PATCHES entry to a throwaway copy, so a PatchError
+    (a bad offset, a wrong texture size) shows up in `check` and not first
+    when `run` assembles the game folder. Skipped for archives that are not
+    in the extracted disc."""
+    from tools.archive_patcher import PatchError, patch_archive
+    from tools.archive_patches import ARCHIVE_PATCHES
+
+    with tempfile.TemporaryDirectory(prefix="ssbm-patches-") as tmp:
+        for name, replacements in ARCHIVE_PATCHES.items():
+            src = ORIG / "files" / name
+            if not src.is_file():
+                continue
+            try:
+                patch_archive(src, Path(tmp) / name, replacements)
+            except PatchError as e:
+                raise DevError(f"patching {name}: {e}")
+
+
 def assemble_game(dol):
     """Mirror the extracted disc into GAME_DIR using links, with `dol` as main.dol.
 
     Nothing under orig/ is ever written: main.dol and boot.bin (whose game ID
     becomes TRAINING_GAME_ID) in the game folder are fresh copies (never links
-    to the originals), and everything else is read-only linked.
+    to the originals), and everything else is read-only linked. The main menu's
+    archives (tools/archive_patches.py) are fresh patched copies too.
     """
+    from tools.archive_patcher import PatchError, patch_archive
+    from tools.archive_patches import ARCHIVE_PATCHES
     from tools.memcard import TRAINING_GAME_ID
 
     remove_tree(GAME_DIR)
@@ -534,6 +557,11 @@ def assemble_game(dol):
             header = bytearray(src.read_bytes())
             header[: len(TRAINING_GAME_ID)] = TRAINING_GAME_ID.encode("ascii")
             dest.write_bytes(header)
+        elif rel.parts[0] == "files" and len(rel.parts) == 2 and rel.name in ARCHIVE_PATCHES:
+            try:
+                patch_archive(src, dest, ARCHIVE_PATCHES[rel.name])
+            except PatchError as e:
+                raise DevError(f"patching {rel.name}: {e}")
         elif not link_or_copy(src, dest):
             copied += 1
     if copied:
@@ -1173,6 +1201,11 @@ def cmd_check(args):
             results[name] = None
         except DevError as e:
             results[name] = str(e)
+    try:
+        verify_archive_patches()
+        results["archive-patches"] = None
+    except DevError as e:
+        results["archive-patches"] = str(e)
     say()
     say("check summary")
     for mode, err in results.items():

@@ -10,7 +10,7 @@
 # Timing measured with no card: the notice that there is no card is up by
 # frame 100 and `a` answers "Continue without saving" (the intro, title and
 # main menu then take a `start` each, 120 frames apart, the fourth `start`
-# opens the 1-P Mode menu).
+# chooses RTC 101 and opens the event list).
 wait:100
 a:2
 wait:60
@@ -22,10 +22,6 @@ start:2
 wait:118
 start:2
 wait:100
-shot one-p-mode
-stick-down:2
-wait:4
-a:2
 wait:40
 shot event-list
 stick-down:2
@@ -51,7 +47,7 @@ wait:600
 wait:700
 shot summary
 
-# Leave by the summary's Event list (its third item), then open the graph.
+# Leave by the summary's RTC 101 (its third item), then open the graph.
 stick-down:2
 wait:14
 stick-down:2

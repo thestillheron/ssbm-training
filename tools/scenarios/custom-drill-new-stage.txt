@@ -9,54 +9,9 @@
 # landing_x=0, then one with the edited landing_x (the right edge), then
 # `drill_start stage=31` with landing_x=0 again and `layout` lines with
 # landing_x=0, and no `invalid_layout`. Needs window focus for the shots.
-include boot-to-event-list
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:14
-stick-down:2
-wait:120
+include boot-to-custom-drill
 a:2
+wait:30
 include event-css
 wait:2
 

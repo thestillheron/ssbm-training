@@ -106,7 +106,7 @@ class ScenarioMovieTests(unittest.TestCase):
         self.assertEqual(movie.build([])[0x97], 0x01)
 
     def test_header_turns_on_fast_disc_speed(self):
-        # boot-to-training only fits its time budget with fast disc loads.
+        # The boot prefixes were timed with fast disc loads.
         m, _, _ = self.movie({"s": "wait:10\n"})
         self.assertEqual(m.header[0x8E], 1)  # bFastDiscSpeed
 
@@ -212,7 +212,7 @@ class ScenarioMovieTests(unittest.TestCase):
         shutil.rmtree(root / "tools" / "scenarios")
         shutil.copytree(REPO_ROOT / "tools" / "scenarios", root / "tools" / "scenarios",
                         ignore=shutil.ignore_patterns("*.dtm", "*.sav"))
-        for name in ("boot-to-character-select", "boot-to-training"):
+        for name in ("boot-to-character-select", "boot-to-event-list"):
             with self.subTest(name):
                 path = root / f"{name}.dtm"
                 r = dev(root, "scenario", name, "--movie", str(path))

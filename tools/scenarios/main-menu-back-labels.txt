@@ -1,0 +1,64 @@
+# Acceptance scenario for main-menu ticket 01: in a curriculum drill the pause
+# menu's back item says "Back to RTC 101" and the drill summary's says
+# "RTC 101", and both still go back to the event list. Authoring build (it
+# plays drill 9, `Test: ten reps`, to its summary with no input).
+#  - shot `pause-back`: the pause menu, "Back to RTC 101" highlighted (its
+#    fourth item, three down from Resume); Start closes it.
+#  - shot `summary-back`: the summary, "RTC 101" highlighted (two down).
+#  - A on it: the event list again, on drill 9 (shot `list-after-summary`),
+#    and B there goes to the main menu on RTC 101 (`back-after-drill`).
+# `python dev.py run --scenario main-menu-back-labels` prints
+# `menu menu="Drill over" item="RTC 101"`. The pause item is checked by
+# `event-restart-change-list` (`item="Back to RTC 101"`, then the list).
+# Shots land late, so the scenario holds still after each. Needs window
+# focus for the shots.
+include boot-to-event-list
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+include event-css-to-match
+wait:300
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+shot pause-back
+wait:100
+start:2
+wait:600
+wait:600
+wait:600
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+shot summary-back
+wait:100
+a:2
+wait:200
+shot list-after-summary
+wait:100
+# B on the list after a drill: the main menu, cursor on RTC 101 (shot
+# `back-after-drill`).
+b:2
+wait:60
+shot back-after-drill
+wait:60

@@ -160,8 +160,8 @@ int training_drill_count(void);
 /// True when the current drill is not the last one in the table.
 bool training_drill_has_next(void);
 
-/// The number of rows the Event Match list shows: the table's drills, then
-/// the Custom drill.
+/// The number of rows the Event Match list shows: the table's drills. The
+/// Custom drill is not a row; its index is training_drill_custom_index().
 int training_drill_event_count(void);
 
 /// The table index of the Custom drill: one past the compiled table.

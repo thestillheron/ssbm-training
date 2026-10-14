@@ -85,12 +85,25 @@ static void choose_edit_layout(void)
 }
 
 
+/* The label of the item that goes back to the event list in a curriculum
+ * drill (the Custom drill's reads "Settings", see back_label). */
+#define BACK_LABEL "Back to RTC 101"
+
+/* The pause menu's items, in order (items[] below). */
+enum {
+    ITEM_RESUME,
+    ITEM_RESTART,
+    ITEM_CHANGE_CHARACTERS,
+    ITEM_BACK,
+};
+
 static TrainingMenuItem items[] = {
     { "Resume", "Carry on with the drill", true, choose_resume },
     { "Restart drill", "Start again from rep 1", true, choose_restart },
     { "Change characters", "Pick the fighters again", true,
       choose_change_characters },
-    { "Back to event list", "Leave the drill and pick another", true,
+    /* Its label is set when the menu opens (back_label). */
+    { BACK_LABEL, "Leave the drill and pick another", true,
       choose_event_list },
     { "Edit layout", "Change the landing, heights and start", true,
       choose_edit_layout },
@@ -104,6 +117,15 @@ static TrainingMenuItem items[] = {
 };
 
 static TrainingMenu menu = { "Paused", items, ARRAY_SIZE(items) };
+
+/// The back item's label: a curriculum drill goes back to RTC 101, the
+/// Custom drill to its settings menu.
+static const char* back_label(void)
+{
+    return training_drill_is_custom(training_drill_current_index())
+               ? "Settings"
+               : BACK_LABEL;
+}
 
 #ifdef AUTHORING_BUILD
 /// The pause line's extra fields: the punish window shown for each tech
@@ -143,6 +165,7 @@ static void pause(int port)
     ifAll_802F3394();
     gm_SetDbPauseFlag(DB_PAUSE_FLAG_VS);
     HSD_PadRumblePauseAll();
+    items[ITEM_BACK].label = back_label();
     training_menu_show(&menu);
     training_punish_window_panel_show();
     LOG_PAUSE();

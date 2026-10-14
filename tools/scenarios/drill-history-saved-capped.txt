@@ -15,10 +15,6 @@ wait:38
 start:2
 wait:80
 a:2
-wait:14
-stick-down:2
-wait:4
-a:2
 wait:40
 shot event-list
 stick-down:2

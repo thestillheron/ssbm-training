@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "drill.h"
+#include "main_menu.h"
 #include "text.h"
 
 /* The retail screen's layout (mnevent.c): 9 rows; a row's number and name
@@ -34,6 +35,12 @@
 /* The screen's joints: the retail event's score kind label ([TIME] or
  * [KO]). */
 #define JOINT_SCORE_KIND 9
+
+/* The screen's top-level joints that make up the list: the scroll arrows
+ * (1, with 2 and 3), the cell column (4) and its frame (5), the description
+ * box (6, with 7 to 9), the cursor (10, with 11) and the row marker (12).
+ * Hiding these leaves the menu background. */
+static const int LIST_JOINTS[] = { 1, 4, 6, 10, 12 };
 
 /* The retail text canvas the screen draws on. */
 #define MENU_CANVAS 1
@@ -155,6 +162,7 @@ void training_event_list_show(HSD_GObj* gobj)
     int event = data->first_event + data->page;
     HSD_JObj* jobj;
 
+    training_main_menu_heading(training_drill_is_custom(event));
     if (event >= training_drill_event_count()) {
         event = training_drill_event_count() - 1;
     }
@@ -188,6 +196,19 @@ void training_event_list_set_visible(MnEventData* data, bool visible)
     }
     if (data->desc_text != NULL) {
         training_text_set_visible(data->desc_text, visible);
+    }
+}
+
+void training_event_list_hide(HSD_GObj* gobj)
+{
+    MnEventData* data = gobj->user_data;
+    HSD_JObj* jobj;
+    int i;
+
+    training_event_list_set_visible(data, false);
+    for (i = 0; i < (int) (sizeof(LIST_JOINTS) / sizeof(LIST_JOINTS[0])); i++) {
+        lb_80011E24(gobj->hsd_obj, &jobj, LIST_JOINTS[i], -1);
+        HSD_JObjSetFlagsAll(jobj, JOBJ_HIDDEN);
     }
 }
 

@@ -1,25 +1,21 @@
-# Boot to the Event Match list (ADR-0005): from a freshly launched training
-# build, 1-P Mode, then Event Match, ending on the event list with the cursor
-# on its first row (shot `event-list`). Reusable prefix: `include` it, then
-# move the cursor and choose an event. `boot-to-event` goes on to the first
-# event, the character select and the match.
+# Boot to the RTC 101 event list (ADR-0005, ADR-0007): from a freshly launched
+# training build, the main menu, then RTC 101 (its first item, where the
+# cursor starts), ending on the event list with the cursor on its first row
+# (shot `event-list`). Reusable prefix: `include` it, then move the cursor
+# and choose an event. `boot-to-event` goes on to the first event, the
+# character select and the match.
 #
 # Timing is frame-exact (movie frames from power-on, fast disc loads; see
-# docs/developer-workflow.md). Presses are 2 frames. Where a press waits on a
-# load it has about 10 frames or more of margin past what was measured.
-# The list opens on the event last chosen since power-on, so on the first row
-# after a fresh boot.
+# docs/developer-workflow.md). Presses are 2 frames. The list builds 20
+# frames after the `a` that opens it and reads input from then; the shot
+# comes 40 frames after the `a`, and the next press no earlier.
+# The list opens on its first row from the main menu (after a drill it
+# reopens on the event last chosen).
 
 include boot-to-main-menu
 shot main-menu
 
-# 194: 1-P Mode. The submenu reads input from 6 frames after the `a`; down
-# moves from Regular Match to Event Match, which takes `a` from the frame
-# after the down is released (no load).
-a:2
-wait:14
-stick-down:2
-wait:4
+# 194: RTC 101.
 a:2
 wait:40
 shot event-list

@@ -1,0 +1,54 @@
+# Acceptance scenario for main-menu ticket 03: after switching Options'
+# language to Japanese, the description box still shows the new English text
+# for our items (shot `japanese-rtc-101`; `japanese-custom-drill` for the
+# second). Needs window focus for the shots. The language is saved to the
+# run's own copy of the memory card, not your snapshot.
+include boot-to-main-menu
+stick-down:2
+wait:7
+stick-down:2
+wait:7
+a:2
+wait:60
+shot options-menu
+wait:10
+stick-down:2
+wait:7
+stick-down:2
+wait:7
+stick-down:2
+wait:20
+shot on-language
+wait:10
+a:2
+wait:90
+stick-left:2
+wait:20
+shot japanese-picked
+wait:10
+a:2
+wait:90
+shot after-switch
+wait:10
+a:2
+wait:90
+shot after-switch-2
+wait:10
+b:2
+wait:90
+shot options-again
+wait:10
+b:2
+wait:120
+shot japanese-options
+wait:20
+stick-up:2
+wait:7
+stick-up:2
+wait:40
+shot japanese-rtc-101
+wait:20
+stick-down:2
+wait:40
+shot japanese-custom-drill
+wait:30
