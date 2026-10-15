@@ -200,13 +200,38 @@ void training_event_exit_sss(GameModeState* state)
     gm_SetNextGameModeStateId(STATE_VS);
 }
 
+/* The fighters the last match loaded, once there has been one. */
+static bool loaded_set;
+static s8 loaded_player;
+static s8 loaded_cpu;
+
 /// Tells the loader which fighters, stage and sound banks the match needs,
-/// as retail Event Match does before its matches.
+/// as retail Event Match does before its matches. When the fighters are not
+/// the last match's, the files the character select has been loading are
+/// laid out as retail's single-player modes do (gmclassic.c): the cache
+/// starts from its defaults, the player is loaded and waited for and the
+/// previous match's fighters are released before the opponent and the stage
+/// are added. Without that the match reads a stage file that has been
+/// overwritten, and crashes. (The same fighters need none of it, and doing it
+/// for them crashed the next character select.)
 static void preload(int stage)
 {
     struct GameCache* cache = &lbDvd_GetPreloadCacheScene()->game_cache;
     u64 mask;
 
+    if (loaded_set &&
+        (player_ckind != loaded_player || cpu_ckind != loaded_cpu))
+    {
+        lbDvd_80018C6C();
+        cache->entries[0].char_id = player_ckind;
+        cache->entries[0].color = player_color;
+        lbDvd_80018254();
+        lbDvd_80018C2C(0xC7);
+        lbDvd_80017700(4);
+    }
+    loaded_set = true;
+    loaded_player = player_ckind;
+    loaded_cpu = cpu_ckind;
     cache->entries[0].char_id = player_ckind;
     cache->entries[0].color = player_color;
     cache->entries[1].char_id = cpu_ckind;

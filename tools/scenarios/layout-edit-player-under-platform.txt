@@ -1,0 +1,61 @@
+# Regression scenario: the player start under a lower side platform. On the
+# Custom drill on Battlefield (landing on the main floor at x 0, start_dy 0:
+# the player on the floor) Edit layout, then C-stick left for 25 frames (1
+# unit a frame) moves the player from x -12 to about x -37, which is under
+# the left side platform (about 27 units above the floor). The values text
+# still ends "floor" and the player marker must stay on the floor (shot
+# `under-platform-floor`), not be snapped up onto the platform that is within
+# the ground probe's reach above it. B leaves: the drill restarts with the
+# player on the floor (`drop` line player_y=0), not on the platform.
+# Then edit again: a C-stick up flick puts the player on the side platform
+# (shot `under-platform-on-platform`, text "platform"), B leaves (`drop`
+# player_y is the platform's), and a down flick on the next edit puts it back
+# on the floor.
+# `python dev.py run --scenario layout-edit-player-under-platform` prints
+# `drill_start name="Custom drill" stage=31` lines with start_dy=0, then the
+# platform's height, then 0 again, whose `drop` lines read player_y=0, the
+# platform's height (about 27), then 0. Needs window focus for the shots.
+include custom-drill-battlefield
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:20
+cstick-left:25
+wait:20
+shot under-platform-floor
+wait:200
+b:2
+wait:300
+
+# Up onto the side platform.
+start:2
+wait:30
+a:2
+wait:20
+cstick-up:4
+wait:20
+shot under-platform-on-platform
+wait:200
+b:2
+wait:300
+
+# And back down onto the floor.
+start:2
+wait:30
+a:2
+wait:20
+cstick-down:4
+wait:20
+shot under-platform-back-on-floor
+wait:200
+b:2
+wait:300

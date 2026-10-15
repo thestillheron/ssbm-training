@@ -1,0 +1,104 @@
+# Acceptance scenario for choosing, deliberately, whether the player stands on
+# the floor or on a platform in the layout editor. On the Custom drill on
+# Battlefield (landing point on the main floor at x 0, start_dy 0: the player
+# on the floor), Edit layout (fifth item; the cursor stays on it between
+# pauses). A C-stick FLICK (a 4-frame press past 0.6 tilt, one step a flick)
+# steps the player marker onto the next surface above or below it at its x.
+# The player starts 12 units left of the landing point (start_x -12), and at
+# that x only the top platform (y 54.4) is above the floor: Battlefield's two
+# lower side platforms are further out and are not under the player, so the
+# steps there are floor <-> top platform:
+#  - one flick up: the player is on the top platform (shot `on-platform`, the
+#    values text ends "y 54.4 platform"); a second flick up does nothing,
+#    there being no higher surface (shot `top-no-more`).
+#  - flick down: back on the floor (shot `on-floor`, "y 0.0 floor"); a second
+#    flick down does nothing (shot `floor-no-more`).
+#  - one more flick up and B leaves: the drill restarts with the player on
+#    the platform (start_dy 54, start_y 54).
+#  - edit again: the player is still on the platform (`reopened-on-platform`);
+#    a flick down puts it on the floor (`reopened-floor`); B leaves, the
+#    restart is back at start_dy 0.
+# Then, with the opponent marker raised past the top platform (stick up 20
+# frames: landing on the platform, drop height 5.6), the player is on the floor below it by default (`landing-on-platform-floor`,
+# start_dy 0); a C-stick up flick puts it on the platform (`landing-on-
+# platform`, text "y 0.1 platform": 0.1 above the landing surface) and a down
+# flick back on the floor (`landing-platform-floor`, "y -52.9 floor": under
+# the landing surface, aimed 1.5 past the floor's height difference).
+# Shots are taken on the wall clock, so each state is held for 200 frames.
+# `python dev.py run --scenario layout-edit-player-surface` prints
+# `drill_start name="Custom drill" stage=31` lines with landing_y=0 and
+# start_dy=0, then 54 (`layout` start_y=54), then 0 again, and finally
+# landing_y=54 (heights=5) with start_dy=-52 (the log prints whole units) and `layout`
+# start_y=0. Needs window focus for the shots.
+include custom-drill-battlefield
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:20
+shot on-floor-start
+wait:200
+cstick-up:4
+wait:20
+shot on-platform
+wait:200
+cstick-up:4
+wait:20
+shot top-no-more
+wait:200
+cstick-down:4
+wait:20
+shot on-floor
+wait:200
+cstick-down:4
+wait:20
+shot floor-no-more
+wait:200
+cstick-up:4
+wait:20
+b:2
+wait:300
+
+# Player flicked onto the platform and left: the restart starts there. Edit
+# again and put it back on the floor.
+start:2
+wait:30
+a:2
+wait:20
+shot reopened-on-platform
+wait:200
+cstick-down:4
+wait:20
+shot reopened-floor
+wait:200
+b:2
+wait:300
+
+# Opponent marker past the top platform, then the player up and down.
+start:2
+wait:30
+a:2
+wait:30
+stick-up:20
+wait:20
+shot landing-on-platform-floor
+wait:200
+cstick-up:4
+wait:20
+shot landing-on-platform
+wait:200
+cstick-down:4
+wait:20
+shot landing-platform-floor
+wait:200
+wait:30
+b:2
+wait:300

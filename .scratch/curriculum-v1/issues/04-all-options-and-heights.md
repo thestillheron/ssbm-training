@@ -12,7 +12,7 @@ The design calls are the developer's: which heights, which range, and which opti
 
 **Blocked by:** 03 (pair drills).
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [ ] The developer has recorded the heights, the range and which one-option drills to include under "Design" below
 - [ ] The event list has these drills after the pair drills, each with a description and the lengths and vanish settings above

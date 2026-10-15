@@ -4,7 +4,7 @@
 
 **Blocked by:** 04 (all-options and heights drills).
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [ ] The developer has recorded the stage, the printed layouts and the pool of each platform drill under "Design" below
 - [ ] The event list has the platform drills last in the curriculum, each with a description, none an [invalid layout](../../../docs/glossary.md#glossary_invalid_layout)

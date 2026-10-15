@@ -3,16 +3,18 @@
 # the top platform at y 54), lets a few reps run, then:
 #  - pause, Edit layout (the last item): the opponent hangs over the top
 #    platform (shot `editor-platform`).
-#  - stick down: the landing point steps down to the floor (shot
+#  - stick down 100 frames: the marker (54 + 40 above the floor) comes down
+#    through the platform and stops at the floor, height 0 (shot
 #    `stepped-down`), B: the drill restarts on the floor.
-#  - edit again, stick up: back up onto the top platform (shot
-#    `stepped-up`), B.
-#  - edit again, stick down to the floor, stick left 40 frames (under the
-#    left platform), stick up: onto the left platform (shot
-#    `left-platform`), B.
+#  - edit again, stick up 60 frames: back up past the top platform, which
+#    becomes the landing (shot `stepped-up`), B.
+#  - edit again, stick down 100 to the floor, stick left 40 frames (under the
+#    left platform), stick up 30: past the left platform, which becomes the
+#    landing (shot `left-platform`), B.
 # `python dev.py run --scenario layout-edit-step` prints `drill_start` lines
-# with landing_y=54 (compiled), 0, 54, then the left platform's height (27),
-# each followed by `layout` lines with the same landing_y. Needs window focus
+# with landing_y=54 (compiled, heights=40), 0 (heights=0), 54 (heights=6), then
+# landing_x=-40 landing_y=27 (heights=2), each followed by `layout` lines
+# with the same landing_y. Needs window focus
 # for the shots.
 include boot-to-event-list
 stick-down:2
@@ -54,7 +56,7 @@ wait:14
 a:2
 wait:30
 shot editor-platform
-stick-down:4
+stick-down:100
 wait:20
 shot stepped-down
 wait:30
@@ -65,7 +67,7 @@ start:2
 wait:30
 a:2
 wait:30
-stick-up:4
+stick-up:60
 wait:20
 shot stepped-up
 wait:30
@@ -76,11 +78,11 @@ start:2
 wait:30
 a:2
 wait:30
-stick-down:4
+stick-down:100
 wait:20
 stick-left:40
 wait:10
-stick-up:4
+stick-up:30
 wait:20
 shot left-platform
 wait:30

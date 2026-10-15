@@ -10,13 +10,13 @@ Ends with the developer's look check (`ready-for-human` for that sign-off), from
 
 **Blocked by:** 01, 03
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] Shots of the main menu with each of the four items hovered, showing the new labels tinted and highlighted like retail's.
 - [x] Shots with the cursor on RTC 101 and on Custom Drill showing their preview panels. Options and Data show their retail panels.
 - [x] A comparison shot with Options and Data left as retail labels beside our two, so the developer can choose between redrawn and retail.
 - [x] After switching Options' language to Japanese, the main menu shows the same art (shot).
-- [ ] The developer has signed off on the look, or a fallback ticket has been filed.
+- [x] The developer has signed off on the look, or a fallback ticket has been filed.
 
 ## Comments
 

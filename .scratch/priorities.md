@@ -14,12 +14,12 @@ The order of work for the tech-chasing curriculum. Each item is a feature with i
 | 8 | [rep-feedback](rep-feedback/spec.md) | done | 3, 4, 7 | Per-rep option, outcome, frames early/late; per-option summary. |
 | 9 | [drill-select](drill-select/spec.md) | done | 5, 7 | Each drill an Event Match event; pause menu (resume, restart, change characters, event list); summary menu; Training Mode back to vanilla (ADR-0005). |
 | 10 | [layout-editor](layout-editor/spec.md) | done | 2, 5, 9 | Edit layout in game with the fighters as markers; Print layout in authoring builds only. |
-| 11 | [curriculum-v1](curriculum-v1/spec.md) | ready-for-human | 5, 6, 10 | Tickets 01-03 done (vanish until actionable, the one-option and pair drills). Left for the developer: 04 (heights drills), 05 (platform drills), 06 (play-test). |
+| 11 | [curriculum-v1](curriculum-v1/spec.md) | done | 5, 6, 10 | The v1 curriculum: vanish until actionable, the one-option and pair drills, heights and platform drills, play-tested. |
 | 12 | [custom-drills](custom-drills/spec.md) | done | 9, 10 | Custom drill settings menu, any stage, layout editor for players; session only. |
 | 13 | [locked-camera](locked-camera/spec.md) | done | 6, 12 | Camera held on one measured view per tournament-legal stage whenever a drill has vanish on (curriculum and Custom), so camera movement can't give the tech away. |
 | 14 | [own-game-id](own-game-id/spec.md) | done | — | Training build runs as `GTCE01` (ADR-0006) so its saves never touch the player's Melee save; new save unlocks every character and stage; snapshot card gets a save. |
 | 15 | [drill-history](drill-history/spec.md) | done | 14 (ticket 03 only) | Record each curriculum drill attempt's score to the save; X in the event list opens a line graph of score by attempt with the pass mark. |
-| 16 | [main-menu](main-menu/spec.md) | done | 12, 15 | Main menu is RTC 101, Custom Drill, Options, Data (ADR-0007); designed labels, headings and preview panels patched into the menu archives; vanilla modes unreachable. Ticket 04's look sign-off is still the developer's. |
+| 16 | [main-menu](main-menu/spec.md) | done | 12, 15 | Main menu is RTC 101, Custom Drill, Options, Data (ADR-0007); designed labels, headings and preview panels patched into the menu archives; vanilla modes unreachable. Look signed off by the developer. |
 
 Item 7 is done; its findings ([unclepunch-ui-research/findings.md](unclepunch-ui-research/findings.md)) feed 8, 9 and the Later items.
 

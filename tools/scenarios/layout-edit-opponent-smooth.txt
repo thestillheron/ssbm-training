@@ -1,0 +1,74 @@
+# Acceptance scenario for the smooth opponent move in the layout editor: the
+# stick's up and down move the opponent marker continuously instead of
+# flicking the landing point between surfaces. On the Custom drill on
+# Battlefield (landing on the floor at x 0, one drop height 40), Edit layout
+# (fifth item). The marker's height in the world is the landing surface plus
+# the selected drop height; the stick changes it by 1 unit a frame at full
+# tilt (a tenth of that with Z held). When it passes a surface at the landing
+# x (here the top platform at y 54.4) that surface becomes the landing (the
+# values text's "Landing x 0.0 y <surface>") and the drop height becomes the
+# distance above it, so the marker never jumps. Holding the stick up in
+# slices, with a shot after each (the values text is the evidence):
+#  - `start`: "Landing x 0.0 y 0.0", "Heights [40.0]".
+#  - up 8 frames (`up-8`): y 0.0, [48.0].
+#  - up 6 more (`up-14`): y 0.0, [54.0], just under the platform.
+#  - up 4 more (`crossed`): y 54.4, [3.6]: the world height is 58.0, the
+#    landing is now the platform and the height the overshoot above it.
+#  - up 10 more (`higher`): y 54.4, [13.6] (world 68.0).
+#  - down 20 (`recrossed`): back through the platform, y 0.0, [48.0].
+#  - down 70 (`bottom`): y 0.0, [0.0]; down 10 more (`bottom-stays`) is the
+#    same: it stops at the lowest surface.
+#  - Z held, up 20 (`fine`): y 0.0, [2.0]: a tenth of the speed.
+# B leaves with the changed layout; the drill restarts with it.
+# Shots are taken on the wall clock, so each state is held for 200 frames.
+# Needs window focus for the shots.
+include custom-drill-battlefield
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:20
+shot start
+wait:200
+stick-up:8
+wait:10
+shot up-8
+wait:200
+stick-up:6
+wait:10
+shot up-14
+wait:200
+stick-up:4
+wait:10
+shot crossed
+wait:200
+stick-up:10
+wait:10
+shot higher
+wait:200
+stick-down:20
+wait:10
+shot recrossed
+wait:200
+stick-down:70
+wait:10
+shot bottom
+wait:200
+stick-down:10
+wait:10
+shot bottom-stays
+wait:200
+stick-up+z:20
+wait:10
+shot fine
+wait:200
+b:2
+wait:300

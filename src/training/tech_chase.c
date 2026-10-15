@@ -40,8 +40,12 @@
  * snaps its points onto the stage. */
 
 /* How far above and below a spawn point teleport() looks for the floor. The
- * layout has snapped the point onto a surface, so this only absorbs rounding. */
-#define GROUND_PROBE_RANGE 40.0F
+ * layout has snapped the point onto the surface it means, so the probe starts
+ * only a little above it (rounding): a higher start would catch a platform
+ * overhead (Battlefield's side platforms are 27 units up) instead. Below, it
+ * reaches further for a point that hangs in the air. */
+#define GROUND_PROBE_ABOVE 2.5F
+#define GROUND_PROBE_BELOW 40.0F
 
 /* Vanish: the opponent is drawn for this many frames of its tech, counted
  * from the landing frame as frame 1, then hidden until it is actionable (see
@@ -175,6 +179,13 @@ static TechResult tech_result(Fighter* fp, float px)
 #ifdef AUTHORING_BUILD
 static int rep_number;
 static int rep_frame;
+
+/// The player's y position (logged with the drop, to show which surface the
+/// player was placed on).
+static float player_y(void)
+{
+    return GET_FIGHTER(Player_GetEntity(PLAYER_SLOT))->cur_pos.y;
+}
 
 static const char* tech_option_name(TechOption option)
 {
@@ -429,7 +440,8 @@ static void refresh_hit_baseline(Fighter* fp)
 /// With `grounded`, the fighter ends the teleport standing on the floor below
 /// `pos` (in Wait), so its first frame of input reads as a grounded one.
 /// Fighter_Spawn leaves it airborne (its own ground probe, ft_80082A68, only
-/// reaches 10 units and misses); the probe here reaches GROUND_PROBE_RANGE.
+/// reaches 10 units and misses); the probe here reaches GROUND_PROBE_BELOW (and
+/// only GROUND_PROBE_ABOVE up, so a platform above `pos` is not taken for it).
 /// The probe also loads the fighter's real ECB, which a spawn leaves stale.
 static void teleport(int slot, Vec3* pos, bool grounded)
 {
@@ -451,8 +463,8 @@ static void teleport(int slot, Vec3* pos, bool grounded)
 
     coll->cur_pos = fp->cur_pos;
     coll->last_pos = fp->cur_pos;
-    coll->last_pos.y += GROUND_PROBE_RANGE;
-    coll->cur_pos.y -= GROUND_PROBE_RANGE;
+    coll->last_pos.y += GROUND_PROBE_ABOVE;
+    coll->cur_pos.y -= GROUND_PROBE_BELOW;
     found = mpColl_800471F8(coll);
     if (grounded && found) {
         fp->cur_pos = coll->cur_pos;
@@ -570,10 +582,10 @@ static void do_rep_setup(const Layout* layout)
     rep.option = choose_tech_option();
     REP_LOG_START();
     LOG_LAYOUT(layout);
-    REP_LOG_WITH("drop", " height=%d option=%s opp_facing=%d player_x=%d",
+    REP_LOG_WITH("drop", " height=%d option=%s opp_facing=%d player_x=%d player_y=%d",
                  (int) drop_height, tech_option_name(rep.option),
                  (int) GET_FIGHTER(Player_GetEntity(OPPONENT_SLOT))->facing_dir,
-                 (int) player_x());
+                 (int) player_x(), (int) player_y());
 
     opp = Player_GetEntity(OPPONENT_SLOT);
     if (opp != NULL) {

@@ -1,0 +1,53 @@
+# Regression scenario: entering a drill, going back to the character select
+# and picking a different character used to crash the game while the match
+# loaded (`psInitDataBanks: unknown version` in the Dolphin log). Boots to
+# drill 1 (Ness), pauses, Change characters (third item), picks Luigi for the
+# player, then starts: a second `drill_start` and the shot `after-change`
+# shows Luigi. Then Change characters once more and start again with the same picks: a third `drill_start`.
+include boot-to-event
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:200
+shot css-after-change
+# Hand to Luigi (first row, third column).
+stick-up+stick-left:82
+wait:4
+stick-right:14
+wait:4
+stick-down:6
+wait:4
+shot hand-moved
+wait:60
+# B lifts the player's token off Ness, A drops it where the hand is.
+b:2
+wait:30
+shot lifted
+a:2
+wait:30
+stick-down:20
+wait:30
+shot picked
+
+wait:100
+start:2
+wait:340
+shot after-change
+
+# And back through the character select again with the same picks.
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:200
+shot css-again
+start:2
+wait:340
+shot after-again

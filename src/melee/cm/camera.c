@@ -46,6 +46,7 @@
 #include <sysdolphin/baselib/wobj.h>
 
 #ifdef TRAINING_BUILD
+#include <training/layout_editor.h>
 #include <training/locked_camera.h>
 #endif
 
@@ -1936,6 +1937,13 @@ void Camera_8002C1A8(void)
     if (game_camera.x305 == 5) {
         return;
     }
+#ifdef TRAINING_BUILD
+    /* The layout editor owns the sticks and the buttons of the frozen match;
+     * the pause camera must not zoom or pan with them. */
+    if (training_layout_editor_is_open()) {
+        return;
+    }
+#endif
 
     Camera_8002B694(&inputs, game_camera.x305);
 

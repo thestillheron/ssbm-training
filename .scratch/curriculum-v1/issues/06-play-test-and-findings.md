@@ -7,7 +7,7 @@
 
 **Blocked by:** 05 (all curriculum drills in place).
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [ ] Every curriculum drill has been played in at least one matchup, and the pass marks have been adjusted where a drill was clearly too hard or too easy
 - [ ] The measured rep length is recorded here, and the rep counts are rescaled if it is more than ~15% off

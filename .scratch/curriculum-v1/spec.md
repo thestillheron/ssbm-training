@@ -1,6 +1,6 @@
 # Curriculum v1: the first designed sequence of drills
 
-Status: ready-for-human
+Status: resolved
 
 ## Problem Statement
 

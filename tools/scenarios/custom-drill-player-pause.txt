@@ -5,8 +5,8 @@
 # it moves down eight times, chooses it, goes through the character select and
 # Battlefield on the stage select, pauses (shot `player-pause`: Resume,
 # Restart drill, Change characters, Settings, Edit layout, and no
-# Print layout), opens Edit layout (down four) and steps the landing point up
-# onto the top platform (shot `player-editor`). There is no rep log in a
+# Print layout), opens Edit layout (down four) and holds the stick up 20 frames,
+# raising the opponent marker onto the top platform (shot `player-editor`). There is no rep log in a
 # player build, so the shots are the check. Needs window focus.
 include boot-to-custom-drill
 a:2
@@ -34,7 +34,7 @@ stick-down:2
 wait:14
 a:2
 wait:30
-stick-up:4
+stick-up:20
 wait:20
 shot player-editor
 wait:30
