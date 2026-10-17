@@ -1,249 +1,70 @@
-Super Smash Bros Melee \
-[![Build Status]][actions]
-[![Discord Badge]][discord]
-[![Linked Progress]][progress]
-=============
+<p align="center"><img src="../assets/banner/banner.png" alt="RTC Training" width="576"></p>
 
-[actions]: https://github.com/doldecomp/melee/actions/workflows/build.yml
-[discord]: https://discord.gg/hKx3FJJgrV
-[progress]: https://decomp.dev/doldecomp/melee
+# RTC Training
 
-[Build Status]: https://github.com/doldecomp/melee/actions/workflows/build.yml/badge.svg
-[Linked Progress]: https://decomp.dev/doldecomp/melee.svg?mode=shield&measure=complete_code&label=linked&category=all
-[Discord Badge]: https://img.shields.io/discord/727908905392275526?color=%237289DA&logo=discord&logoColor=%23FFFFFF
+A Super Smash Bros. Melee training disc for practising reaction tech chasing, made from your own copy of Melee and played in Dolphin.
 
-This repo contains a matching decompilation of Super Smash Bros Melee (US).
+**[Download the latest release](https://github.com/thestillheron/ssbm-training/releases/latest)** (`rtc-training.zip`)
 
-> [!TIP]
-> The DOL this repository builds can be shifted! Meaning you are able to now add and remove code as you see fit, for modding or research purposes.
+## What's in it
 
-It builds `main.dol`:
+- **RTC 101**: a curriculum of drills that teaches reaction tech chasing step by step.
+- **Custom Drill**: choose a drill's settings and stage yourself and practise it for as long as you like.
+- **Drill history**: every attempt at an RTC 101 drill is scored and kept, and you can see a graph of your scores over time (press X on a drill in its event list).
 
-|Version|Game ID|SHA-1
--|-|-
-1.02|`GALE01`|`08e0bf20134dfcb260699671004527b2d6bb1a45`
+RTC Training keeps **its own save**. Dolphin treats it as a separate game with its own game ID (`GTCE01`), so it never reads or overwrites your vanilla Melee save.
 
-# Dependencies
+It is **tested on Dolphin**. It hasn't been tested on a real GameCube or Wii (Nintendont, Swiss), so it may or may not work there.
 
-## Windows:
-On Windows, it's **highly recommended** to use native tooling. WSL or msys2 are **not** required.
-When running under WSL, [objdiff](#diffing) is unable to get filesystem notifications for automatic rebuilds.
+## What you need
 
-- Install [Python](https://www.python.org/downloads/) and add it to `%PATH%`.
-  - Also available from the [Windows Store](https://apps.microsoft.com/store/detail/python-311/9NRWMJP3717K).
-- Download [ninja](https://github.com/ninja-build/ninja/releases) and add it to `%PATH%`.
-  - Quick install via pip: `pip install ninja`
+- [Dolphin](https://dolphin-emu.org/), with a controller set up for Port 1.
+- Your own copy of **Super Smash Bros. Melee, NTSC (US) version 1.02**, as a plain `.iso` file. The download doesn't contain the game; it's a patch that turns your ISO into RTC Training.
 
-## macOS:
-- Install [ninja](https://github.com/ninja-build/ninja/wiki/Pre-built-Ninja-packages):
-  ```
-  brew install ninja
-  ```
-- Install [wine-crossover](https://github.com/Gcenx/homebrew-wine):
-  ```
-  brew install --cask --no-quarantine gcenx/wine/wine-crossover
-  ```
+Nothing else is supported: PAL and Japanese discs, other revisions, already-modded ISOs and **NKit images** (`.nkit.iso`, or an RVZ made from one) won't work, because the patch only applies to a clean, full 1.02 dump. With any of those, the patch script stops with `ERROR: The ISO is not a valid v1.02 NTSC melee iso`.
 
-After OS upgrades, if macOS complains about `Wine Crossover.app` being unverified, you can unquarantine it using:
-```sh
-sudo xattr -rd com.apple.quarantine '/Applications/Wine Crossover.app'
-```
+### If your Melee is an RVZ
 
-## Linux:
-- Install [ninja](https://github.com/ninja-build/ninja/wiki/Pre-built-Ninja-packages).
-- For non-x86(_64) platforms: Install wine from your package manager.
-  - For x86(_64), [WiBo](https://github.com/decompals/WiBo), a minimal 32-bit Windows binary wrapper, will be automatically downloaded and used.
+Convert it to ISO in Dolphin first (this is lossless): right-click the game in Dolphin's game list, choose **Convert File...**, set **Format** to **ISO** and click **Convert...**. Use the `.iso` it writes in the steps below.
 
-# Building
-- Clone the repository:
-  ```
-  git clone https://github.com/doldecomp/melee.git --depth=1
-  ```
-- Using [Dolphin Emulator](https://dolphin-emu.org/), find your ISO and click `Properties`. Go to the `Filesystem` tab, right-click `Disc - GALE01` and select `Extract System Data`. Choose `orig/GALE01` of this repository.
-  - To save space, only `main.dol` (and `.gitkeep`) are necessary. Other files can be deleted.
-  ![](assets/dolphin-extract.png)
-- Configure:
-  ```
-  python configure.py
-  ```
-- Build:
-  ```
-  ninja
-  ```
+## Making the RTC Training ISO
 
-# Tooling
+Download `rtc-training.zip` from the [latest release](https://github.com/thestillheron/ssbm-training/releases/latest) and unzip it. You get a folder called `rtc-training`. Your original ISO is only read, never changed.
 
-We use Python for our command line tooling. It is recommended that you use a [virtual environment](https://docs.python.org/3/library/venv.html).
+### Windows
 
-1. Create a virtual environment.
-    ```sh
-    python -m venv --upgrade-deps '.venv'
-    ```
-1. You'll need to activate it whenever you open a new shell.
-    * Windows:
-        ```ps1
-        .venv/Scripts/Activate.ps1
-        ```
-    * Linux/macOS:
-        ```ps1
-        . .venv/bin/activate
-        ```
-1. After that, you can install or update our packages with:
-    ```sh
-    pip install -r reqs/decomp.txt
-    ```
-1. Now you can run `decomp.py` to decomp a function using [m2c](https://github.com/matt-kempster/m2c). Pass it `-h` to see all the options.
-    ```sh
-    python tools/decomp.py my_function_name
-    ```
+1. Drag your Melee ISO onto **`DRAG VANILLA MELEE HERE.bat`** in the `rtc-training` folder.
+2. When the window says `rtc-training.iso has been successfully created!`, press any key to close it.
 
-# Modding
-1. Dump the full game disc to a folder as described under [Building](#building), not just the system files.
-1. After cloning the repository, you can freely add new source files/folders under `/src`.
-1. Enable the non-matching build by running:
+`rtc-training.iso` is now in the `rtc-training` folder.
+
+### macOS and Linux
+
+1. Install xdelta if you don't have it:
+   - macOS: `brew install xdelta` (with [Homebrew](https://brew.sh/))
+   - Debian or Ubuntu: `sudo apt install xdelta3`
+   - Other distributions: the `xdelta3` (or `xdelta`) package from your package manager
+2. In a terminal, run the script with the path to your Melee ISO:
+
+   ```sh
+   cd path/to/rtc-training
+   ./build_linux_and_mac.sh path/to/melee.iso
    ```
-   python configure.py --non-matching
-   ```
-1. Add each of your source files to `configure.py`. The order determines when your files are linked, but in most cases does not matter. You can create a new `MeleeLib` definition, but you don't have to. Make sure any newly created files are marked `Equivalent`.
-   ```py
-       MeleeLib(
-           "My Custom Library",
-           [
-               Object(Equivalent, "my-cool-mod/helloworld.c"),
-           ],
-       ),
-    ```
-1. Run `ninja` to build the game.
-1. Move the build DOL from `build/GALE01/main.dol` to the `sys` folder of the game directory you created.
-1. Make sure your game directory is configured under Paths in Dolphin, then launch your `main.dol` from the Games list.
 
-# Containers
-We use [nix](https://nixos.org/) for [most of our tontinuous integration](https://github.com/doldecomp/melee/blob/1ddf751b718f86933ca93a022f93f23f823a6744/.github/workflows/build.yml#L146-L265), which can be containerized under [nixos/nix](https://hub.docker.com/r/nixos/nix/) or [nix-toolbox](https://thrix.github.io/nix-toolbox/). We plan on fully migrating our CI to nix; see [issue #1368](https://github.com/doldecomp/melee/issues/1368).
+When it prints `rtc-training.iso has been successfully created`, `rtc-training.iso` is in the `rtc-training` folder. If the script says xdelta isn't installed, go back to step 1.
 
-# Diffing
+### Playing it
 
-Once the initial build succeeds, an `objdiff.json` should exist in the project root.
+Open `rtc-training.iso` in Dolphin: drag it onto Dolphin's window, or add the `rtc-training` folder under **Config > Paths** so it appears in the game list as **RTC Training**, next to your vanilla Melee. Start it, press Start on the title screen, and you're at RTC Training's main menu: RTC 101, Custom Drill, Options and Data.
 
-Download the latest release from [encounter/objdiff](https://github.com/encounter/objdiff). Under project settings, set `Project directory`. The configuration should be loaded automatically.
+## Reporting bugs
 
-Select an object from the left sidebar to begin diffing. Changes to the project will rebuild automatically: changes to source files, headers, `configure.py`, `splits.txt` or `symbols.txt`.
+Please [open an issue](https://github.com/thestillheron/ssbm-training/issues) saying what you did, what you expected and what happened. Include which release you're on (for example `v0.1.0`), your Dolphin version and your OS.
 
-![](assets/objdiff.png)
+## Building from source
 
-# Contributing
+RTC Training is built on [doldecomp/melee](https://github.com/doldecomp/melee), the matching decompilation of Melee, with the training features added on top. To build it yourself you need your own Melee disc image and the toolchain that `python dev.py setup` downloads; `python dev.py iso` then builds the RTC Training ISO. See the [developer workflow](../docs/developer-workflow.md) for the rest, including how to make a release.
 
-Contributions are welcome! If you're new to decomp, check out our [Getting Started guide](https://doldecomp.github.io/melee/getting_started.html). Before [opening a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request), please read our [contributing guidelines](CONTRIBUTING.md). If you're new to Git and don't know how to create a pull request, we encourage you to [create an issue](https://github.com/doldecomp/melee/issues/new) with your decomp.me link and a maintainer will add your code to the repository.
+## Credits
 
-Most of our efforts now are directed to naming and cleanup. See our [todo list](https://doldecomp.github.io/melee/todo.html) and [cleanup index](https://doldecomp.github.io/melee/cleanup/).
-
-We're also happy to answer any questions in the `#smash-bros-melee` channel on Discord.
-
-[![Gamecube/Wii Decompilation Discord](https://discordapp.com/api/guilds/727908905392275526/widget.png?style=banner2)](https://discord.gg/hKx3FJJgrV)
-
-# FAQ
-## How is the codebase structured?
-
-The code in `src` is divided into several modules, the main one being `melee`, which is the game code.
-
-### `melee`
-The main game code is divided into several two-letter folders, which were left behind by HAL in assert messages and game data on the original disc.
-
-Short|Full|Notes
--|-|-
-`cm`|Camera|
-`db`|Debug|
-`ef`|Effect|Visual effects.
-`ft`|Fighter|The player characters.
-`gm`|Game|The main game loop.
-`gr`|Ground|Stages and other levels.
-`if`|Interface|User interface.
-`it`|Items|
-`lb`|Library|Utility functions that are often thin wrappers around `dolphin` or `baselib` code.
-`mn`|Menu|
-`mp`|Map|Related to stages and contains things like `mpcoll` (map collisions).
-`pl`|Player|As in users.
-`sc`|Scene|Menu, versus mode, single-player, etc. The game mode.
-`ty`|Toy|Trophies.
-`vi`|Visual|Cutscenes, etc.
-
-#### `melee/ft/kinds`
-
-HAL also used two-letter abbreviations for each fighter.
-
-Short|Full|Canonical English
--|-|-
-`Bo`|Zako<sup>1</sup> Boy|[Male wire frame](https://www.ssbwiki.com/Fighting_Wire_Frames#Male_Wire_Frame.2FCaptain_Falcon)
-`Ca`|Captain|Captain Falcon
-`Ch`|Crazy Hand|
-`Cl`|Child Link|Young Link
-`Co`|Common|Shared code
-`Dk`|Donkey Kong|
-`Dr`|Dr. Mario|
-`Fc`|Falco|
-`Fe`|Fire Emblem|Roy
-`Fx`|Fox|
-`Gk`|Giga Koopa|Giga Bowser
-`Gl`|Zako Girl|[Female wire frame](https://www.ssbwiki.com/Fighting_Wire_Frames#Female_Wire_Frame.2FZelda)
-`Gn`|Ganondorf|
-`Gw`|Mr. Game & Watch|
-`Kb`|Kirby|
-`Kp`|Koopa|Bowser
-`Lg`|Luigi|
-`Lk`|Link|
-`Mh`|Master Hand|
-`Mr`|Mario|
-`Ms`|Mars|Marth
-`Mt`|Mewtwo|
-`Nn`|Nana|
-`Ns`|Ness|
-`Pc`|Pichu|
-`Pe`|Peach|
-`Pk`|Pikachu|
-`Pp`|Popo|
-`Pr`|Purin|Jigglypuff
-`Sb`|Sandbag|
-`Sk`|Seak|Sheik
-`Ss`|Samus|
-`Ys`|Yoshi|
-`Zd`|Zelda|
-
-<sup>1</sup> Zako (雑魚) is Japanese for "trash mob" in video games, literally "small fish."
-
-### `sysdolphin/baselib`
-
-HAL's core internal library.
-Class|Full
--|-
-`AObj`|Animation
-`CObj`|Camera
-`DObj`|Draw/Display
-`FObj`|Frame
-`GObj`|Global/Game
-`JObj`|Joint
-`LObj`|Light
-`MObj`|Material
-`PObj`|Polygon
-`TObj`|Texture
-`RObj`|Reference
-`SObj`|Scene
-`WObj`|World
-
-### `dolphin`
-
-The [Dolphin SDK](https://wiki.raregamingdump.ca/index.php/Dolphin_SDK).
-
-### `MetroTRK`
-
-The Metrowerks Target Resident Kernel.
-
-### `MSL`
-
-The Metrowerks Standard Library.
-
-### `Runtime`
-
-The Gekko hardware runtime.
-
-## What can be done now that the game is fully decompiled?
-
-See our [FAQ](https://github.com/doldecomp/melee/wiki/FAQ).
+See [credits](../credits.md), including UnclePunch, whose training tools inspired this, and Alex Harrison's [Training Mode - Community Edition](https://github.com/AlexanderHarrison/TrainingMode-CommunityEdition), whose release model this follows.

@@ -20,7 +20,7 @@ void training_new_save_unlock_all(void)
 /// (ADR-0006). Called from lb_8001C658 in place of the vanilla title.
 const char* training_new_save_title(void)
 {
-    return "Melee Tech Chase Training       Game Data";
+    return "RTC Training                    Game Data";
 }
 
 #endif

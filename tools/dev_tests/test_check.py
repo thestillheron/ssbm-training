@@ -9,7 +9,9 @@ import shutil
 import subprocess
 import unittest
 
-from .support import REPO_ROOT, dev, find_disc, requires_disc, make_full_sandbox
+from .support import REPO_ROOT, dev, find_disc, requires_disc, make_full_sandbox, write_png
+
+BANNER_IMAGE = "assets/banner/banner.png"
 
 # An upstream function with an empty body; the "hook" gives it one without
 # the TRAINING_BUILD guard, so it leaks into the matching build.
@@ -70,6 +72,17 @@ class CheckTests(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0, out)
         self.assertEqual(status_line(out, "training"), "FAIL", out)
         self.assertEqual(status_line(out, "matching"), "PASS", out)
+
+    def test_wrong_size_banner_fails_archive_patches(self):
+        path = self.root / BANNER_IMAGE
+        original = path.read_bytes()
+        self.addCleanup(path.write_bytes, original)
+        write_png(path, 95, 32)
+        r, out = self.check()
+        self.assertNotEqual(r.returncode, 0, out)
+        self.assertEqual(status_line(out, "archive-patches"), "FAIL", out)
+        self.assertIn("95x32", out)
+        self.assertEqual(status_line(out, "training"), "PASS", out)
 
     def test_tree_is_clean_again_after_failures(self):
         r, out = self.check()

@@ -22,6 +22,7 @@ Why we keep both: [ADR-0001](adr/0001-matching-build-alongside-modded-build.md).
   ```
   (the second line is for Apple Silicon).
 - Dolphin (vanilla), only for `run`. `setup` looks for it and prints how to install it if it can't find it. See [Dolphin](#developer_workflow_dolphin).
+- xdelta3, only for `release`, on macOS and Linux. `setup` checks for it on macOS and prints `brew install xdelta` if it is missing (Linux: install `xdelta3` with your package manager). On Windows `release` downloads it.
 
 ## Supply a disc image
 
@@ -62,7 +63,7 @@ Both builds share one `build.ninja` at the repo root. `dev.py` remembers which b
 python dev.py run
 ```
 
-Builds the training build, assembles a game folder in `build/training/game/`, and launches Dolphin on its `main.dol`; it doesn't wait for Dolphin to exit. The folder mirrors your extracted disc using hard links (falling back to copies, with a warning, if linking fails, e.g. across drives) and replaces `main.dol` with a fresh copy of the training build's and `boot.bin` with a copy whose game ID is `GTCE01` (the training build's [own game ID](adr/0006-training-build-has-its-own-game-id.md): Dolphin lists it as `GTCE01`, and Melee saves under that ID, so the player's vanilla Melee save is never read or written; the matching build and the files under `orig/` still say `GALE01`). The main menu's archives (`MnMaAll` and `SdMenu`, `.usd` and `.dat`) are fresh patched copies too, never links: `tools/archive_patches.py` lists each one's texture and string replacements and `tools/archive_patcher.py` applies them (ADR-0007). The patching happens in `assemble_game` during `run`, not in `build` (`build` produces only `main.dol`); a bad replacement stops `run` with the reason, and `check` applies them too so it fails there first. Files under `orig/` are never written to. You should see "- T" next to the "Melee" subtitle on the title screen.
+Builds the training build, assembles a game folder in `build/training/game/`, and launches Dolphin on its `main.dol`; it doesn't wait for Dolphin to exit. The folder mirrors your extracted disc using hard links (falling back to copies, with a warning, if linking fails, e.g. across drives) and replaces `main.dol` with a fresh copy of the training build's and `boot.bin` with a copy whose game ID is `GTCE01` (the training build's [own game ID](adr/0006-training-build-has-its-own-game-id.md): Dolphin lists it as `GTCE01`, and Melee saves under that ID, so the player's vanilla Melee save is never read or written; the matching build and the files under `orig/` still say `GALE01`). The main menu's archives (`MnMaAll` and `SdMenu`, `.usd` and `.dat`) are fresh patched copies too, never links: `tools/archive_patches.py` lists each one's texture and string replacements and `tools/archive_patcher.py` applies them (ADR-0007). So is the disc banner, `opening.bnr`, which Dolphin's game list and the GameCube menu show: `tools/banner.py` writes the 96×32 image `assets/banner/banner.png` into it in RGB5A3 and the text in `assets/banner/banner.txt` into its name fields (line 1 the short name, up to 32 characters, also used as the long name; line 2 the maker, up to 32, also the long maker; the rest the description, up to 128 bytes, a line break counting as one). The patching happens in `assemble_game` during `run`, not in `build` (`build` produces only `main.dol`); a bad replacement (or a banner image that isn't 96×32, or text that doesn't fit) stops `run` with the reason, and `check` applies them too so it fails there first. Files under `orig/` are never written to. You should see "- T" next to the "Melee" subtitle on the title screen.
 
 `run --scenario <name>` also boots with a scenario played as a movie from power-on; see [Scenarios](#developer_workflow_scenarios). Two flags change which memory card a movie run plays against: `--keep-card` plays on from the [run copy](glossary.md#glossary_run_copy) the last run left (what its game saved) instead of a fresh copy of the snapshot, so a second run can check what the first one stored; `--no-card` boots with nothing in slot A (the movie header records no card, the snapshot and run copy are left alone), so a scenario can check the no-card case, where Melee asks "Continue without saving or loading Game Data?" and the title needs one more `start` than with a card.
 
@@ -74,13 +75,54 @@ python dev.py stop
 
 Closes the Dolphin that the last `run` launched (the PID in `build/dev_state.json`, and only if it is still a Dolphin process). `run` leaves Dolphin open, so call `stop` when you are done with it. Windows only; a no-op elsewhere.
 
+### `iso`
+
+```
+python dev.py iso
+```
+
+Builds the [RTC Training](glossary.md#glossary_rtc_training) ISO, the disc players get ([ADR-0008](adr/0008-players-get-a-patch-not-the-game.md)), into `build/training/rtc-training.iso` (about 1.4 GB, so `build` and `run` never write it). It always configures the training build without the [authoring tools](glossary.md#glossary_authoring_tools) and with each drill's own tech pool, whatever you last built, then assembles the game folder as `run` does and packs it with [gc_fst](https://github.com/AlexanderHarrison/gc_fst): `rebuild` makes the ISO and `set-header` writes the game ID `GTCE01` and the title "RTC Training". It needs neither Dolphin nor window focus, and files under `orig/` are never written to.
+
+The first `iso` downloads gc_fst into `build/tools/` (later runs reuse it): on Windows and Linux from gc_fst's GitHub releases (the tag is `GC_FST_TAG` in `dev.py`), and on macOS the Apple Silicon binary that TM-CE keeps at `bin/gc_fst_macos_arm64`, at the commit pinned in `tools/download_tool.py`, because gc_fst publishes no macOS release.
+
+gc_fst's `rebuild` doesn't read the `sys/` + `files/` layout that `setup` extracts and `run` assembles. It wants the disc's filesystem at the top of its folder and the system files in `&&systemdata/` (`ISO.hdr`, which is `boot.bin` followed by `bi2.bin`, `AppLoader.ldr`, which is `apploader.img`, and `Start.dol`, which is `main.dol`); it builds `fst.bin` itself. So `iso` links the assembled game folder into that layout in `build/training/iso-root/` and deletes it once the ISO is written.
+
+To try the ISO, open it in Dolphin (add `build/training` to the game list's paths, or drag the file onto Dolphin).
+
+### `release`
+
+```
+python dev.py release [disc image]
+```
+
+Makes the [release patch](glossary.md#glossary_release_patch) zip players download ([ADR-0008](adr/0008-players-get-a-patch-not-the-game.md)), `build/release/rtc-training.zip`. The disc image is your vanilla Melee, found as `setup` finds it (the argument, `"disc"` in `dev.config.json`, or the single image in `orig/GALE01/`). It is only read, never written. `release`:
+
+1. Checks the disc with `dtk disc verify` and refuses to go on unless it fully matches Redump's "Super Smash Bros. Melee (USA) (En,Ja) (Rev 2)". The patch only applies to a byte-identical ISO, so one made from a bad, modified or NKit dump wouldn't work for players. (dtk exits 0 even on a mismatch, so `release` reads its report.)
+2. Runs `iso` (so the release never has the authoring tools or a non-default tech pool, whatever you last built).
+3. Makes a plain ISO of the disc with `dtk disc convert` if it isn't one (an RVZ, say) in `build/release/`, and deletes it afterwards.
+4. Encodes `patch.xdelta` with xdelta3 against the plain ISO. It uses a source window as large as the disc (`-B`), because gc_fst lays the files out afresh and the default 64 MB window makes a patch of about 1 GB instead of under 1 MB, and no secondary compression (`-S none`), so the xdelta3 that players get from Homebrew or their Linux distribution (3.0.11 and 3.1.0 were tried) can apply it.
+5. Zips one `rtc-training/` folder, modelled on TM-CE's `TM-CE/`: `patch.xdelta`, `xdelta3.exe`, `DRAG VANILLA MELEE HERE.bat` and `build_linux_and_mac.sh`. The scripts live in `tools/release/`. Each writes `rtc-training.iso` next to itself and prints "not a valid v1.02 NTSC melee iso" if the source disc isn't the right one (xdelta3 checks it).
+
+xdelta3 is [jmacd/xdelta](https://github.com/jmacd/xdelta) (Apache-2.0), pinned at `XDELTA3_TAG` in `dev.py`. Its Windows build is downloaded into `build/tools/` on every OS, because it goes into the zip; on Windows it also encodes the patch. On macOS and Linux the encoder is the `xdelta3` on `PATH` (`brew install xdelta` on macOS).
+
+`--allow-unverified-disc` is for testing the release pipeline with a disc that fails verification: it goes on with a warning and writes `rtc-training-UNVERIFIED.zip` instead. Never upload that zip.
+
+#### Publishing a release
+
+There is no CI (ADR-0001), so a maintainer publishes by hand:
+
+1. On an up-to-date `master` with a clean tree, run `python dev.py check`, then `python dev.py release`.
+2. Optionally apply the patch as a player would (drag your vanilla ISO onto the `.bat`, or run the `.sh`) and boot the result in Dolphin.
+3. Pick the next version, `vX.Y.Z` ([semantic versioning](https://semver.org/), starting at `v0.1.0`), and tag the commit: `git tag v0.1.0` and `git push origin v0.1.0`.
+4. On the fork's GitHub page, open Releases, Draft a new release, choose the tag, give it the title `RTC Training v0.1.0` and a short list of changes, attach `build/release/rtc-training.zip` and publish. Push to the fork (`origin`), never to upstream.
+
 ### `check`
 
 ```
 python dev.py check
 ```
 
-Builds the matching build, then the training build (even if the first fails), and applies every archive patch to a throwaway copy (so a `PatchError` shows up here and not first at `run`), and prints a `check summary` with `matching: PASS|FAIL`, `training: PASS|FAIL` and `archive-patches: PASS|FAIL`. It exits non-zero if either fails. Matching must pass its SHA-1 verification; training must compile and link.
+Builds the matching build, then the training build (even if the first fails), and applies every archive patch and the banner to a throwaway copy (so a `PatchError` shows up here and not first at `run`), and prints a `check summary` with `matching: PASS|FAIL`, `training: PASS|FAIL` and `archive-patches: PASS|FAIL`. It exits non-zero if either fails. Matching must pass its SHA-1 verification; training must compile and link.
 
 **Run `check` before merging to `master`.** The fork has no CI (the game's `main.dol` can't be stored publicly), so this local gate is the only check.
 
@@ -157,7 +199,7 @@ What movie playback means for scenario authors:
 - **Frames are exact.** A hold of N frames is exactly N emulated frames of input, and `wait:N` exactly N neutral frames. Melee polls the pad twice per emulated frame, so each scenario frame is two identical movie entries. This holds through boot, menus and loads (checked live: four 2-frame presses 6 frames apart in the main menu all register, every run). Shot timing is only approximate: a shot lands a few frames (measured 0 to 4) after its nominal frame, so a shot right before a press can show that press's effect.
 - **Power-on only.** A movie always starts at power-on. Never start a movie from a savestate: a savestate restores all of RAM, including the game code, so a savestate movie silently runs the build it was recorded with, not the one you just built.
 - **Memory card.** Every movie run starts from the same card contents: a [memory card snapshot](glossary.md#glossary_memory_card_snapshot) of your slot A card, `build/memcard/snapshot.USA.raw` (gitignored, never committed). The first `run --scenario` copies it from the raw card file Dolphin has in slot A and prints where it is. Slot A must be a raw memory card file (Dolphin: Config > GameCube > Slot A: Memory Card); a GCI folder or no card is an error naming the problem. Before each launch `run` copies the snapshot to a throwaway [run copy](glossary.md#glossary_run_copy), `build/memcard/run.USA.raw`, and points slot A at that copy for this launch only (`-C Dolphin.Core.SlotA=1 -C Dolphin.Core.MemcardAPath=...`; your Dolphin.ini is not edited). Melee saves to the card during play (the "SAVING" icon at the main menu), but only the run copy changes: your real card is never written by a movie run, and the same build and scenario always start from the same card. `--live` runs and `scenario <name>` use Dolphin's own card as before. After you unlock things on your real card (or switch cards), refresh the snapshot with `python dev.py snapshot-card`.
-  - The snapshot must hold a `GTCE01` save, the training build's own, because that is the only save the training build reads ([ADR-0006](adr/0006-training-build-has-its-own-game-id.md)). If it has none (a card from before the game ID changed, or a new one), `run --scenario` and `snapshot-card` make one first: they play `boot-new-save-to-main-menu` in the training build against the snapshot, so Melee itself answers its create-save prompt and creates the save, and keep the card that run saved. Other saves on the card, such as your vanilla `GALE01` one, are carried along and never touched. A file that is not a memory card is left as it is. The save's comment reads "Melee Tech Chase Training", so Dolphin's memory card manager lists it apart from vanilla Melee's.
+  - The snapshot must hold a `GTCE01` save, the training build's own, because that is the only save the training build reads ([ADR-0006](adr/0006-training-build-has-its-own-game-id.md)). If it has none (a card from before the game ID changed, or a new one), `run --scenario` and `snapshot-card` make one first: they play `boot-new-save-to-main-menu` in the training build against the snapshot, so Melee itself answers its create-save prompt and creates the save, and keep the card that run saved. Other saves on the card, such as your vanilla `GALE01` one, are carried along and never touched. A file that is not a memory card is left as it is. The save's comment reads "RTC Training", so Dolphin's memory card manager lists it apart from vanilla Melee's.
   - Scenarios assume the snapshot's save has every character and stage unlocked: the character select and stage select layouts, and so the cursor moves, depend on it. The training build unlocks them when it creates a new save, but a save made without that (a vanilla one, or one from before the change) may not hold them, and then Final Destination shows as "?" and the moves land elsewhere. To check what a new save holds, put a card with no `GTCE01` save (a blank card, or one with only your vanilla Melee save) in place of `build/memcard/snapshot.USA.raw` and run `new-save-character-select` or `new-save-stage-select`, which answer the create-save prompt and clear the unlock notices that follow (`run` leaves the snapshot alone for scenarios named `new-save-*`); restore your snapshot afterwards.
 - **Fast disc loads.** The movie header turns on Dolphin's fast disc speed (playback applies the header's settings, whatever your Dolphin.ini says). Loads take a fraction of the emulated disc time, so the boot timeline is: a `start` from frame 62 skips the logo and intro to the title, a `start` on the title from 23 frames after that goes to the main menu, and the main menu reads input from 30 frames after the title's `start` (measured earliest frames, with presses at 66 and 92: 89 and 122). Without it every load (main menu, character select, stage) took seconds, and the main menu only read input from frame 638. The frame numbers in the committed scenarios assume fast disc.
 - **Load margins.** A training-build change that adds work to a scene transition makes that load, and every screen after it, a few frames later, and a press that used to land just after a screen became ready would then land before it and be lost. So in the committed prefixes every press or cursor clamp that waits on a load sits about 10 frames or more after the earliest frame it was measured to work at. Keep that margin when you retime them. If a prefix stops reaching its shots after a change, look for a load that got longer.
@@ -351,6 +393,10 @@ One event per line: the fixed prefix `[rep]`, then space-separated `key=value` f
 
 Keeping hooks to one guarded line makes them easy to find and re-apply after merging upstream `doldecomp/melee`. If you forget a guard, the matching build stops being byte-identical and `check` fails.
 
+## Merging upstream
+
+When you merge upstream `doldecomp/melee` into the fork, keep our `.github/README.md` if it conflicts (`git checkout --ours .github/README.md`, then `git add` it). That file is the player page GitHub shows on the fork's front page; upstream's version is its decomp README, which @ref getting_started and the rest of `docs/` already cover.
+
 ## Reference source
 
 Reference source for agents to read alongside the decomp, such as the UnclePunch training pack (`ref/Training-Mode`), goes in `ref/` at the repo root. It is gitignored and nothing in the build reads from it.
@@ -388,6 +434,7 @@ Reference source for agents to read alongside the decomp, such as the UnclePunch
 - **Wine stops launching after a macOS upgrade.** Clear its quarantine flag, adjusting the path to your install: `xattr -dr com.apple.quarantine /Applications/Wine*.app` (this is the command `setup` prints).
 - **"Wine is required on macOS".** Install it as shown under Prerequisites, or set `wine` in `dev.config.json`.
 - **"could not find Dolphin".** Install Dolphin from <https://dolphin-emu.org/download/> (on macOS also `brew install --cask dolphin`), or set `dolphin` in `dev.config.json`.
+- **"... failed verification" from `release`.** Your disc isn't a clean Redump dump of Melee 1.02; `release` prints dtk's hashes. An NKit image (it says so) has to be restored to a full ISO with NKit first. `setup`, `build`, `run` and `iso` still work with it, but a patch made from it wouldn't apply to players' discs.
 - **"run `python dev.py setup <disc image>` first".** `build` needs the extracted disc and `.venv` that `setup` creates.
 
 ## Tests for the tooling

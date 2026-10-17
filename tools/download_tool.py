@@ -56,6 +56,21 @@ def dtk_url(tag: str) -> str:
     return f"{repo}/releases/download/{tag}/dtk-{system}-{arch}{suffix}"
 
 
+# gc_fst publishes no macOS release, so on macOS we take the Apple Silicon
+# binary TM-CE keeps in its repo, at this pinned commit (`tag` is unused there).
+GC_FST_MACOS_COMMIT = "16fc45650f6036b1445dffce403eff9d353b310e"
+
+
+def gc_fst_url(tag: str) -> str:
+    system = platform.uname().system.lower()
+    if system == "darwin":
+        repo = "https://raw.githubusercontent.com/AlexanderHarrison/TrainingMode-CommunityEdition"
+        return f"{repo}/{GC_FST_MACOS_COMMIT}/bin/gc_fst_macos_arm64"
+    suffix = ".exe" if system == "windows" else ""
+    repo = "https://github.com/AlexanderHarrison/gc_fst"
+    return f"{repo}/releases/download/{tag}/gc_fst{suffix}"
+
+
 def objdiff_cli_url(tag: str) -> str:
     uname = platform.uname()
     suffix = ""
@@ -82,13 +97,22 @@ def wibo_url(tag: str) -> str:
     return f"{repo}/releases/download/{tag}/wibo"
 
 
+def xdelta3_windows_url(tag: str) -> str:
+    # The Windows build on every OS: it also goes into the release zip.
+    # Unzips to xdelta3-<version>-windows-x86_64/xdelta3.exe.
+    repo = "https://github.com/jmacd/xdelta"
+    return f"{repo}/releases/download/{tag}/xdelta3-{tag.lstrip('v')}-windows-x86_64.zip"
+
+
 TOOLS: Dict[str, Callable[[str], str]] = {
     "binutils": binutils_url,
     "compilers": compilers_url,
     "dtk": dtk_url,
+    "gc_fst": gc_fst_url,
     "objdiff-cli": objdiff_cli_url,
     "sjiswrap": sjiswrap_url,
     "wibo": wibo_url,
+    "xdelta3-windows": xdelta3_windows_url,
 }
 
 

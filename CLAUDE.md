@@ -14,7 +14,7 @@ Single-context: `docs/glossary.md` plus `docs/adr/` at the repo root. See `docs/
 
 ### Developer workflow
 
-Build, run and check with `dev.py` (`setup`, `build`, `run`, `check`); run `check` before merging to `master`. Matching build vs training build, and where training code and `TRAINING_BUILD` hooks go: see `docs/developer-workflow.md`.
+Build, run and check with `dev.py` (`setup`, `build`, `run`, `check`, plus `iso` and `release` for the player ISO and patch zip); run `check` before merging to `master`. Matching build vs training build, and where training code and `TRAINING_BUILD` hooks go: see `docs/developer-workflow.md`.
 
 ### Focus permission
 

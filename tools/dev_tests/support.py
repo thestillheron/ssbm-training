@@ -105,6 +105,78 @@ def make_full_sandbox():
     return root
 
 
+# ------------------------------------------------------------ disc banner
+
+# opening.bnr (BNR1): a 0x20-byte header, the 96x32 RGB5A3 image, then the
+# text fields (offset, size).
+BANNER_IMAGE = 0x20
+BANNER_TEXT = {
+    "short name": (0x1820, 0x20),
+    "short maker": (0x1840, 0x20),
+    "long name": (0x1860, 0x40),
+    "long maker": (0x18A0, 0x40),
+    "description": (0x18E0, 0x80),
+}
+
+
+def banner_text_fields(bnr):
+    """{field: text} of a BNR1 banner, each up to its first NUL."""
+    return {
+        name: bnr[off : off + size].split(b"\0")[0].decode("cp1252")
+        for name, (off, size) in BANNER_TEXT.items()
+    }
+
+
+def banner_pixels(bnr):
+    """A BNR1 banner's image as rows of (r, g, b, a), decoded from RGB5A3
+    (4x4-pixel tiles of big-endian 16-bit pixels: top bit set is RGB555,
+    clear is A3RGB444)."""
+    rows = [[None] * 96 for _ in range(32)]
+    pos = BANNER_IMAGE
+    for ty in range(0, 32, 4):
+        for tx in range(0, 96, 4):
+            for y in range(4):
+                for x in range(4):
+                    v = int.from_bytes(bnr[pos : pos + 2], "big")
+                    pos += 2
+                    if v & 0x8000:
+                        r, g, b = ((v >> s) & 31 for s in (10, 5, 0))
+                        px = ((r << 3) | (r >> 2), (g << 3) | (g >> 2), (b << 3) | (b >> 2), 255)
+                    else:
+                        a = (v >> 12) & 7
+                        r, g, b = ((v >> s) & 15 for s in (8, 4, 0))
+                        px = (r * 17, g * 17, b * 17, (a << 5) | (a << 2) | (a >> 1))
+                    rows[ty + y][tx + x] = px
+    return rows
+
+
+def png_pixels(path):
+    """A PNG's pixels as rows of (r, g, b, a)."""
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
+    from tools.archive_patcher import read_png
+
+    return read_png(path).pixels
+
+
+def write_png(path, width, height, rgba=(255, 0, 0, 255)):
+    """A one-colour 8-bit RGBA PNG."""
+    import zlib
+
+    def chunk(kind, body):
+        crc = zlib.crc32(kind + body).to_bytes(4, "big")
+        return len(body).to_bytes(4, "big") + kind + body + crc
+
+    header = width.to_bytes(4, "big") + height.to_bytes(4, "big") + bytes([8, 6, 0, 0, 0])
+    raw = b"".join(b"\0" + bytes(rgba) * width for _ in range(height))
+    Path(path).write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", header)
+        + chunk(b"IDAT", zlib.compress(raw))
+        + chunk(b"IEND", b"")
+    )
+
+
 CARD_BYTES = b"unlocked-everything" * 1000
 
 

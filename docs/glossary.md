@@ -191,6 +191,9 @@ Short for "radians."
 @section glossary_reaction_tech_chase reaction tech chase
 Tech chasing by reacting to what the opponent does on landing (its @ref glossary_tech_option "tech option", and later its getup) and punishing it, rather than guessing or conditioning. It is the skill the @ref glossary_training_build "training build" trains, through its @ref glossary_curriculum "curricula" and the @ref glossary_custom_drill "custom drill". Shortened to "RTC" in what players see. Avoid "tech chase training".
 
+@section glossary_release_patch release patch
+The file players download to get the @ref glossary_training_build "training build": a binary diff that turns their own copy of vanilla Melee (a plain `GALE01` 1.02 ISO) into a playable @ref glossary_rtc_training "RTC Training" ISO. The game itself is never distributed, only the difference from it. Avoid "mod download" or "the ISO" for the download.
+
 @section glossary_rep rep
 One cycle of a @ref glossary_drill "drill": the opponent drops in tumble, lands, carries out its @ref glossary_tech_option "tech option", and the rep ends as a success (the player hit or grabbed it in the @ref glossary_punish_window "punish window") or a failure (it became actionable unpunished). A rep is void, and doesn't count, if the player hits the opponent before it lands. Each rep ends with a @ref glossary_rep_result "rep result". Avoid "round", "attempt" or "instance".
 
@@ -205,6 +208,9 @@ Short for "rotation."
 
 @section glossary_rtc_101 RTC 101
 The basic @ref glossary_curriculum "curriculum", and the name players see for it on the main menu and in its @ref glossary_event_list "event list". RTC stands for @ref glossary_reaction_tech_chase "reaction tech chase".
+
+@section glossary_rtc_training RTC Training
+The name players know the @ref glossary_training_build "training build" by: the disc's title in Dolphin, the @ref glossary_release_patch "release patch"'s download and the README. Not to be confused with @ref glossary_rtc_101 "RTC 101", the curriculum inside it.
 
 @section glossary_run_copy run copy
 The throwaway copy of the @ref glossary_memory_card_snapshot "memory card snapshot" (`build/memcard/run.USA.raw`) that `dev.py` makes before each @ref glossary_movie "movie" launch and puts in slot A for that launch only. Melee saves to it during the run; the next run replaces it.

@@ -85,6 +85,7 @@ __pycache__
 *.exe
 *.dll
 *.bat
+!tools/release/*.bat
 
 # https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
 .vscode/*
