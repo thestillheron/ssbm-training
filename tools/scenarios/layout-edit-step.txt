@@ -1,9 +1,9 @@
 # Acceptance scenario for layout-editor ticket 04 (surface stepping). Chooses
 # drill 12 on the Event Match list ("Test: platform", Battlefield, landing on
-# the top platform at y 54), lets a few reps run, then:
+# the top platform at y 54, Character heights: the default CPU, Pichu, drops from 27.3), lets a few reps run, then:
 #  - pause, Edit layout (the last item): the opponent hangs over the top
 #    platform (shot `editor-platform`).
-#  - stick down 100 frames: the marker (54 + 40 above the floor) comes down
+#  - stick down 100 frames: the marker (54 + 27.3 above the floor; moving it makes the heights explicit) comes down
 #    through the platform and stops at the floor, height 0 (shot
 #    `stepped-down`), B: the drill restarts on the floor.
 #  - edit again, stick up 60 frames: back up past the top platform, which
@@ -12,7 +12,7 @@
 #    left platform), stick up 30: past the left platform, which becomes the
 #    landing (shot `left-platform`), B.
 # `python dev.py run --scenario layout-edit-step` prints `drill_start` lines
-# with landing_y=54 (compiled, heights=40), 0 (heights=0), 54 (heights=6), then
+# with landing_y=54 (compiled, height_kind=character, drop height=27), 0 (heights=0), 54 (heights=6), then
 # landing_x=-40 landing_y=27 (heights=2), each followed by `layout` lines
 # with the same landing_y. Needs window focus
 # for the shots.

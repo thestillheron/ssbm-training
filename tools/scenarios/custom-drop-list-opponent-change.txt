@@ -1,0 +1,97 @@
+# Acceptance scenario for character drop heights ticket 04 on the custom
+# drill (a list set in the settings menu resets after the opponent changes).
+# Chooses Custom Drill, sets Drop heights to List and heights 50, 40, 50 as in
+# custom-drop-list, starts (Final Destination; the CPU is the default, Pichu),
+# lets a few reps run, then the pause menu's Settings item (shot `kept`: the
+# list is still the custom drill's), Start, the CPU moved to Mewtwo
+# (css-pick-cpu-mewtwo), Final Destination again.
+# `python dev.py run --scenario custom-drop-list-opponent-change` prints a
+# `drill_start` with height_kind=list heights=50,40,50 and drops at heights 50
+# and 40, then after the change a `drill_start` with height_kind=character and
+# drops at height=23 (Mewtwo's table height, 23.1) opponent=16. Needs window
+# focus for the shots.
+include boot-to-custom-drill
+wait:70
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+a:2
+wait:14
+wait:70
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+a:2
+wait:30
+include event-css
+wait:2
+stick-down+stick-left:50
+wait:4
+stick-right:22
+wait:4
+stick-up:8
+wait:4
+a:2
+wait:700
+
+# Pause, Settings (the pause menu's fourth item).
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:120
+shot kept
+wait:40
+a:2
+wait:200
+include css-pick-cpu-mewtwo
+wait:30
+stick-down+stick-left:50
+wait:4
+stick-right:22
+wait:4
+stick-up:8
+wait:4
+a:2
+wait:700
+shot after-change
+wait:700

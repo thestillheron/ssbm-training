@@ -5,6 +5,7 @@
 #include "drill.h"
 #include "layout.h"
 #include "menu.h"
+#include "punish_window.h"
 #include "tech_chase.h"
 #include "text.h"
 
@@ -130,6 +131,9 @@ static void show_values(void)
     char line[TRAINING_TEXT_MAX_CHARS + 1];
     char* p;
     int i;
+    int count = drill->height_kind == DrillHeight_Character
+                    ? 1
+                    : drill->height_count;
 
     p = line + sprintf(line, "Landing x ");
     p = training_drill_format_tenths(p, drill->landing_x);
@@ -140,12 +144,15 @@ static void show_values(void)
     p = line + sprintf(line, drill->height_kind == DrillHeight_Range
                                  ? "Height range"
                                  : "Heights");
-    for (i = 0; i < drill->height_count; i++) {
+    for (i = 0; i < count; i++) {
         *p++ = ' ';
         if (i == selected_height) {
             *p++ = '[';
         }
-        p = training_drill_format_tenths(p, drill->heights[i]);
+        p = training_drill_format_tenths(
+            p, training_drill_height_at(drill,
+                                        training_punish_window_opponent_kind(),
+                                        i));
         if (i == selected_height) {
             *p++ = ']';
         }
@@ -275,6 +282,7 @@ static void edit_heights(u64 pressed, u64 held, float speed)
     if (!(held & (PAD_BUTTON_UP | PAD_BUTTON_DOWN))) {
         return;
     }
+    training_drill_make_explicit(training_punish_window_opponent_kind());
     height = &drill->heights[selected_height];
     *height = step_tenths(*height, (held & PAD_BUTTON_UP) ? speed : -speed);
     if (drill->height_kind == DrillHeight_Range) {
@@ -301,6 +309,11 @@ static void add_remove_height(u64 pressed)
     Drill* drill = training_drill_session();
     int i;
 
+    if (drill->height_kind == DrillHeight_Character &&
+        (pressed & PAD_BUTTON_X))
+    {
+        training_drill_make_explicit(training_punish_window_opponent_kind());
+    }
     if (drill->height_kind != DrillHeight_List) {
         return;
     }
@@ -345,12 +358,13 @@ static void height_bounds(float* lo, float* hi)
 /// the world is the landing surface plus the selected drop height; moving it
 /// past a surface at the landing x makes that surface the landing (and the
 /// drop height the distance above it), so the marker never jumps. Below the
-/// lowest surface it stops at that surface.
+/// lowest surface it stops at that surface. Moving it changes the height, so a
+/// Character drill's heights become explicit (unless the move is refused).
 static void move_opponent(float delta)
 {
     Drill* drill = training_drill_session();
-    float* height = &drill->heights[selected_height];
-    float old_height = *height;
+    float* height;
+    float old_height;
     float old_landing = drill->landing_y;
     float x = placed.landing.x;
     float surface = placed.landing.y;
@@ -358,8 +372,12 @@ static void move_opponent(float delta)
     float lo;
     float hi;
     float y;
+    bool was_character = drill->height_kind == DrillHeight_Character;
     int i;
 
+    training_drill_make_explicit(training_punish_window_opponent_kind());
+    height = &drill->heights[selected_height];
+    old_height = *height;
     delta = training_drill_round_tenths(delta) != 0.0F
                 ? delta
                 : (delta > 0.0F ? 0.1F : -0.1F);
@@ -391,6 +409,10 @@ static void move_opponent(float delta)
     if (place(NULL) != Layout_Ok) {
         drill->landing_y = old_landing;
         *height = old_height;
+        if (was_character) {
+            /* Nothing moved, so the heights still follow the character. */
+            drill->height_kind = DrillHeight_Character;
+        }
         place(NULL);
         return;
     }

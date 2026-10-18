@@ -1,0 +1,57 @@
+# Acceptance scenario for layout-editor ticket 03 of character drop heights
+# (the layout editor on a Character drill). Boots through Event Match into
+# drill 1 (Final Destination, Character heights: Pichu, the default CPU,
+# drops from 27.3), lets a few reps run, then:
+#  - Edit layout (the last pause item; shot `editor-open`: the opponent hangs
+#    at 27.3 and the values text reads "Heights [27.3]"). Stick right for 30
+#    frames moves only the landing point, B leaves: `drill_start` reads
+#    height_kind=character landing_x=30 and the drops stay at height=27.
+#  - Edit layout again, d-pad up for 20 frames: the first height change makes
+#    the heights explicit, starting from 27.3 (shot `raised`: "Heights
+#    [47.3]"). B leaves: `drill_start` reads height_kind=list heights=47 and
+#    every following drop is height=47.
+#  - Edit layout again, A reverts to the compiled drill (shot `reverted`:
+#    Character again, "Heights [27.3]", landing x 0), B leaves: `drill_start`
+#    reads height_kind=character landing_x=0 and the drops are height=27.
+include boot-to-event
+wait:400
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+shot editor-open
+stick-right:30
+wait:10
+b:2
+wait:700
+
+start:2
+wait:30
+a:2
+wait:30
+dpad-up:20
+wait:10
+shot raised
+wait:40
+b:2
+wait:700
+
+start:2
+wait:30
+a:2
+wait:30
+a:2
+wait:20
+shot reverted
+wait:40
+b:2
+wait:500

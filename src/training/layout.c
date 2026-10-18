@@ -34,6 +34,9 @@ static bool find_floor_below(float x, float from_y, Vec3* out)
 /// of them, a range has its two ends.
 static bool heights_valid(const Drill* drill)
 {
+    if (drill->height_kind == DrillHeight_Character) {
+        return true;
+    }
     if (drill->height_kind == DrillHeight_Range) {
         return drill->height_count == 2;
     }

@@ -1,0 +1,73 @@
+# Acceptance scenario for character drop heights ticket 04 (an edited drop
+# height is kept when the opponent stays the same). Boots into drill 1 (Pichu,
+# drops from 27.3) and raises the drop height in the layout editor to 47.3
+# (d-pad up 20 frames), B leaves. Then Change characters twice:
+#  - once with the same picks, Start;
+#  - once with only the player's character changed (Ness to Luigi), Start.
+# `python dev.py run --scenario character-keep-same-opponent` prints a
+# `drill_start` with height_kind=character (drops height=27), then one with
+# height_kind=list heights=47 after the edit, and the same height_kind=list
+# heights=47 after each of the two character changes, every drop at height=47
+# opponent=23. Needs window focus for the shots.
+include boot-to-event
+wait:400
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+dpad-up:20
+wait:10
+b:2
+wait:700
+
+# The cursor is on Edit layout: up two for Change characters.
+start:2
+wait:30
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+a:2
+wait:200
+start:2
+wait:340
+shot same-picks
+wait:700
+
+# A new match's pause menu starts on Resume: down two for Change characters.
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:200
+# Hand to Luigi, B lifts the player's token off Ness, A drops it.
+stick-up+stick-left:82
+wait:4
+stick-right:14
+wait:4
+stick-down:6
+wait:4
+wait:60
+b:2
+wait:30
+a:2
+wait:30
+stick-down:20
+wait:30
+shot luigi
+start:2
+wait:340
+shot after-player-change
+wait:700

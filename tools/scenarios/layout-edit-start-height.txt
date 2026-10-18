@@ -8,7 +8,7 @@
 #    the player marker is on the top platform beside the opponent (shot
 #    `start-platform`, text "y 0.1 platform"), B.
 #  - edit again, Z + d-pad up for 15 frames (fine height edit): the height
-#    goes from 40 to 41.5 (shot `fine-height`), B. Pause, down one to Print
+#    goes from 27.3 to 28.8 (shot `fine-height`), B. Pause, down one to Print
 #    layout, A: writes the edited layout; Start closes the menu.
 #  - pause, up one to Edit layout, flick the C-stick down: back on the floor
 #    below the platform, start_dy -52.9 (shot `start-floor-again`, text "y

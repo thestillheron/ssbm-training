@@ -1,0 +1,20 @@
+# Fragment, not a scenario of its own: in the player + CPU character select
+# (Change characters from a drill's pause menu), moves the CPU from the
+# default (Pichu) to Mewtwo, then Start. The hand starts at the bottom left:
+# clamp it to the top-left corner, then right and down onto the CPU token on
+# Pichu's tile, A lifts the token, right again onto Mewtwo, A drops it. The
+# player's pick is left as it was. Follow with a wait for the match to load.
+stick-up+stick-left:82
+wait:4
+stick-right:8
+wait:4
+stick-down:16
+wait:20
+a:2
+wait:30
+stick-right:14
+wait:30
+shot cpu-on-mewtwo
+a:2
+wait:30
+start:2

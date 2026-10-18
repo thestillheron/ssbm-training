@@ -2,6 +2,7 @@
 
 #include "drill.h"
 
+#include "drop_height.h"
 #include "layout.h"
 
 #include <sysdolphin/baselib/random.h>
@@ -31,9 +32,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -52,9 +53,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -73,9 +74,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -94,9 +95,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -116,9 +117,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -138,9 +139,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -160,9 +161,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -182,9 +183,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -207,9 +208,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -270,9 +271,9 @@ static const Drill drills[] = {
         DRILL_STAGE_BATTLEFIELD,
         0.0F,
         54.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F, /* no offset: the player stands under the platform */
         DrillFacing_TowardPlayer,
@@ -291,9 +292,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         5000.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -312,9 +313,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -333,9 +334,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -354,9 +355,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_Away,
@@ -375,9 +376,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_Left,
@@ -396,9 +397,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_Right,
@@ -417,9 +418,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -461,9 +462,9 @@ static const Drill drills[] = {
         DRILL_STAGE_FINAL_DESTINATION,
         0.0F,
         0.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -482,9 +483,9 @@ static const Drill drills[] = {
         DRILL_STAGE_BATTLEFIELD,
         0.0F,
         54.0F,
-        DrillHeight_List,
-        1,
-        { 40.0F },
+        DrillHeight_Character,
+        0,
+        { 0.0F },
         0.0F,
         0.0F,
         DrillFacing_TowardPlayer,
@@ -505,7 +506,6 @@ static const Drill drills[] = {
 /* The Custom drill: one session-scoped record of the same type, listed after
  * the table. Its stage is the stage select's pick, and its layout is fitted
  * to that stage (training_drill_custom_fit). */
-#define CUSTOM_BASE_HEIGHT 40.0F
 #define CUSTOM_REPS 10
 static Drill custom = {
     "Custom drill",
@@ -513,9 +513,9 @@ static Drill custom = {
     DRILL_STAGE_FINAL_DESTINATION,
     0.0F,
     0.0F,
-    DrillHeight_List,
-    1,
-    { CUSTOM_BASE_HEIGHT },
+    DrillHeight_Character, /* the opponent's character drop height */
+    0,
+    { 0.0F },
     0.0F,
     0.0F,
     DrillFacing_TowardPlayer,
@@ -707,6 +707,12 @@ bool training_drill_same_layout(const Drill* a, const Drill* b)
 {
     int i;
 
+    if (a->height_kind == DrillHeight_Character &&
+        b->height_kind == DrillHeight_Character)
+    {
+        return a->landing_x == b->landing_x && a->landing_y == b->landing_y &&
+               a->start_dx == b->start_dx && a->start_dy == b->start_dy;
+    }
     if (a->landing_x != b->landing_x || a->landing_y != b->landing_y ||
         a->height_kind != b->height_kind ||
         a->height_count != b->height_count || a->start_dx != b->start_dx ||
@@ -779,10 +785,21 @@ void training_drill_print_layout(void)
     p += sprintf(p, ", ");
     p = print_float(p, drill->landing_y);
     p += sprintf(p, ", %s, %d, { ",
-                 drill->height_kind == DrillHeight_Range ? "DrillHeight_Range"
-                                                         : "DrillHeight_List",
-                 drill->height_count);
-    for (i = 0; i < drill->height_count; i++) {
+                 drill->height_kind == DrillHeight_Range
+                     ? "DrillHeight_Range"
+                     : drill->height_kind == DrillHeight_Character
+                           ? "DrillHeight_Character"
+                           : "DrillHeight_List",
+                 drill->height_kind == DrillHeight_Character
+                     ? 0
+                     : drill->height_count);
+    if (drill->height_kind == DrillHeight_Character) {
+        p = print_float(p, 0.0F);
+    }
+    for (i = 0; i < drill->height_count &&
+                drill->height_kind != DrillHeight_Character;
+         i++)
+    {
         if (i > 0) {
             p += sprintf(p, ", ");
         }
@@ -808,8 +825,69 @@ void training_drill_select(int index)
     }
 }
 
-float training_drill_pick_height(const Drill* drill)
+void training_drill_make_explicit_at(Drill* drill, float height)
 {
+    if (drill->height_kind != DrillHeight_Character) {
+        return;
+    }
+    drill->height_kind = DrillHeight_List;
+    drill->height_count = 1;
+    drill->heights[0] = height;
+}
+
+void training_drill_make_explicit(int opponent_kind)
+{
+    training_drill_make_explicit_at(
+        training_drill_session(),
+        training_drill_round_tenths(training_drop_height(opponent_kind)));
+}
+
+/// Puts `drill`'s drop heights back to Character.
+static void reset_to_character(Drill* drill)
+{
+    int i;
+
+    drill->height_kind = DrillHeight_Character;
+    drill->height_count = 0;
+    for (i = 0; i < DRILL_MAX_HEIGHTS; i++) {
+        drill->heights[i] = 0.0F;
+    }
+}
+
+/* The opponent's fighter kind at the last drill start, or -1 before the first. */
+static int last_opponent_kind = -1;
+
+void training_drill_note_opponent(int opponent_kind)
+{
+    if (opponent_kind < 0) {
+        return;
+    }
+    if (last_opponent_kind >= 0 && opponent_kind != last_opponent_kind) {
+        /* A new opponent starts at its own character drop height: the drill
+         * that is starting loses its explicit heights, from the layout editor
+         * or the settings menu. The other drill's heights stay. */
+        if (training_drill_is_custom(current_index)) {
+            reset_to_character(&custom);
+        } else if (session_index == current_index) {
+            reset_to_character(&session);
+        }
+    }
+    last_opponent_kind = opponent_kind;
+}
+
+float training_drill_height_at(const Drill* drill, int opponent_kind, int index)
+{
+    if (drill->height_kind == DrillHeight_Character) {
+        return training_drop_height(opponent_kind);
+    }
+    return drill->heights[index];
+}
+
+float training_drill_pick_height(const Drill* drill, int opponent_kind)
+{
+    if (drill->height_kind == DrillHeight_Character) {
+        return training_drop_height(opponent_kind);
+    }
     if (drill->height_kind == DrillHeight_Range) {
         return drill->heights[0] +
                HSD_Randf() * (drill->heights[1] - drill->heights[0]);

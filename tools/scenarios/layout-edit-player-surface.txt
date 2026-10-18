@@ -18,8 +18,8 @@
 #  - edit again: the player is still on the platform (`reopened-on-platform`);
 #    a flick down puts it on the floor (`reopened-floor`); B leaves, the
 #    restart is back at start_dy 0.
-# Then, with the opponent marker raised past the top platform (stick up 20
-# frames: landing on the platform, drop height 5.6), the player is on the floor below it by default (`landing-on-platform-floor`,
+# Then, with the opponent marker raised past the top platform (stick up 35
+# frames from the Character height 27.3: landing on the platform, drop height 7.9), the player is on the floor below it by default (`landing-on-platform-floor`,
 # start_dy 0); a C-stick up flick puts it on the platform (`landing-on-
 # platform`, text "y 0.1 platform": 0.1 above the landing surface) and a down
 # flick back on the floor (`landing-platform-floor`, "y -52.9 floor": under
@@ -28,7 +28,7 @@
 # `python dev.py run --scenario layout-edit-player-surface` prints
 # `drill_start name="Custom drill" stage=31` lines with landing_y=0 and
 # start_dy=0, then 54 (`layout` start_y=54), then 0 again, and finally
-# landing_y=54 (heights=5) with start_dy=-52 (the log prints whole units) and `layout`
+# landing_y=54 (heights=7) with start_dy=-52 (the log prints whole units) and `layout`
 # start_y=0. Needs window focus for the shots.
 include custom-drill-battlefield
 
@@ -87,7 +87,7 @@ start:2
 wait:30
 a:2
 wait:30
-stick-up:20
+stick-up:35
 wait:20
 shot landing-on-platform-floor
 wait:200

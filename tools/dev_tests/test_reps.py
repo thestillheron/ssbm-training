@@ -10,6 +10,8 @@ import subprocess
 import sys
 import unittest
 
+from tools import reps
+
 from .support import dev, make_piloting_sandbox
 
 LOG = (
@@ -207,6 +209,43 @@ class ScenarioRepLogTests(unittest.TestCase):
         self.assertIn("has not written its game log", err)
 
 
+class ParseRepLinesTests(unittest.TestCase):
+    """The parsed values of `drill_start` and `drop` lines: the height kind
+    (list, range or character) and the opponent's fighter kind."""
+
+    def test_drill_start_kind_and_heights(self):
+        lines = [
+            '[rep] event=drill_start name="Tech in place" stage=32 height_kind=character heights= landing_x=0 pool=1',
+            '[rep] event=drill_start name="Test: heights" stage=32 height_kind=list heights=30,60,90 landing_x=0 pool=1',
+            '[rep] event=drill_start name="Test: range" stage=32 height_kind=range heights=30,90 landing_x=0 pool=1',
+        ]
+        self.assertEqual(
+            reps.drill_starts(lines),
+            [
+                {"name": "Tech in place", "height_kind": "character", "heights": []},
+                {"name": "Test: heights", "height_kind": "list", "heights": [30, 60, 90]},
+                {"name": "Test: range", "height_kind": "range", "heights": [30, 90]},
+            ],
+        )
+
+    def test_drop_height_and_opponent(self):
+        lines = [
+            "[rep] event=start rep=1 frame=100",
+            "[rep] event=drop rep=1 frame=61 height=27 opponent=23 option=tech_in_place opp_facing=1 player_x=-20 player_y=0",
+            "[rep] event=drop rep=2 frame=61 height=23 opponent=16 option=roll opp_facing=-1 player_x=-20 player_y=0",
+        ]
+        self.assertEqual(
+            reps.drops(lines),
+            [{"height": 27, "opponent": 23}, {"height": 23, "opponent": 16}],
+        )
+
+    def test_a_drop_line_without_the_opponent_field_still_parses(self):
+        self.assertEqual(
+            reps.drops(["[rep] event=drop rep=2 frame=61 height=40"]),
+            [{"height": 40, "opponent": None}],
+        )
+
+
 DRILL_TABLE = (
     "static const Drill drills[] = {\n"
     '    {\n        "Tech in place",\n        "Opponent techs in place.",\n    },\n'
@@ -250,6 +289,17 @@ class CheckDrillStartsTests(unittest.TestCase):
         r = self.check([START % "Tech in place", START % "Test: invalid layout"])
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("Test: invalid layout: expected invalid layout", r.stderr)
+
+    def test_a_character_height_drill_start_counts_as_started(self):
+        # drill_start with height_kind=character (no heights), then a drop
+        # line carrying the opponent's fighter kind: both pass through.
+        start = ('[rep] event=drill_start name="Tech in place" stage=32 '
+                 'height_kind=character heights= landing_x=0\n')
+        drop = "[rep] event=drop rep=1 frame=61 height=26 opponent=8 option=away\n"
+        r = self.check([start, drop, START % "Test: invalid layout",
+                        INVALID % ("Test: invalid layout", "no-floor-below-landing")])
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("all 2 drills started", r.stdout)
 
     def test_a_drill_that_never_started_fails(self):
         r = self.check([START % "Tech in place"])

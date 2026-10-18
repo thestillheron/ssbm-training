@@ -13,7 +13,8 @@
 #  - edit again, stick left for 400 frames: clamped at the left edge, where
 #    the player's start still has floor (shot `clamped-left`), B leaves.
 # `python dev.py run --scenario layout-edit-move` prints, after each leave, a
-# `drill_start` whose landing_x is the edited one (60, then the right edge,
+# `drill_start` (height_kind=character throughout: moving only the landing point
+# leaves the drill on Character) whose landing_x is the edited one (60, then the right edge,
 # then the left edge) and `layout` lines with the same landing_x; the first
 # `drill_start` (landing_x=0) is the compiled drill's.
 include boot-to-event

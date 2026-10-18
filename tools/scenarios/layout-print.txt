@@ -1,20 +1,20 @@
 # Acceptance scenario for layout-editor ticket 06 (Print layout). Boots
-# through Event Match into drill 1 (Final Destination, landing x 0, one
-# height 40), lets a few reps run, then:
+# through Event Match into drill 1 (Final Destination, landing x 0, Character
+# heights), lets a few reps run, then:
 #  - pause (shot `paused`: with authoring tools the menu ends with Print
 #    layout under Edit layout; with --no-authoring it ends at Edit layout),
 #    down five to Print layout, A: writes the compiled layout.
 #  - up one to Edit layout, A; stick right for 60 frames (landing x 60), X
-#    adds a copy of the height, d-pad up for 30 frames raises it to 70, B
+#    adds a copy of the height, d-pad up for 30 frames raises it to 57.3, B
 #    leaves.
 #  - pause again (the cursor is still on Edit layout), down one to Print
 #    layout (shot `print-highlighted`), A: writes the edited layout. Start
 #    closes the menu.
 # `python dev.py run --scenario layout-print` prints, in order:
-#   [rep] layout: 0.0F, 0.0F, DrillHeight_List, 1, { 40.0F }, 0.0F, 0.0F,
-#   [rep] layout: 60.0F, 0.0F, DrillHeight_List, 2, { 40.0F, 70.0F }, 0.0F, 0.0F,
+#   [rep] layout: 0.0F, 0.0F, DrillHeight_Character, 0, { 0.0F }, 0.0F, 0.0F,
+#   [rep] layout: 60.0F, 0.0F, DrillHeight_List, 2, { 27.3F, 57.3F }, 0.0F, 0.0F,
 # the second matching the `drill_start` after the edit (landing_x=60
-# heights=40,70).
+# heights=27,57).
 include boot-to-event
 wait:400
 

@@ -14,6 +14,10 @@ No Dolphin here, so it is testable on fixture files. Entry points:
                                                  printed by the game)
   layout_lines(lines)                 -> [str]  (only the Print layout lines,
                                                  `[rep] layout: ...`)
+  drill_starts(lines)                 -> [dict] (name, height_kind (`list`,
+                                                 `range` or `character`), heights)
+  drops(lines)                        -> [dict] (height and opponent fighter
+                                                 kind of each `drop` line)
   check_drill_starts(lines, names)    -> [str]  (problems with the drills a
                                                  scenario started, see below)
 
@@ -99,6 +103,38 @@ def read_reps(log, since=0):
 def layout_lines(lines):
     """The Print layout lines among `lines` (as read_reps returns them)."""
     return [line for line in lines if line.startswith(LAYOUT_PREFIX)]
+
+
+_DRILL_START_FIELDS = re.compile(
+    r'event=drill_start name="([^"]*)" stage=\S+ height_kind=(\S+) heights=(\S*)'
+)
+_DROP = re.compile(r"event=drop .*?\bheight=(-?\d+)(?:.*?\bopponent=(-?\d+))?")
+
+
+def drill_starts(lines):
+    """The parsed `drill_start` lines among `lines`: each drill's name, its
+    height kind (`list`, `range` or `character`) and its heights (empty for
+    `character`)."""
+    out = []
+    for line in lines:
+        m = _DRILL_START_FIELDS.search(line)
+        if m:
+            heights = [int(h) for h in m.group(3).split(",") if h]
+            out.append({"name": m.group(1), "height_kind": m.group(2), "heights": heights})
+    return out
+
+
+def drops(lines):
+    """The parsed `drop` lines among `lines`: the height the opponent dropped
+    from and its fighter kind (None on a line from before the field was
+    logged)."""
+    out = []
+    for line in lines:
+        m = _DROP.search(line)
+        if m:
+            opp = m.group(2)
+            out.append({"height": int(m.group(1)), "opponent": int(opp) if opp is not None else None})
+    return out
 
 
 # Test drills that are meant to be invalid layouts, and the problem each one

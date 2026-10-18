@@ -248,7 +248,10 @@ static void log_drill_start(const Drill* drill)
     OSReport("[rep] event=drill_start name=\"%s\" stage=%d height_kind=%s "
              "heights=",
              drill->name, drill->stage,
-             drill->height_kind == DrillHeight_Range ? "range" : "list");
+             drill->height_kind == DrillHeight_Range
+                 ? "range"
+                 : drill->height_kind == DrillHeight_Character ? "character"
+                                                               : "list");
     for (i = 0; i < drill->height_count && i < DRILL_MAX_HEIGHTS; i++) {
         OSReport(i == 0 ? "%d" : ",%d", (int) drill->heights[i]);
     }
@@ -561,7 +564,8 @@ static void do_rep_setup(const Layout* layout)
     Vec3 drop = layout->landing;
     HSD_GObj* opp;
     const Drill* drill = training_drill_current();
-    float drop_height = training_drill_pick_height(drill);
+    float drop_height = training_drill_pick_height(
+        drill, training_punish_window_opponent_kind());
     bool place_player = drill->reset_player || !player_placed;
 
     reset_rep_data(layout->landing.y);
@@ -582,8 +586,8 @@ static void do_rep_setup(const Layout* layout)
     rep.option = choose_tech_option();
     REP_LOG_START();
     LOG_LAYOUT(layout);
-    REP_LOG_WITH("drop", " height=%d option=%s opp_facing=%d player_x=%d player_y=%d",
-                 (int) drop_height, tech_option_name(rep.option),
+    REP_LOG_WITH("drop", " height=%d opponent=%d option=%s opp_facing=%d player_x=%d player_y=%d",
+                 (int) drop_height, training_punish_window_opponent_kind(), tech_option_name(rep.option),
                  (int) GET_FIGHTER(Player_GetEntity(OPPONENT_SLOT))->facing_dir,
                  (int) player_x(), (int) player_y());
 
@@ -1223,7 +1227,8 @@ LayoutStatus training_tech_chase_edit_place(int height_index, Layout* out)
         height_index = 0;
     }
     drop = layout.landing;
-    drop.y += drill->heights[height_index];
+    drop.y += training_drill_height_at(
+        drill, training_punish_window_opponent_kind(), height_index);
     Player_SetFacingDirection(PLAYER_SLOT, 1.0F);
     teleport(PLAYER_SLOT, &layout.start, true);
     Player_SetFacingDirection(OPPONENT_SLOT,
@@ -1444,6 +1449,7 @@ void training_tech_chase_init(void)
     player_placed = false;
     edit_mode = false;
     REP_LOG_RESET();
+    training_drill_note_opponent(training_punish_window_opponent_kind());
     training_drill_custom_fit();
     log_drill_start(training_drill_current());
     reset_rep_data(0.0F);

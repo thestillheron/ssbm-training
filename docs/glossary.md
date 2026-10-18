@@ -27,6 +27,9 @@ Short for "callback."
 @section glossary_chan chan
 Short for "channel."
 
+@section glossary_character_drop_height character drop height
+The default @ref glossary_drop_height "drop height" for one opponent character, from a per-character table: first derived from max fall speed on a straight line from Jigglypuff (1.3 falls from 21) to Falco (3.1 falls from 40), and tuned by hand from there. Only the opponent's character counts. Avoid "fall height".
+
 @section glossary_coll coll
 Short for "collision(s)."
 
@@ -65,6 +68,9 @@ The screen shown when a @ref glossary_drill "drill" ends: its name, the score, t
 
 @section glossary_drill_table drill table
 The const table of @ref glossary_drill "drills" in `src/training/drill.c`: the @ref glossary_curriculum "curriculum", plus test drills in authoring builds. The rep loop runs one entry, the current drill.
+
+@section glossary_drop_height drop height
+A height above the landing point that a @ref glossary_drill "drill"'s opponent falls from in tumble, part of its @ref glossary_layout "layout". A drill's drop heights are either the opponent's @ref glossary_character_drop_height "character drop height" (the default) or explicit: a fixed height, list or range used exactly as set, never scaled. Explicit heights go back to the character drop height when the opponent's character changes. Avoid "fall height".
 
 @section glossary_dst dst
 Short for "destination."

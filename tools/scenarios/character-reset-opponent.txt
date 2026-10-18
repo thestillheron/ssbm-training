@@ -1,0 +1,50 @@
+# Acceptance scenario for character drop heights ticket 04 (an opponent
+# change resets the drop height to Character), on a curriculum drill. Boots
+# into drill 1 (Pichu, the default CPU, drops from 27.3), lets a few reps run,
+# then Edit layout and the d-pad up for 20 frames: the heights become explicit
+# at 47.3 (shot `raised`), and B leaves. Then the pause menu's Back item (the
+# event list), drill 1 again, the CPU moved to Mewtwo (css-pick-cpu-mewtwo),
+# Start. (Change characters with a different CPU crashes the game: see
+# docs/developer-workflow.md; the event list path loads fresh.)
+# `python dev.py run --scenario character-reset-opponent` prints a
+# `drill_start` with height_kind=character and drops at height=27 opponent=23,
+# then after the edit one with height_kind=list heights=47 and drops at
+# height=47 opponent=23, then after the change one with height_kind=character
+# and drops at height=23 (Mewtwo's table height, 23.1) opponent=16. Needs
+# window focus for the shots.
+include boot-to-event
+wait:400
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+dpad-up:20
+wait:10
+shot raised
+wait:40
+b:2
+wait:700
+
+# The cursor is on Edit layout: up one for Back (the event list).
+start:2
+wait:30
+stick-up:2
+wait:14
+a:2
+wait:200
+shot event-list
+a:2
+wait:40
+include css-pick-cpu-mewtwo
+wait:400
+shot after-change
+wait:700

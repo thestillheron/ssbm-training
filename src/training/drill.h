@@ -26,6 +26,9 @@
 typedef enum DrillHeightKind {
     DrillHeight_List, /* heights[0..count): one picked at random per rep */
     DrillHeight_Range, /* heights[0]..heights[1], picked uniformly */
+    /* The opponent's character drop height (drop_height.h); height_count and
+     * heights are unused, and nothing is stored per character here. */
+    DrillHeight_Character,
 } DrillHeightKind;
 
 typedef enum DrillFacing {
@@ -121,7 +124,8 @@ Drill* training_drill_session(void);
 void training_drill_revert_layout(void);
 
 /// True when `a` and `b` have the same layout (landing point, drop heights,
-/// player start); their other fields are not compared.
+/// player start); their other fields are not compared. Two Character drills
+/// have the same heights.
 bool training_drill_same_layout(const Drill* a, const Drill* b);
 
 /// True when the current drill's layout is not its table entry's: the layout
@@ -145,6 +149,8 @@ char* training_drill_format_tenths(char* out, float value);
 /// landing_x to start_dy in the order of struct Drill, to the rep log as C
 /// initializer text, ready to paste into the table in drill.c:
 /// `[rep] layout: 60.0F, 0.0F, DrillHeight_List, 2, { 40.0F, 70.0F }, 0.0F, 0.0F,`
+/// A Character drill prints `DrillHeight_Character, 0, { 0.0F }` so a paste
+/// keeps it on character drop heights.
 void training_drill_print_layout(void);
 #endif
 
@@ -194,9 +200,32 @@ const Drill* training_drill_at(int index);
 /// (ignored when out of range). A drill event selects its own drill this way.
 void training_drill_select(int index);
 
-/// A drop height for one rep: the only height, one of a list at random, or a
-/// uniform pick from a range (game units above the landing surface).
-float training_drill_pick_height(const Drill* drill);
+/// A drop height for one rep: the character drop height of `opponent_kind` (a
+/// FighterKind), the only height, one of a list at random, or a uniform pick
+/// from a range (game units above the landing surface). Explicit heights are
+/// used as set and never scaled.
+float training_drill_pick_height(const Drill* drill, int opponent_kind);
+
+/// Makes the session drill's heights explicit: a Character drill becomes a
+/// list of one, the opponent's character drop height; others are unchanged.
+void training_drill_make_explicit(int opponent_kind);
+
+/// Makes `drill`'s heights explicit at `height` if it is a Character drill:
+/// a list of one. Others are unchanged.
+void training_drill_make_explicit_at(Drill* drill, float height);
+
+/// Called at each drill start with the opponent's fighter kind (-1 if there is
+/// no opponent yet, ignored). When it differs from the kind at the last drill
+/// start, the explicit drop heights of the drill that is starting (the session
+/// copy, or the Custom drill) go back to Character, so a new opponent drops
+/// from its own character drop height; the other drill's heights stay. The
+/// same opponent, or only the player's character changing, keeps them.
+void training_drill_note_opponent(int opponent_kind);
+
+/// The height the opponent marker hangs at, at height index `index` (ignored
+/// for Character): the opponent's character drop height on a Character drill,
+/// else `heights[index]`.
+float training_drill_height_at(const Drill* drill, int opponent_kind, int index);
 
 #endif
 

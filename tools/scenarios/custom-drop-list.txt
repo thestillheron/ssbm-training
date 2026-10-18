@@ -1,0 +1,74 @@
+# Acceptance scenario for character drop heights ticket 02 (a list set in the
+# custom drill's settings menu is used as set). Chooses Custom Drill, sets Drop
+# heights to List (A), raises Height 1 from 40 to 50, adds Heights 2 and 3
+# (40) and raises Height 3 to 50 (shot list: 50, 40, 50), then starts the drill
+# (Final Destination) and gives no input for its 10 reps.
+# `python dev.py run --scenario custom-drop-list` prints `drill_start` with
+# height_kind=list heights=50,40,50 and 10 reps whose `drop` lines show only
+# heights 50 and 40, none at the opponent's character drop height. Needs window
+# focus for the shot.
+include boot-to-custom-drill
+wait:70
+shot settings-menu
+wait:70
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:14
+a:2
+wait:14
+wait:70
+shot list
+wait:70
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+a:2
+wait:30
+include event-css
+wait:2
+stick-down+stick-left:50
+wait:4
+stick-right:22
+wait:4
+stick-up:8
+wait:4
+a:2
+wait:300
+wait:70
+shot in-custom-drill
+wait:2400
+

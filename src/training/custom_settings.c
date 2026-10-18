@@ -150,9 +150,13 @@ typedef enum HeightMode {
 
 static HeightMode height_mode;
 
-/// The height mode the custom drill's heights are in.
+/// The height mode the custom drill's heights are in. A Character default
+/// shows as Fixed, as the fixed 40 it replaced did.
 static HeightMode mode_of(const Drill* drill)
 {
+    if (drill->height_kind == DrillHeight_Character) {
+        return HeightMode_Fixed;
+    }
     if (drill->height_kind == DrillHeight_Range) {
         return HeightMode_Range;
     }
@@ -167,12 +171,21 @@ static void value_height_mode(char* out)
     strcpy(out, names[height_mode]);
 }
 
+/// Makes the custom drill's heights explicit before the menu changes them: a
+/// Character default becomes a fixed HEIGHT_NEW (the 40 the row shows), used
+/// exactly as set from then on.
+static void make_explicit(Drill* drill)
+{
+    training_drill_make_explicit_at(drill, HEIGHT_NEW);
+}
+
 /// Next mode in the cycle, converting the custom drill's heights to it.
 static void cycle_height_mode(void)
 {
     Drill* drill = training_drill_custom();
     int i;
 
+    make_explicit(drill);
     height_mode = (HeightMode) ((height_mode + 1) % HeightMode_Count);
     switch (height_mode) {
     case HeightMode_Fixed:
@@ -206,7 +219,14 @@ static void height_value(char* out, int n)
 {
     const Drill* drill = training_drill_custom();
 
-    if (n >= drill->height_count) {
+    if (drill->height_kind == DrillHeight_Character) {
+        /* Shown as the fixed 40 it replaced. */
+        if (n == 0) {
+            sprintf(out, "%d", HEIGHT_NEW);
+        } else {
+            strcpy(out, "-");
+        }
+    } else if (n >= drill->height_count) {
         strcpy(out, height_mode == HeightMode_List ? "Off" : "-");
     } else if (height_mode == HeightMode_Range) {
         sprintf(out, "%d (%s)", (int) drill->heights[n],
@@ -228,6 +248,7 @@ static void step_height(int n)
     float next;
     int i;
 
+    make_explicit(drill);
     if (n >= drill->height_count) {
         if (height_mode == HeightMode_List) {
             drill->heights[drill->height_count++] = HEIGHT_NEW;
