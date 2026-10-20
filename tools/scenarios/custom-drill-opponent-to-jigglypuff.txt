@@ -1,0 +1,41 @@
+# Fragment, not a scenario of its own: from the character select reached by
+# Change characters after Marth against Falco, moves the CP token from Falco
+# to Jigglypuff and starts, then picks Final Destination on the stage select
+# and lets the match load (shot `jigglypuff-fd`).
+wait:40
+stick-up+stick-left:82
+wait:4
+stick-right:5
+wait:4
+stick-down:10
+wait:60
+shot hover-cp-falco
+a:2
+wait:20
+stick-up+stick-left:82
+wait:4
+stick-right:14
+wait:4
+stick-down:16
+wait:4
+stick-down:3
+wait:4
+stick-right:7
+wait:60
+shot hover-jigglypuff
+a:2
+wait:3
+start:2
+wait:60
+shot stage-select
+wait:30
+stick-down+stick-left:50
+wait:4
+stick-right:22
+wait:4
+stick-up:8
+wait:4
+a:2
+wait:500
+shot jigglypuff-fd
+wait:200

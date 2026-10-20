@@ -207,6 +207,18 @@ class ScenarioMovieTests(unittest.TestCase):
                 self.assertIn(needle, out)
                 self.assertFalse(path.exists())
 
+    def test_every_committed_scenario_generates(self):
+        root = self.sandbox({})
+        shutil.rmtree(root / "tools" / "scenarios")
+        shutil.copytree(REPO_ROOT / "tools" / "scenarios", root / "tools" / "scenarios",
+                        ignore=shutil.ignore_patterns("*.dtm", "*.sav"))
+        for source in sorted((REPO_ROOT / "tools" / "scenarios").glob("*.txt")):
+            with self.subTest(source.stem):
+                path = root / f"{source.stem}.dtm"
+                r = dev(root, "scenario", source.stem, "--movie", str(path))
+                self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+                self.assertGreater(len(Movie(path.read_bytes()).entries), 0)
+
     def test_committed_scenarios_generate(self):
         root = self.sandbox({})
         shutil.rmtree(root / "tools" / "scenarios")

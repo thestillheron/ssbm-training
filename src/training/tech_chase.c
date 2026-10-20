@@ -241,6 +241,13 @@ static void log_drill_end(const Drill* drill)
                  (int) (layout)->landing.x, (int) (layout)->landing.y,        \
                  (int) (layout)->start.x, (int) (layout)->start.y)
 
+static int fighter_kind_at(int slot)
+{
+    HSD_GObj* gobj = Player_GetEntity(slot);
+
+    return gobj != NULL ? GET_FIGHTER(gobj)->kind : -1;
+}
+
 static void log_drill_start(const Drill* drill)
 {
     int i;
@@ -258,6 +265,8 @@ static void log_drill_start(const Drill* drill)
     OSReport(" landing_x=%d landing_y=%d start_dx=%d start_dy=%d",
              (int) drill->landing_x, (int) drill->landing_y,
              (int) drill->start_dx, (int) drill->start_dy);
+    OSReport(" player=%d opponent=%d", fighter_kind_at(PLAYER_SLOT),
+             fighter_kind_at(OPPONENT_SLOT));
     OSReport(" pool=%d vanish=%d reset=%d facing=%d length=%s/%d pass=%d\n",
              drill->option_pool, drill->vanish, drill->reset_player,
              drill->opponent_facing,

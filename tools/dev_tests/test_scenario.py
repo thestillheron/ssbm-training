@@ -105,6 +105,28 @@ class ScenarioDryRunTests(unittest.TestCase):
         self.assertEqual(r.returncode, 0, out)
         self.assertTrue(self.rows(out))
 
+    def test_boot_prefixes_press_nothing_before_the_main_menu(self):
+        # The training build launches straight to the main menu: no intro or
+        # title to skip, no unlock notices to clear. A `start` or any other
+        # press in a boot prefix would land on the main menu itself.
+        for name in ("boot-to-main-menu", "boot-new-save-to-main-menu"):
+            lines = [
+                line.split("#")[0].strip()
+                for line in (REPO_ROOT / "tools" / "scenarios" / f"{name}.txt")
+                .read_text().splitlines()
+            ]
+            presses = [line for line in lines if line.startswith("start")]
+            with self.subTest(name):
+                self.assertEqual(presses, [], f"{name} presses start before the menu")
+        # The only presses the new-save prefix keeps answer the create-save
+        # prompt: two `a`, the prompt and the "Game Data created" message.
+        lines = [
+            line.split("#")[0].strip()
+            for line in (REPO_ROOT / "tools" / "scenarios" / "boot-new-save-to-main-menu.txt")
+            .read_text().splitlines()
+        ]
+        self.assertEqual([line for line in lines if line.startswith("a")], ["a:3", "a:3"])
+
     def check_committed_scenario_dry_run(self, name):
         root, _ = make_piloting_sandbox()
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)

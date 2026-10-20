@@ -59,16 +59,16 @@ class LiveScenarioEndToEnd(unittest.TestCase):
     def test_run_scenario_plays_a_movie_then_live_replacing_the_instance(self):
         self.addCleanup(self.stop_launched)
         start = time.monotonic()
-        r = dev(REPO_ROOT, "run", "--scenario", "e2e-title")
+        r = dev(REPO_ROOT, "run", "--scenario", "e2e-main-menu")
         elapsed = time.monotonic() - start
         out = r.stdout + r.stderr
         self.assertEqual(r.returncode, 0, out)
         self.assertIn(".dtm", out)
         self.assertIn("Movie finished", out)
-        png = self.shot_path(out, "title")
+        png = self.shot_path(out, "main-menu")
         self.assertTrue(png.is_file(), png)
         self.assertGreater(png.stat().st_size, 0)
-        # Returns once the movie (134 frames, ~2 s) is over, not long after.
+        # Returns once the movie (about 150 frames) is over, not long after.
         # The bound allows for the build that `run` does first.
         self.assertLess(elapsed, 120, out)
         first = tracked_pid()

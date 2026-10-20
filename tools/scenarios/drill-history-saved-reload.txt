@@ -13,15 +13,9 @@
 # write; a third run, `drill-history-saved-capped --keep-card`, then shows the
 # same graph from the card.
 # Authoring build. Needs window focus for the shots.
-# Not boot-to-event-list: against a card that already holds a save the game
-# played, the title needs one `start` fewer than boot-to-main-menu has (its
-# third would choose 1-P Mode), so the boot is spelled out: the main menu is
-# up by frame 194 as in the prefix.
-wait:72
-start:2
-wait:38
-start:2
-wait:80
+# The main menu is reached by boot-to-main-menu (no title to press through);
+# `a` then chooses RTC 101 and opens the event list.
+include boot-to-main-menu
 a:2
 wait:40
 shot event-list

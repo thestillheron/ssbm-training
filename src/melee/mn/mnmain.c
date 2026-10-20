@@ -2656,7 +2656,9 @@ void mn_8022D7F4(HSD_GObj* gp)
 /// @brief Main menu input think
 void mn_8022DB10(HSD_GObj* gp)
 {
+#ifndef TRAINING_BUILD
     MenuExitData* data;
+#endif
     MenuKind menu_kind;
     void (*temp_r28)(HSD_GObj*);
     int selection_count;
@@ -2715,6 +2717,7 @@ void mn_8022DB10(HSD_GObj* gp)
                 HSD_GObj_SetupProc(GObj_Create(0, 1, 0x80), temp_r28, 0);
             temp_r3_2->flags_3 = HSD_GObj_804D783C;
         }
+#ifndef TRAINING_BUILD
     } else if (buttons & MenuInput_Back) {
         sfxBack();
         mf->entering_menu = 0;
@@ -2722,6 +2725,7 @@ void mn_8022DB10(HSD_GObj* gp)
         data = gm_GetCurrentSceneExitData();
         data->pending_mode = GM_TITLE;
         gm_801A4B60();
+#endif
     } else if (buttons & MenuInput_Up) {
         sfxMove();
         decrement_selection(selection_count, MENU_KIND_MAIN);

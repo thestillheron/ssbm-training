@@ -1,0 +1,7 @@
+# Reach the main menu and take a shot. For the opt-in end-to-end test
+# (tools/dev_tests/test_e2e.py), played as a movie from power-on. The training
+# build launches straight to the main menu, so no input is needed; a shot of
+# the menu (not the logo) shows that the game booted to it.
+#
+wait:150
+shot main-menu

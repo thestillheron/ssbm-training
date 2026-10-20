@@ -6,6 +6,9 @@
 #include <melee/lb/lbcardnew.h>
 #include <melee/lb/lblanguage.h>
 #include <melee/ty/toy.h>
+#ifdef TRAINING_BUILD
+#include <training/boot_menu.h>
+#endif
 
 /* 1BF948 */ static void bootOnLoad(GameModeState*);
 /* 1BF9A8 */ static void bootOnLeave(GameModeState*);
@@ -51,12 +54,17 @@ void bootOnLoad(GameModeState* scene)
     struct loadData* scene_data = gm_GetGameModeStateEnterData(scene);
     scene_data->x4 = 0;
     scene_data->x0 = 0;
+#ifdef TRAINING_BUILD
+    /* Boot straight to the main menu: no intro movie, no title screen. */
+    scene_data->mode_id = GM_MENU;
+#else
     if (gmMainLib_8046B0F0.skip_intro == true) {
         scene_data->mode_id = GM_TITLE;
     } else {
         gm_801BF708(0);
         scene_data->mode_id = GM_OPENING_MV;
     }
+#endif
 }
 
 void bootOnLeave(GameModeState* data)
@@ -75,6 +83,10 @@ void bootOnLeave(GameModeState* data)
     }
 
     gm_SetGameModeOverride(lbCardGame_DecideGameMode);
+
+#ifdef TRAINING_BUILD
+    training_boot_enter_main_menu();
+#endif
 
     // Enter mode
     // Gekko "boot to CSS" code changes scene_id to a hardcoded 2 (::GM_VS)

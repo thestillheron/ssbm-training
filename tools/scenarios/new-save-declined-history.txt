@@ -10,21 +10,18 @@
 # "Test: ten reps   1 attempt", one dot at 0). The card is left without a
 # GTCE01 save. Authoring build. Needs window focus for the shots.
 #
-# Timing measured: the prompt is up by frame 200; after the two `a` presses
-# the intro, title and main menu take a `start` each, and the third `start`
-# chooses RTC 101 on the main menu.
+# Timing: the prompt is up by frame 200. The training build launches straight
+# to the main menu, so after the two `a` presses nothing else needs pressing
+# until `a` chooses RTC 101 there.
+# TODO(skip-to-main-menu): the wait before that `a` is generous; measure live.
 wait:200
 stick-right:3
 wait:30
 a:3
 wait:100
 a:3
-wait:100
-start:2
-wait:100
-start:2
-wait:100
-start:2
+wait:200
+a:2
 wait:100
 wait:40
 shot event-list

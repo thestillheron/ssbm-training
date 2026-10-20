@@ -1,0 +1,57 @@
+# Fragment, not a scenario of its own: the Custom drill from power-on with
+# Marth for the player and Falco for the opponent on Final Destination, ending
+# with the drill running (shot `marth-falco-fd`). Used by the character-change
+# scenarios (custom-drill-change-opponent*).
+#
+# The character select starts with the player's token in the hand: the hand
+# goes to Marth (third row) and A drops it. The opponent starts as Pichu: the
+# hand goes to the CP token on Pichu, A lifts it, the hand goes to Falco (second
+# row, first column) and A drops it. The hand glides a little after the stick
+# is released, so each move waits before the A.
+include boot-to-custom-drill
+a:2
+wait:70
+stick-up+stick-left:82
+wait:4
+stick-right:14
+wait:4
+stick-down:16
+wait:4
+stick-down:3
+wait:4
+stick-right:23
+wait:30
+shot hover-marth
+a:2
+wait:30
+stick-up+stick-left:82
+wait:4
+stick-right:9
+wait:4
+stick-down:17
+wait:60
+shot hover-cp
+a:2
+wait:20
+stick-up+stick-left:82
+wait:4
+stick-right:5
+wait:4
+stick-down:10
+wait:60
+shot hover-falco
+a:2
+wait:3
+start:2
+
+# Stage select: Final Destination, as in custom-drill-new-stage.
+wait:60
+stick-down+stick-left:50
+wait:4
+stick-right:22
+wait:4
+stick-up:8
+wait:4
+a:2
+wait:500
+shot marth-falco-fd

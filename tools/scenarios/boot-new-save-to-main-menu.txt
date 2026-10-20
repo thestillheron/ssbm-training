@@ -1,46 +1,29 @@
 # Boot to the main menu from power-on against a card that is formatted but
 # holds no save for this build (ADR-0006): the create-save prompt shows, Yes
-# is chosen, and the intro and title are skipped. Reusable prefix: `include`
-# it from scenarios that check what a new save holds.
+# is chosen, and the main menu follows. Reusable prefix: `include` it from
+# scenarios that check what a new save holds.
 #
-# Run it against a blank card: put a freshly formatted card (no Melee save)
-# where the memory card snapshot is, `build/memcard/snapshot.USA.raw`; see the
-# Memory card section of docs/developer-workflow.md. Unlike boot-to-main-menu
-# it does not assume anything about the player's own save.
+# Run it against a card with no GTCE01 save: put a card with only your vanilla
+# Melee save (or a blank formatted one) where the memory card snapshot is,
+# `build/memcard/snapshot.USA.raw`; see the Memory card section of
+# docs/developer-workflow.md. Unlike boot-to-main-menu it does not assume
+# anything about the player's own save.
 #
-# Movie frames from power-on, fast disc loads. The prompt is up by frame 160
-# and defaults to Yes; the "Game Data has been created" message that follows
-# takes `a` about 60 frames later; the intro skips on a `start` once the
-# message is gone, and the title takes another. The first main menu entry then
-# queues Melee's own unlock notices for what the new save holds (random stage
-# select, sound test, all characters, all stages and the trophies that come
-# with them): eight `a` presses, 40 frames apart, clear them.
+# Movie frames from power-on, fast disc loads (measured):
+#  - The "Create Game Data?" prompt is up by frame 100 and defaults to Yes; `a`
+#    at 160 answers it.
+#  - "Game Data has been created" then ignores every press until somewhere
+#    between frames 283 and 323; a press at 335 dismisses it (3 frames is
+#    enough from then; earlier ones, even a 10-frame hold, are ignored).
+#  - The main menu then reads input from about 65 frames after that press
+#    (a press 60 frames after was ignored, 70 registered). The prefix waits 500: Dolphin writes the new save to the card file some seconds of real time after the menu is up (a tail of 200 frames left no save on the card), and `dev.py run` keeps the card the run leaves.
+# There is no intro, title or unlock notice to press through: the training
+# build marks the notices the new save would queue as shown, so the first
+# thing after the message is the menu.
 
 wait:160
 a:3
-wait:60
+wait:172
 a:3
-wait:40
-start:2
-wait:40
-start:2
-wait:40
-start:2
-wait:100
-a:2
-wait:40
-a:2
-wait:40
-a:2
-wait:40
-a:2
-wait:40
-a:2
-wait:40
-a:2
-wait:40
-a:2
-wait:40
-a:2
-wait:60
+wait:500
 shot main-menu

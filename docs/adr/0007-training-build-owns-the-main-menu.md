@@ -16,3 +16,4 @@ The training build's main menu has four items: [RTC 101](../glossary.md#glossary
 - The label artwork (or, failing that, an open-licence font) is part of the build.
 - The art stays in retail's texture formats and sizes, tinted by the menu's own materials, so highlighting works as it does for retail labels.
 - Both language variants of each patched archive (`.usd` English, `.dat` Japanese) get the same English art and text, so Options' language switch can't bring the retail menu back.
+- The build also boots straight to the main menu: no intro movie, no title screen and no unlock notices for the all-unlocked new save (ADR-0006), so the menu is the first screen after the create-save step.

@@ -1,0 +1,17 @@
+# Control for custom-drill-change-opponent: the same steps without the layout
+# edit. Marth against Falco on Final Destination, Change characters (the pause
+# menu's cursor starts on Resume: down two), the CP token from Falco to
+# Jigglypuff, Final Destination again. Run before the fix to learn whether the
+# edit is part of the crash; kept as a regression. Needs window focus.
+include custom-drill-marth-falco-fd
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:200
+shot css-again
+include custom-drill-opponent-to-jigglypuff

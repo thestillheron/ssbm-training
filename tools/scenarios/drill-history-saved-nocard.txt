@@ -7,20 +7,17 @@
 # event list X shows the attempt (shot `graph`: "Test: ten reps   1 attempt",
 # one dot at 0). Authoring build. Needs window focus for the shots.
 #
-# Timing measured with no card: the notice that there is no card is up by
-# frame 100 and `a` answers "Continue without saving" (the intro, title and
-# main menu then take a `start` each, 120 frames apart, the fourth `start`
-# chooses RTC 101 and opens the event list).
+# Timing with no card (measured): the notice that there is no card is up by
+# frame 100 and `a` answers it; "Continue without saving or loading Game Data?"
+# follows and a second `a` answers OK 60 frames later. The main menu follows
+# with no intro or title, is up about 20 frames after that and settled by about
+# 60; a third `a` then chooses RTC 101 and opens the event list.
 wait:100
 a:2
 wait:60
-start:2
-wait:118
-start:2
-wait:118
-start:2
-wait:118
-start:2
+a:2
+wait:120
+a:2
 wait:100
 wait:40
 shot event-list

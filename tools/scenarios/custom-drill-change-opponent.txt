@@ -1,0 +1,45 @@
+# Regression scenario for the crash after changing the opponent following an
+# edited layout (character-swap-crash ticket 02). Marth against Falco on Final
+# Destination (custom-drill-marth-falco-fd), then Edit layout (fifth item of
+# the pause menu), stick up for 10 frames (the opponent marker rises: a higher
+# drop), leave with B (the drill restarts with the edited layout). Then Change
+# characters (the cursor stays on Edit layout: up two), the CP token from
+# Falco to Jigglypuff, Final Destination again.
+# `python dev.py run --scenario custom-drill-change-opponent` prints a first
+# `drill_start` with Marth and Falco and the default height, a second with the
+# edited height, and (once fixed) a third with the same edited height, Marth
+# and Jigglypuff, and the shot `jigglypuff-fd` shows the drill running. Before
+# the fix the game crashed as the match loaded. Needs window focus.
+include custom-drill-marth-falco-fd
+
+start:2
+wait:30
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+stick-down:2
+wait:14
+a:2
+wait:30
+stick-up:10
+wait:20
+shot editor-raised
+wait:30
+b:2
+wait:300
+shot edited-drill
+
+# Pause (the cursor is on Edit layout), up two to Change characters.
+start:2
+wait:30
+stick-up:2
+wait:14
+stick-up:2
+wait:14
+a:2
+wait:200
+shot css-again
+include custom-drill-opponent-to-jigglypuff
